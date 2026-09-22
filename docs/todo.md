@@ -61,6 +61,17 @@ the homelab.
 - [ ] **C7. Test the join from a runner.** A job must reach the Proxmox API.
       Task A4 gives the method.
 
+## E. The bootstrap of a VPS — complete
+
+- [x] **E1. Write the hardening script.** `scripts/vps-harden.sh` protects a new
+      VPS. It uses whiptail, the text interface of Debian and Ubuntu.
+- [x] **E2. Write the runbook.** `docs/runbooks/vps-bootstrap.md`.
+- [ ] **E3. Run the script on the RackNerd VPS.** The host runs CrowdSec,
+      Fail2ban, and Pangolin now. Caution: select only the tasks that the host
+      does not have. **The owner does this task.**
+- [ ] **E4. Make an Ansible role from the script.** Ansible owns the host after
+      the bootstrap. The role keeps the same configuration.
+
 ## D. The rest of the build order
 
 - [ ] **D1. Step 3.** Set up the remote state backend, the state encryption, and
