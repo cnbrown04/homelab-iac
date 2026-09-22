@@ -31,7 +31,7 @@ See `docs/runbooks/risks.md` for the full text of each risk.
       collection.
 - [ ] **B4. Correct the old comments.** `mise.toml` and `.gitignore` name
       "CLAUDE.md, decision 1", but no `CLAUDE.md` exists. The decisions are in
-      `AGENTS.md`, section 3.
+      `AGENTS.md`, section 4.
 
 ## C. Set up Headscale — build order step 4
 

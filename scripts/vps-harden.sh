@@ -60,8 +60,10 @@ die() {
   local message="$1"
   log "FAILURE: ${message}"
   if command -v whiptail > /dev/null 2>&1; then
-    whiptail --backtitle "$BACKTITLE" --title "Failure" --msgbox "${message}" 12 70
+    # The box is a help, and not a need. A failure here must not hide the text.
+    tui --title "Failure" --msgbox "${message}" 12 70 || true
   fi
+  restore_terminal
   printf 'Failure: %s\n' "${message}" >&2
   exit 1
 }
@@ -98,27 +100,65 @@ require_apt() {
   fi
 }
 
-# The script comes from a pipe: `curl ... | sudo bash`. The pipe is stdin, so
-# whiptail reads the script and not the keyboard. Attach stdin to the terminal.
+# Run whiptail. It reads the keyboard from /dev/tty, and not from stdin.
 #
-# Caution: bash reads the script from stdin as it runs. After this change, bash
-# cannot read more of the script. For that reason, the last line of this file
-# calls main and exits on one line. Do not divide that line.
-attach_terminal() {
-  [[ -t 0 ]] && return 0
+# The reason: `curl ... | bash` gives the script to bash on stdin. bash and
+# whiptail cannot both read one file descriptor. The arrow keys go to bash, and
+# the terminal shows ^[OA instead.
+tui() {
+  whiptail --backtitle "$BACKTITLE" "$@" < /dev/tty
+}
 
-  # Test the terminal in a subshell. A failed redirection in `exec` stops the
-  # shell, so a test in this shell gives no message to the operator.
-  if ( exec < /dev/tty ) 2> /dev/null; then
-    exec < /dev/tty
-    return 0
+# whiptail puts the terminal in the mode for an application. A failure leaves
+# the terminal in that mode, and the arrow keys make ^[OA. Put the mode back.
+restore_terminal() {
+  [[ -e /dev/tty ]] || return 0
+  printf '\033[?1l\033>\033[?25h' > /dev/tty 2> /dev/null || true
+  stty sane < /dev/tty 2> /dev/null || true
+}
+
+# The script comes from a pipe, so bash reads it from stdin. Get the script
+# again as a file, then start it again. bash then reads the file, and stdin
+# stays free for the keyboard.
+relaunch_from_file() {
+  # A file or a terminal on stdin needs no change.
+  [[ -t 0 ]] && return 0
+  # The second start must not start a third one.
+  [[ -n "${VPS_HARDEN_CHILD:-}" ]] && return 0
+
+  if ! ( exec < /dev/tty ) 2> /dev/null; then
+    printf 'Failure: the script has no terminal, so it cannot show the menu.\n' >&2
+    printf 'Run the script from a terminal of SSH.\n' >&2
+    exit 1
   fi
 
-  printf 'Failure: the script has no terminal, so it cannot show the menu.\n' >&2
-  printf 'Download the script first, then run it:\n' >&2
-  printf '  curl -fsSLO %s\n' "${SCRIPT_URL}" >&2
-  printf '  sudo bash vps-harden.sh\n' >&2
-  exit 1
+  local getter
+  if command -v curl > /dev/null 2>&1; then
+    getter="curl -fsSL"
+  elif command -v wget > /dev/null 2>&1; then
+    getter="wget -qO-"
+  else
+    printf 'Failure: the host has no curl and no wget.\n' >&2
+    exit 1
+  fi
+
+  local tmp
+  tmp="$(mktemp /tmp/vps-harden.XXXXXX.sh)"
+  if ! ${getter} "${SCRIPT_URL}" > "${tmp}" 2> /dev/null; then
+    rm -f "${tmp}"
+    printf 'Failure: the script cannot get %s\n' "${SCRIPT_URL}" >&2
+    exit 1
+  fi
+  # A short file means the download failed. Do not run it.
+  if [[ "$(wc -c < "${tmp}")" -lt 1000 ]]; then
+    rm -f "${tmp}"
+    printf 'Failure: the file from %s is too short.\n' "${SCRIPT_URL}" >&2
+    exit 1
+  fi
+
+  export VPS_HARDEN_CHILD=1
+  export VPS_HARDEN_TMP="${tmp}"
+  exec bash "${tmp}" "$@" < /dev/tty
 }
 
 require_whiptail() {
@@ -156,7 +196,7 @@ detect_session() {
 # ---------------------------------------------------------------------------
 
 show_welcome() {
-  whiptail --backtitle "$BACKTITLE" --title "Before you start" --yesno \
+  tui --title "Before you start" --yesno \
 "This script protects a VPS against an attacker.
 
 WARNING: a mistake in the configuration of SSH can lock you out of the
@@ -168,7 +208,7 @@ Do you want to continue?" 18 72 || exit 0
 }
 
 choose_tasks() {
-  TASKS="$(whiptail --backtitle "$BACKTITLE" --title "Tasks" --checklist \
+  TASKS="$(tui --title "Tasks" --checklist \
 "Select each task. Use SPACE to select, and TAB to move to OK." 20 74 10 \
     "updates"  "Install the updates, and turn on the automatic updates" ON \
     "user"     "Create an admin user with an SSH key"                  ON \
@@ -186,7 +226,7 @@ choose_tasks() {
 ask_admin_user() {
   has_task user || return 0
 
-  ADMIN_USER="$(whiptail --backtitle "$BACKTITLE" --title "The admin user" \
+  ADMIN_USER="$(tui --title "The admin user" \
     --inputbox "Give the name of the admin user. The user gets sudo." \
     10 70 "admin" 3>&1 1>&2 2>&3)" || exit 0
 
@@ -194,7 +234,7 @@ ask_admin_user() {
     || die "The name '${ADMIN_USER}' is not a correct name for a user."
   [[ "${ADMIN_USER}" != "root" ]] || die "Do not use root as the admin user."
 
-  ADMIN_KEY="$(whiptail --backtitle "$BACKTITLE" --title "The public key" \
+  ADMIN_KEY="$(tui --title "The public key" \
     --inputbox \
 "Paste the public SSH key of the user.
 
@@ -213,7 +253,7 @@ The key starts with ssh-ed25519 or ssh-rsa." 12 74 "" 3>&1 1>&2 2>&3)" || exit 0
 ask_ssh_port() {
   has_task ssh || return 0
 
-  NEW_SSH_PORT="$(whiptail --backtitle "$BACKTITLE" --title "The port of SSH" \
+  NEW_SSH_PORT="$(tui --title "The port of SSH" \
     --inputbox \
 "The current port is ${SSH_PORT}.
 
@@ -227,7 +267,7 @@ log, but it is not a protection." 13 74 "${SSH_PORT}" 3>&1 1>&2 2>&3)" || exit 0
 ask_extra_ports() {
   has_task ufw || return 0
 
-  EXTRA_PORTS="$(whiptail --backtitle "$BACKTITLE" --title "The open ports" \
+  EXTRA_PORTS="$(tui --title "The open ports" \
     --inputbox \
 "Give each other port that must stay open. Put a space between two ports.
 Add /udp for a port of UDP.
@@ -241,7 +281,7 @@ Example: 80/tcp 443/tcp 51820/udp" 15 74 "80/tcp 443/tcp" 3>&1 1>&2 2>&3)" \
 ask_trusted_ip() {
   has_task fail2ban || has_task crowdsec || return 0
 
-  TRUSTED_IP="$(whiptail --backtitle "$BACKTITLE" --title "Your address" \
+  TRUSTED_IP="$(tui --title "Your address" \
     --inputbox \
 "Fail2ban and CrowdSec do not ban this address.
 
@@ -271,7 +311,7 @@ confirm_start() {
   summary+="
 Do you want to start?"
 
-  whiptail --backtitle "$BACKTITLE" --title "Confirm" --yesno "${summary}" \
+  tui --title "Confirm" --yesno "${summary}" \
     22 74 || exit 0
 }
 
@@ -550,7 +590,7 @@ show_results() {
   local port="${NEW_SSH_PORT:-${SSH_PORT}}"
   local user="${ADMIN_USER:-<your user>}"
 
-  whiptail --backtitle "$BACKTITLE" --title "The result" --msgbox \
+  tui --title "The result" --msgbox \
 "${RESULTS}
 WARNING: keep this session open.
 
@@ -567,7 +607,8 @@ The log is ${LOG_FILE}." 26 76
 }
 
 main() {
-  attach_terminal
+  relaunch_from_file "$@"
+  trap 'restore_terminal; rm -f "${VPS_HARDEN_TMP:-}"' EXIT
   require_root
   require_apt
   require_whiptail

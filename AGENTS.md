@@ -59,10 +59,6 @@ https://www.conventionalcommits.org/.
 
 ```
 <type>(<scope>): <description>
-
-<body>
-
-<footer>
 ```
 
 ### Types
@@ -90,17 +86,27 @@ Use the area of the repository as the scope: `tofu`, `ansible`, `mise`,
 - Start the description with a lower case letter. Do not put a full stop at
   the end.
 - Keep the first line to 72 characters or less.
-- Put the reason for the change in the body. The code shows what changed.
-  The body must show why.
-- Mark a breaking change with a `!` after the type, and add a
-  `BREAKING CHANGE:` footer.
+- Write the first line only. A commit message has no body. Put the reason for
+  the change in the pull request, or in `docs/`.
+- Mark a breaking change with a `!` after the type. A footer is the one
+  exception to the rule above.
 
 ### Branches
 
 Name a branch `<type>/<short-description>`, for example
 `feat/proxmox-vm-module`. Use the same type names as the commits.
 
-## 3. Project context
+## 3. Ask before you write to git
+
+Do not run `git commit`, `git push`, or `gh pr create` unless the owner gives
+permission for that action.
+
+- Make the change to the file, then stop. Tell the owner what is ready.
+- Permission for one commit is not permission for the next commit.
+- This rule covers a new branch on the remote, a push, and a pull request.
+- `git add`, `git status`, and `git diff` need no permission.
+
+## 4. Project context
 
 This repository deploys changes to a homelab. Every change goes through a pull
 request and a GitHub Actions pipeline. Do not apply a change by hand and do not
@@ -211,7 +217,7 @@ the plan job needs the mesh network to reach the Proxmox API.
 - Do not give the tag for GitHub Actions more access than the Proxmox API port.
 - Do not run Headscale in the homelab. See decision 3.
 
-## 4. The `context/` folder
+## 5. The `context/` folder
 
 `context/` holds the context for one topic, for example the notes for a task in
 progress or a document from a third party. Git ignores the folder.
