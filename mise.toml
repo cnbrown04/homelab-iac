@@ -1,0 +1,31 @@
+# Tool versions for this repo. Identical on every machine.
+#
+#   mise install    # fetch everything below
+#   mise doctor     # diagnose a broken setup
+#
+# Versions are pinned exactly and bumped by Renovate, not by hand.
+
+[tools]
+# Creates and changes Proxmox resources. See CLAUDE.md, decision 1.
+opentofu = "1.12.6"
+
+# Configures hosts that are already running. Collections live in
+# ansible/requirements.yml, not here.
+python = "3.14.7"
+ansible-core = "2.21.4"
+
+# Lints the Ansible content on every PR. Ships its own ansible-core copy;
+# see the pin comment in ansible/requirements.yml before bumping it.
+"pypi:ansible-lint" = "26.8.0"
+
+# Secret encryption. See CLAUDE.md, decision 6.
+sops = "3.13.3"
+age = "1.3.2"
+
+# Installs the PyPI-backed tools above. Not used directly.
+uv = "latest"
+
+[settings]
+# Keep tool resolution to this file: ignore stray .python-version /
+# .terraform-version files that other tooling may drop in the repo.
+idiomatic_version_file_enable_tools = []
