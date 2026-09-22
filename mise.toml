@@ -25,6 +25,9 @@ age = "1.3.2"
 # Installs the PyPI-backed tools above. Not used directly.
 uv = "latest"
 
+# Lints scripts/*.sh on every PR.
+"aqua:koalaman/shellcheck" = "0.11.0"
+
 [settings]
 # Keep tool resolution to this file: ignore stray .python-version /
 # .terraform-version files that other tooling may drop in the repo.
