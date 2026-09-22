@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
+#
+# A guard for the shell. `curl ... | sh` starts dash on Debian, and dash does
+# not have the syntax of bash. This test uses POSIX syntax, so dash can read it.
+if [ -z "${BASH_VERSION:-}" ]; then
+  echo "Failure: run this script with bash, and not with sh." >&2
+  echo "  curl -fsSL <the URL> | sudo bash" >&2
+  exit 1
+fi
 #
 # vps-harden.sh — protect a new VPS against an attacker.
 #
@@ -9,6 +18,9 @@
 # The script uses whiptail, the text interface of Debian and Ubuntu.
 #
 # Usage:
+#   curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh | sudo bash
+#
+# The script also runs from a file:
 #   sudo ./vps-harden.sh
 #
 set -euo pipefail
@@ -17,6 +29,7 @@ readonly LOG_FILE="/var/log/vps-harden.log"
 readonly SSHD_DROPIN="/etc/ssh/sshd_config.d/99-hardening.conf"
 readonly SYSCTL_FILE="/etc/sysctl.d/99-hardening.conf"
 readonly BACKTITLE="VPS hardening"
+readonly SCRIPT_URL="https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh"
 
 # The answers from the operator. The script collects them before it makes a
 # change, so the work runs without a question.
@@ -85,6 +98,29 @@ require_apt() {
   fi
 }
 
+# The script comes from a pipe: `curl ... | sudo bash`. The pipe is stdin, so
+# whiptail reads the script and not the keyboard. Attach stdin to the terminal.
+#
+# Caution: bash reads the script from stdin as it runs. After this change, bash
+# cannot read more of the script. For that reason, the last line of this file
+# calls main and exits on one line. Do not divide that line.
+attach_terminal() {
+  [[ -t 0 ]] && return 0
+
+  # Test the terminal in a subshell. A failed redirection in `exec` stops the
+  # shell, so a test in this shell gives no message to the operator.
+  if ( exec < /dev/tty ) 2> /dev/null; then
+    exec < /dev/tty
+    return 0
+  fi
+
+  printf 'Failure: the script has no terminal, so it cannot show the menu.\n' >&2
+  printf 'Download the script first, then run it:\n' >&2
+  printf '  curl -fsSLO %s\n' "${SCRIPT_URL}" >&2
+  printf '  sudo bash vps-harden.sh\n' >&2
+  exit 1
+}
+
 require_whiptail() {
   if command -v whiptail > /dev/null 2>&1; then
     return
@@ -104,7 +140,15 @@ detect_session() {
 
   if [[ -n "${SSH_CONNECTION:-}" ]]; then
     TRUSTED_IP="$(printf '%s' "${SSH_CONNECTION}" | awk '{ print $1 }')"
+  elif [[ -n "${SSH_CLIENT:-}" ]]; then
+    TRUSTED_IP="$(printf '%s' "${SSH_CLIENT}" | awk '{ print $1 }')"
+  else
+    # sudo deletes SSH_CONNECTION from the environment. Ask the terminal.
+    TRUSTED_IP="$(who am i 2> /dev/null | sed -n 's/.*(\(.*\))$/\1/p')"
   fi
+
+  # A name is not an address. Keep an address only.
+  [[ "${TRUSTED_IP}" =~ ^[0-9a-fA-F.:]+$ ]] || TRUSTED_IP=""
 }
 
 # ---------------------------------------------------------------------------
@@ -523,6 +567,7 @@ The log is ${LOG_FILE}." 26 76
 }
 
 main() {
+  attach_terminal
   require_root
   require_apt
   require_whiptail
@@ -553,4 +598,5 @@ main() {
   show_results
 }
 
-main "$@"
+# Caution: keep the call and the exit on one line. See attach_terminal.
+main "$@"; exit $?

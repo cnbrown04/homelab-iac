@@ -21,22 +21,19 @@ services. See `AGENTS.md`, decision 2.
    ssh root@<the address of the host>
    ```
 
-2. Copy the script to the host.
+2. Run the script on the host. It comes from the repository, so you copy no
+   file.
 
    ```sh
-   scp scripts/vps-harden.sh root@<the address of the host>:/root/
+   curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh | sudo bash
    ```
 
-3. Run the script on the host.
+   Caution: use `bash` and not `sh`. On Debian, `sh` is dash, and dash does not
+   have the syntax of bash. The script stops with a message if you use `sh`.
 
-   ```sh
-   chmod +x /root/vps-harden.sh
-   /root/vps-harden.sh
-   ```
+3. Answer each question. The script makes no change before the box "Confirm".
 
-4. Answer each question. The script makes no change before the box "Confirm".
-
-5. Warning: keep the first session open. Open a second terminal, and test the
+4. Warning: keep the first session open. Open a second terminal, and test the
    new user.
 
    ```sh
@@ -44,14 +41,14 @@ services. See `AGENTS.md`, decision 2.
    sudo -v
    ```
 
-6. The test passed? Close the old port in the firewall.
+5. The test passed? Close the old port in the firewall.
 
    ```sh
    sudo ufw delete limit 22/tcp
    sudo ufw status numbered
    ```
 
-7. The test failed? Use the first session to correct the host. The file
+6. The test failed? Use the first session to correct the host. The file
    `/etc/ssh/sshd_config.d/99-hardening.conf` holds each change. Delete the file
    and run `systemctl restart ssh` to go back.
 
@@ -88,6 +85,22 @@ new port first, and it keeps the old port open. Step 6 closes the old port.
 The script tests the new configuration with `sshd -t` before the restart. A bad
 file stops the service, and the host goes off the network.
 
+## The URL, and the trust in it
+
+The command runs a script from the internet as root. Two facts make that safe
+enough here:
+
+- The repository is yours, and it is public. Read the script before you run it.
+- The branch `main` needs a pull request, so no other person changes the script
+  without a review.
+
+Caution: the URL names the branch `main`. The content of the branch changes. Use
+a tag for a host that needs the same script each time:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/v1.0.0/scripts/vps-harden.sh | sudo bash
+```
+
 ## Notes
 
 - The script blocks `AllowTcpForwarding`. Delete that line if you need a tunnel
@@ -98,5 +111,8 @@ file stops the service, and the host goes off the network.
 - Fail2ban and CrowdSec do the same job in two ways. Fail2ban reads the log of
   this host. CrowdSec also uses the list of addresses from the community. Both
   is acceptable, and each one uses a different action.
+- The pipe is stdin, so whiptail cannot read the keyboard. The script attaches
+  stdin to `/dev/tty` at the start. A host with no terminal gets a message with
+  the two commands that download the file first.
 - The script does not open the ports for Headscale. Task C1 in `docs/todo.md`
   gives the port.
