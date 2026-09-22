@@ -108,10 +108,13 @@ configure a host over ad-hoc SSH after the pipeline exists.
 
 ### The hardware
 
-- A Proxmox VE cluster of four nodes. The cluster has one API endpoint.
-- One standalone Proxmox VE node. It has its own API endpoint.
+- The `pantheon` cluster: four Proxmox VE nodes with one API endpoint.
+- The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
 - A RackNerd VPS. The panel is SolusVM.
-- A DediRock VPS. The panel is WHMCS. Reviews name Virtualizor.
+- A DediRock VPS. The panel is vPanel. The owner tests this host now.
+
+`docs/runbooks/inventory.md` holds the name, the version, and the workload of
+each host. It is the only correct source for those facts.
 
 ### Decisions
 
@@ -174,7 +177,7 @@ Do these steps in order. Do not start step 5 before step 4 is complete, because
 the plan job needs Tailscale to reach the Proxmox API.
 
 1. Verify each risk in `context/handoff-original.md`. Record each answer in
-   `docs/runbooks/`.
+   `docs/runbooks/risks.md`. Four risks are still open.
 2. Scaffold the layout. Pin the tool versions. Add Renovate.
 3. Set up the remote state backend, the state encryption, and SOPS with age.
 4. Set up Tailscale: the account, a tag for GitHub Actions, an ACL rule for the
