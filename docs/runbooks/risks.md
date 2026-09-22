@@ -34,13 +34,32 @@ showed 0.110.0.
 Action: run `tofu init` in a target, then read `.terraform.lock.hcl`. Record the
 version here. Do this in step 2 or step 5.
 
-## 4. The tag of the Tailscale GitHub Action — open
+## 4. The way a runner joins the network — open, and it changed
 
-The handoff names `tailscale/github-action@v4`, but the source was a search
-snippet.
+The owner replaced Tailscale with Headscale on 21 September 2026. Headscale is
+an open-source control server. The client software of Tailscale stays the same,
+but the control server is not the service of Tailscale.
 
-Action: read the official documents of the action before step 8. Record the
-correct tag here.
+Two facts are open:
+
+- The handoff names `tailscale/github-action@v4`, but the source was a search
+  snippet. The correct tag is not confirmed.
+- The action logs in to the service of Tailscale by default. A custom control
+  server needs a login server option. The method is not confirmed.
+
+Headscale has no OAuth client, so the pre-auth key takes the place of the OAuth
+client in decision 6.
+
+Action: read the official documents of the action and of Headscale. Record the
+method here. Then test a job that reaches the Proxmox API.
+
+### New risk: the port on the RackNerd VPS
+
+Headscale needs a public name in DNS and a certificate for TLS. The RackNerd VPS
+runs Pangolin, and Pangolin uses port 443. A conflict is possible.
+
+Action: put Headscale behind the reverse proxy of Pangolin, or give Headscale
+another port. Record the answer before task C2 in `docs/todo.md`.
 
 ## 5. The rights of the user for the provider — open
 

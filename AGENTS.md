@@ -127,14 +127,22 @@ These decisions are closed. Ask the owner before you re-open one.
    Ansible. Do not manage a VPS with OpenTofu.
 3. **Use a GitHub-hosted runner only.** A self-hosted runner in the homelab
    needs the homelab, but it exists to repair the homelab. Each job that needs
-   the Proxmox API starts with the Tailscale GitHub Action. The action joins
-   the runner to the tailnet as an ephemeral node for the length of the job.
+   the Proxmox API joins the mesh network as an ephemeral node, for the length
+   of the job only.
+   1. **Headscale is the control server, and not Tailscale.** The owner made
+      this change on 21 September 2026. Headscale is an open-source control
+      server for a Tailscale client. The client software stays the same.
+   2. **Headscale runs on the RackNerd VPS.** Warning: the control server must
+      stay out of the homelab. A control server in the homelab has the same
+      defect as a self-hosted runner. The homelab goes down, the runner cannot
+      join the mesh network, and the pipeline cannot repair the homelab.
 4. **Ansible manages both VPS hosts.** No OpenTofu provider exists for SolusVM
    or for WHMCS and Virtualizor. Use plain SSH.
 5. **The state is remote and encrypted.** Use an S3-compatible backend and the
    state encryption of OpenTofu.
-6. **SOPS and age encrypt the secrets.** Keep the Tailscale OAuth client in a
-   GitHub secret, because it has no other home.
+6. **SOPS and age encrypt the secrets.** Keep the pre-auth key for Headscale
+   in a GitHub secret, because it has no other home. Headscale has no OAuth
+   client.
 7. **A human approves an apply.** Put a GitHub environment with a required
    reviewer in front of the apply job.
 
@@ -174,14 +182,15 @@ not change a version by hand.
 ### Build order
 
 Do these steps in order. Do not start step 5 before step 4 is complete, because
-the plan job needs Tailscale to reach the Proxmox API.
+the plan job needs the mesh network to reach the Proxmox API.
 
 1. Verify each risk in `context/handoff-original.md`. Record each answer in
    `docs/runbooks/risks.md`. Four risks are still open.
 2. Scaffold the layout. Pin the tool versions. Add Renovate.
 3. Set up the remote state backend, the state encryption, and SOPS with age.
-4. Set up Tailscale: the account, a tag for GitHub Actions, an ACL rule for the
-   Proxmox API port, and an OAuth client in a GitHub secret.
+4. Set up Headscale on the RackNerd VPS: the server, a name in DNS, a
+   certificate for TLS, a tag for GitHub Actions, a policy rule for the Proxmox
+   API port, and a pre-auth key in a GitHub secret. Join each Proxmox node.
 5. Write the `vm` module and the `lxc` module. Write the `pve-standalone`
    target. Import each resource that exists into the state. The step is
    complete when `tofu plan` shows no change.
@@ -199,8 +208,8 @@ the plan job needs Tailscale to reach the Proxmox API.
 - Do not commit a state file.
 - Do not put a secret in plain text in the repository. This includes the
   commit history.
-- Do not give the Tailscale tag for GitHub Actions more access than the Proxmox
-  API port.
+- Do not give the tag for GitHub Actions more access than the Proxmox API port.
+- Do not run Headscale in the homelab. See decision 3.
 
 ## 4. The `context/` folder
 
