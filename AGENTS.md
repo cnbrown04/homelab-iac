@@ -108,10 +108,10 @@ configure a host over ad-hoc SSH after the pipeline exists.
 
 ### The hardware
 
-- A Proxmox VE cluster of four nodes. The cluster has one API endpoint.
-- One standalone Proxmox VE node. It has its own API endpoint.
+- The `pantheon` cluster: four Proxmox VE nodes with one API endpoint.
+- The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
 - A RackNerd VPS. The panel is SolusVM.
-- A DediRock VPS. The panel is WHMCS. Reviews name Virtualizor.
+- A DediRock VPS. The panel is vPanel. The owner tests this host now.
 
 ### Decisions
 
