@@ -1,0 +1,15 @@
+# Scratch context for Claude sessions. Never committed.
+context/
+
+# OpenTofu state is remote and encrypted. See CLAUDE.md, decision 5.
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl.bak
+crash.log
+
+# Decrypted secrets. Only the SOPS-encrypted form belongs in git.
+*.dec
+*.dec.*
+*.decrypted.*
+.env
