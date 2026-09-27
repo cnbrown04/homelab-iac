@@ -8,3 +8,5 @@ collections:
     version: 13.3.0
   - name: community.sops
     version: 2.4.0
+  - name: ansible.posix
+    version: 2.2.2

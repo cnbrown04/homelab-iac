@@ -2,4 +2,4 @@
 # SOPS writes the encrypted files. Their long lines are not an error.
 exclude_paths:
   - .ansible/
-  - inventory/host_vars/*/*.sops.yml
+  - inventory/**/*.sops.yml

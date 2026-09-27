@@ -1,0 +1,7 @@
+---
+tailscale_login_server: ""
+tailscale_tags: []
+# The host that runs Headscale. Ansible makes a join key on it.
+tailscale_headscale_host: hermes
+tailscale_extra_up_args:
+  - --accept-dns=false

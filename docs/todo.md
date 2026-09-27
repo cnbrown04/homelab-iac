@@ -56,19 +56,21 @@ Tailscale's public DERP relays.
 - [x] **C2. Deploy Headscale.** Ansible installed Headscale 0.29.3 on
       27 September 2026. `https://vpn.buildwithcaleb.com/health` returned
       `200`, and the certificate is valid.
-- [ ] **C3. Set the policy.** The policy file gives `tag:github-actions`
-      access to TCP port `8006` on `tag:proxmox` only. It gives no access to
-      other nodes. Decide the access for the devices of the owner.
+- [x] **C3. Set the policy.** `tag:github-actions` gets TCP port `8006` on
+      `tag:proxmox` only. The devices of the owner (`autogroup:member`) get
+      all nodes and all ports. The owner chose this on 27 September 2026, and
+      plans to make the policy narrow later.
 - [x] **C4. Choose the relay.** The owner chose Tailscale's public DERP relays
       on 27 September 2026.
-- [ ] **C5. Join each Proxmox node.** The five nodes and `hermes` join the
-      mesh network. Use a pre-auth key with a tag. Ansible installs the
-      Tailscale client. No Proxmox node has the client now.
-- [ ] **C6. Create the pre-auth key for the pipeline.** The key makes an
-      ephemeral node with the tag for GitHub Actions. Choose the key expiry;
-      Headscale defaults to one hour. Put the key in a GitHub secret.
-- [ ] **C7. Test the join from a runner.** A job must reach the Proxmox API.
-      Task A4 gives the method.
+- [x] **C5. Join each Proxmox node.** The `tailscale` role joined the five
+      nodes with `tag:proxmox` on 27 September 2026. A second run showed no
+      change. `docs/runbooks/inventory.md` holds the tailnet addresses.
+- [ ] **C6. Create the pre-auth key for the pipeline.** The key is reusable
+      and ephemeral, and it has the tag `tag:github-actions`. Put it in the
+      GitHub secret `HEADSCALE_AUTHKEY`. Record its expiry date here.
+- [ ] **C7. Test the join from a runner.** Run the workflow
+      `.github/workflows/tailnet-check.yml`. It must reach port `8006` on each
+      node, and the policy must block port `22`.
 - [ ] **C8. Install the Headplane admin interface.** Install the full
       Headplane on `hermes` after Headscale runs. Route it through Pangolin.
       Do not use Headplane Limited Mode, because its features are limited.

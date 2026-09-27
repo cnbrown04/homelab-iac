@@ -1,0 +1,11 @@
+---
+# Run this play one time for a new node, as root with the root password:
+#
+#   ansible-playbook playbooks/proxmox_bootstrap.yml -k \
+#     -e '{"ansible_user": "root", "ansible_become": false}'
+#
+# After this play, Ansible logs in as the admin user. See the README.
+- name: Create the admin user on the Proxmox hosts
+  hosts: proxmox_nodes
+  roles:
+    - role: admin_user

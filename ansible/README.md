@@ -55,3 +55,24 @@ the tasks for Docker and Compose fail in check mode.
 See `docs/runbooks/hermes-edge.md` for the route from Pangolin to Headscale.
 The Dockhand stack has no published web port. Add a private proxy route only
 after you create the first admin account of Dockhand.
+
+## The Proxmox nodes
+
+Ansible logs in to each Proxmox node as `iac-admin` and uses sudo. The `admin_user`
+role creates that Linux user. It is not a Proxmox user, and it does not show
+in the Users tab of the datacenter. It reads the SSH keys from
+`https://github.com/cnbrown04.keys` and deletes each other key of the user.
+
+`inventory/group_vars/proxmox_nodes/secrets.sops.yml` holds the sudo password
+hash. Use the same password as on `hermes`, because `-K` gives one password to
+all hosts in a run.
+
+A new node has no admin user. Run the bootstrap play one time as root with the
+root password. The `-k` flag needs `sshpass` on the controller.
+
+```sh
+ansible-playbook playbooks/proxmox_bootstrap.yml -k \
+  -e '{"ansible_user": "root", "ansible_become": false}'
+```
+
+After the bootstrap, run `playbooks/proxmox_nodes.yml -K` as usual.

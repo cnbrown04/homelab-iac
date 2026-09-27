@@ -105,3 +105,16 @@
     name: headscale
     enabled: true
     state: started
+
+- name: Read the Headscale users
+  ansible.builtin.command:
+    cmd: headscale users list -o json
+  register: headscale_user_list
+  changed_when: false
+
+# Headscale returns null when no user exists.
+- name: Create each Headscale user
+  ansible.builtin.command:
+    cmd: "headscale users create {{ item }}"
+  loop: "{{ headscale_users | difference(headscale_user_list.stdout | from_json | default([], true) | map(attribute='name')) }}"
+  changed_when: true

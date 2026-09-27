@@ -1,0 +1,83 @@
+---
+- name: Check the Tailscale settings
+  ansible.builtin.assert:
+    that:
+      - tailscale_login_server is match('^https://')
+      - tailscale_tags | length > 0
+      - ansible_distribution | lower in ["debian", "ubuntu"]
+      - ansible_distribution_release | length > 0
+    fail_msg: "Set the login server and at least one tag. The host must run Debian or Ubuntu."
+
+- name: Download the Tailscale APT signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/{{ ansible_distribution | lower }}/{{ ansible_distribution_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure the Tailscale APT repository
+  ansible.builtin.deb822_repository:
+    name: tailscale
+    types: [deb]
+    uris: "https://pkgs.tailscale.com/stable/{{ ansible_distribution | lower }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: [main]
+    signed_by: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    state: present
+  register: tailscale_repository
+
+# The index needs a refresh only after a change to the Tailscale repository.
+- name: Install Tailscale
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: "{{ tailscale_repository is changed }}"
+
+- name: Start and enable the Tailscale daemon
+  ansible.builtin.systemd_service:
+    name: tailscaled
+    enabled: true
+    state: started
+
+- name: Read the Tailscale status
+  ansible.builtin.command:
+    cmd: tailscale status --json
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+
+- name: Find the nodes that must join
+  ansible.builtin.set_fact:
+    tailscale_needs_join: >-
+      {{ tailscale_status.rc != 0
+         or (tailscale_status.stdout | from_json).BackendState != 'Running' }}
+
+# One key serves all nodes in this play. It expires after one hour, and it
+# does not go to disk.
+- name: Create a join key on the Headscale host
+  ansible.builtin.command:
+    cmd: >-
+      headscale preauthkeys create --reusable --expiration 1h
+      --tags {{ tailscale_tags | join(',') }} -o json
+  delegate_to: "{{ tailscale_headscale_host }}"
+  become: true
+  run_once: true
+  register: tailscale_join_key
+  changed_when: true
+  no_log: true
+  when: >-
+    ansible_play_hosts | map('extract', hostvars, 'tailscale_needs_join')
+    | select | list | length > 0
+
+- name: Join the node to the tailnet
+  ansible.builtin.command:
+    argv: >-
+      {{ ['tailscale', 'up',
+          '--login-server=' ~ tailscale_login_server,
+          '--auth-key=' ~ (tailscale_join_key.stdout | from_json).key,
+          '--hostname=' ~ inventory_hostname]
+         + tailscale_extra_up_args }}
+  changed_when: true
+  no_log: true
+  when: tailscale_needs_join | bool

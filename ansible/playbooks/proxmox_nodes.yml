@@ -3,3 +3,7 @@
   hosts: proxmox_nodes
   roles:
     - role: common
+    - role: admin_user
+      tags: [admin_user]
+    - role: tailscale
+      tags: [tailscale]

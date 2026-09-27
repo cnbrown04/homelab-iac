@@ -1,0 +1,35 @@
+---
+- name: Check the admin user settings
+  ansible.builtin.assert:
+    that:
+      - admin_user_name is match('^[a-z_][a-z0-9_-]*$')
+      - admin_user_ssh_keys_url is match('^https://')
+      - admin_user_password_hash is match('^\$6\$')
+    fail_msg: >-
+      Set the user name, an HTTPS URL for the SSH keys, and a SHA-512 password
+      hash in secrets.sops.yml.
+  no_log: true
+
+- name: Install sudo
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+
+- name: Create the admin user
+  ansible.builtin.user:
+    name: "{{ admin_user_name }}"
+    groups: [sudo]
+    append: true
+    shell: /bin/bash
+    password: "{{ admin_user_password_hash }}"
+    update_password: always
+  no_log: true
+
+# The keys at the URL replace all other keys of the user. A key that you delete
+# at the source goes away on the next run.
+- name: Set the SSH keys of the admin user
+  ansible.posix.authorized_key:
+    user: "{{ admin_user_name }}"
+    key: "{{ admin_user_ssh_keys_url }}"
+    exclusive: true
+    state: present
