@@ -9,7 +9,8 @@
       tags: [security]
     - role: docker
       tags: [docker]
-    - role: dockhand
-      tags: [dockhand]
     - role: pangolin
       tags: [pangolin]
+    # Dockge joins the pangolin network, so it comes after Pangolin.
+    - role: dockge
+      tags: [dockge]
