@@ -43,8 +43,28 @@ pangolin_blueprint_resources:
           method: http
           hostname: dockge
           port: 5001
+    pocket-id:
+      name: Pocket ID
+      mode: http
+      full-domain: auth.buildwithcaleb.com
+      auth:
+        sso-enabled: "{{ pocket_id_setup_mode | bool }}"
+      targets:
+        - site: "{{ pangolin_local_site }}"
+          method: http
+          hostname: pocket-id
+          port: 1411
 
 headplane_base_url: https://headplane.buildwithcaleb.com
+
+# Pocket ID is the SSO provider. It is always a Pangolin resource. The first
+# person who opens its setup page becomes the admin, so the Pangolin login
+# protects it during the setup. After you make the admin, set this to false:
+# OIDC clients call Pocket ID from their servers, with no Pangolin session.
+pocket_id_setup_mode: false
+pocket_id_app_url: https://auth.buildwithcaleb.com
+pocket_id_trusted_proxies:
+  - "{{ pangolin_network_subnet }}"
 
 # Headplane serves only /admin. Traefik sends the root path there.
 pangolin_root_redirects:

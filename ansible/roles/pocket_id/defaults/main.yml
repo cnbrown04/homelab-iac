@@ -1,0 +1,11 @@
+---
+pocket_id_stack_root: /opt/stacks
+# The public URL, for example https://auth.example.com.
+pocket_id_app_url: ""
+# A base64 key of 32 bytes. Keep it in secrets.sops.yml. Pocket ID encrypts
+# its data with this key, so the data is lost without it.
+pocket_id_encryption_key: ""
+# The addresses of the reverse proxy.
+pocket_id_trusted_proxies: []
+pocket_id_user_id: 1000
+pocket_id_group_id: 1000

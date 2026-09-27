@@ -1,0 +1,37 @@
+---
+- name: Check the Pocket ID settings
+  ansible.builtin.assert:
+    that:
+      - pocket_id_app_url is match('^https://[^/]+$')
+      # 44 or more base64 characters hold 32 or more bytes. Do not use
+      # b64decode here: it decodes to text, and random bytes are not text.
+      - pocket_id_encryption_key is match('^[A-Za-z0-9+/]{43,}=*$')
+      - pocket_id_encryption_key | length >= 44
+      - pocket_id_trusted_proxies | length > 0
+    fail_msg: >-
+      Set the public URL with no path, the trusted proxies, and an encryption
+      key of 32 bytes or more in secrets.sops.yml.
+  no_log: true
+
+- name: Create the Pocket ID data directory
+  ansible.builtin.file:
+    path: "{{ pocket_id_stack_root }}/pocket-id/data"
+    state: directory
+    owner: "{{ pocket_id_user_id }}"
+    group: "{{ pocket_id_group_id }}"
+    mode: "0750"
+
+- name: Deploy the Pocket ID Compose stack
+  ansible.builtin.include_role:
+    name: compose_stack
+  vars:
+    compose_stack_name: pocket-id
+    compose_stack_source: "{{ playbook_dir }}/../stacks/pocket-id"
+    compose_stack_root: "{{ pocket_id_stack_root }}"
+    compose_stack_environment:
+      APP_URL: "{{ pocket_id_app_url }}"
+      ENCRYPTION_KEY: "{{ pocket_id_encryption_key }}"
+      TRUST_PROXY: "{{ pocket_id_trusted_proxies | join(',') }}"
+      PUID: "{{ pocket_id_user_id }}"
+      PGID: "{{ pocket_id_group_id }}"
+      ANALYTICS_DISABLED: "true"

@@ -1,0 +1,23 @@
+name: pocket-id
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v2.16.0
+    container_name: pocket-id
+    restart: unless-stopped
+    # Ansible writes .env. It holds APP_URL, TRUST_PROXY, and ENCRYPTION_KEY.
+    env_file: .env
+    # No published port. Traefik gets to Pocket ID on the pangolin network.
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+    networks:
+      - pangolin
+
+networks:
+  pangolin:
+    external: true
