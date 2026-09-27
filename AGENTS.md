@@ -114,10 +114,13 @@ configure a host over ad-hoc SSH after the pipeline exists.
 
 ### The hardware
 
-- The `pantheon` cluster: four Proxmox VE nodes with one API endpoint.
+- The `gaia` cluster: `gaia`, `hyperion`, `tartarus`, and `theia`, with one API
+  endpoint.
 - The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
 - A RackNerd VPS. The panel is SolusVM.
-- A DediRock VPS. The panel is vPanel. The owner tests this host now.
+- A DediRock VPS. The panel is vPanel. The owner plans to host external services
+  on it. Dockage is a preferred option, but the owner has not chosen a service
+  manager.
 
 ### Decisions
 
@@ -140,7 +143,8 @@ These decisions are closed. Ask the owner before you re-open one.
       defect as a self-hosted runner. The homelab goes down, the runner cannot
       join the mesh network, and the pipeline cannot repair the homelab.
 4. **Ansible manages both VPS hosts.** No OpenTofu provider exists for SolusVM
-   or for WHMCS and Virtualizor. Use plain SSH.
+   or for vPanel. Use plain SSH. DediRock is the planned host for services
+   outside the homelab. Assess Dockage or another service manager before setup.
 5. **The state is remote and encrypted.** Use an S3-compatible backend and the
    state encryption of OpenTofu.
 6. **SOPS and age encrypt the secrets.** Keep the pre-auth key for Headscale
