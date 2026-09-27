@@ -6,6 +6,18 @@ headscale_trusted_proxies: []
 headscale_acl_path: /etc/headscale/acl.hujson
 # Each name is a Headscale user. A user owns personal devices.
 headscale_users: []
+# MagicDNS gives each node the name <node>.<headscale_base_domain>. The base
+# domain must not be the host name of headscale_server_url, or a parent of it.
+headscale_magic_dns: false
+headscale_base_domain: ""
+
+# OIDC login for personal devices. Leave the issuer empty to turn it off. Keep
+# the client secret in secrets.sops.yml. Ansible writes it to a separate file,
+# because Headplane can read config.yaml.
+headscale_oidc_issuer: ""
+headscale_oidc_client_id: ""
+headscale_oidc_client_secret: ""
+headscale_oidc_secret_path: /etc/headscale/oidc_client_secret
 headscale_architecture_map:
   x86_64: amd64
   aarch64: arm64

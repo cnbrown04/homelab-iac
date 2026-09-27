@@ -70,8 +70,8 @@ Tailscale's public DERP relays.
       change. `docs/runbooks/inventory.md` holds the tailnet addresses.
 - [x] **C6. Create the pre-auth key for the pipeline.** The key is reusable
       and ephemeral, and it has the tag `tag:github-actions`. It is in the
-      GitHub secret `HEADSCALE_AUTHKEY`. Warning: the key expires on
-      26 December 2026. Make a new key and replace the secret before that date.
+      GitHub secret `HEADSCALE_AUTHKEY`. On 27 September 2026 the owner
+      replaced the first key (90 days) with a key of 3650 days. See task F3.
 - [x] **C7. Test the join from a runner.** Run 36350927486 of
       `.github/workflows/tailnet-check.yml` passed on 27 September 2026. Each
       node returned HTTP `200` on port `8006`, and the policy blocked port `22`.
@@ -81,6 +81,17 @@ Tailscale's public DERP relays.
       the Headscale configuration read-only, because Ansible owns that file.
       Headscale keeps its file route. See `docs/runbooks/hermes-edge.md`. The
       owner confirmed the login on 27 September 2026.
+- [ ] **C9. Turn on MagicDNS.** The owner chose the base domain
+      `vnet.buildwithcaleb.com` on 27 September 2026. Headscale refuses
+      `vpn.buildwithcaleb.com`, because that is the host name of the server.
+      The Proxmox nodes keep `--accept-dns=false`. A local test with
+      Headscale 0.29.3 passed `configtest`.
+- [ ] **C10. Log in personal devices with Pocket ID.** Headscale uses Pocket
+      ID through OIDC, with PKCE. Headscale starts when Pocket ID is down. A
+      local test with Headscale 0.29.3 and an issuer that did not answer
+      showed that Headscale started and `/health` returned `200`. Delete the
+      local user `caleb` after the first Pocket ID login. See
+      `docs/runbooks/hermes-edge.md`.
 
 ## E. Bootstrap `hermes`
 
@@ -128,10 +139,12 @@ upgrade to Headscale 0.30.
       does these steps. A test against Headscale 0.29.3 passed: a new key, no
       change on the next run, and a renewal of a key with 100 days left.
 - [ ] **F3. Give the pipeline a login that does not expire.**
-      - Now: replace the key in `HEADSCALE_AUTHKEY` before 26 December 2026.
-        Make a reusable, ephemeral key with `tag:github-actions` and an expiry
-        of 3650 days. The policy limits the key to port `8006` on
-        `tag:proxmox`.
+      - Done on 27 September 2026: the key in `HEADSCALE_AUTHKEY` is a
+        reusable, ephemeral key with `tag:github-actions`. It is key ID 3, and
+        it expires on 24 September 2036. The owner expired the old key (ID 2).
+        Run 36356366413 of `tailnet-check.yml` passed. Run 36356487526 passed
+        after the old key expired, so the secret holds the new key.
+        `docs/runbooks/pipeline-tailnet-key.md` holds the steps.
       - After the upgrade to Headscale 0.30: use an OAuth client. Run
         `headscale oauth-clients create --scope auth_keys --tag
         tag:github-actions`. An OAuth client has no expiry. Store

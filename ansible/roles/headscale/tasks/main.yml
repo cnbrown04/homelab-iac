@@ -8,9 +8,15 @@
       - ansible_facts['distribution'] | lower in ["debian", "ubuntu"]
       - ansible_facts['distribution_release'] | length > 0
       - ansible_facts['architecture'] in headscale_architecture_map
+      - not (headscale_magic_dns | bool) or headscale_base_domain is match('^[a-z0-9-]+([.][a-z0-9-]+)+$')
+      - headscale_oidc_issuer | length == 0 or headscale_oidc_issuer is match('^https://[^/]+$')
+      - headscale_oidc_issuer | length == 0 or headscale_oidc_client_id | length > 0
+      - headscale_oidc_issuer | length == 0 or headscale_oidc_client_secret | length > 0
     fail_msg: >-
       Set a supported OS, CPU architecture, pinned Headscale version, HTTPS
-      server URL, and private listener before you deploy Headscale.
+      server URL, and private listener before you deploy Headscale. With
+      MagicDNS, also set the base domain. With an OIDC issuer, also set the
+      client ID and the client secret.
 
 - name: Set the Headscale package architecture
   ansible.builtin.set_fact:
@@ -76,6 +82,17 @@
     to_port: "{{ headscale_listen_port_number }}"
     comment: Pangolin to Headscale
   when: headscale_proxy_subnet | length > 0
+
+- name: Write the OIDC client secret
+  ansible.builtin.copy:
+    content: "{{ headscale_oidc_client_secret }}"
+    dest: "{{ headscale_oidc_secret_path }}"
+    owner: root
+    group: headscale
+    mode: "0640"
+  no_log: true
+  when: headscale_oidc_issuer | length > 0
+  notify: Restart Headscale
 
 - name: Install the Headscale configuration
   ansible.builtin.template:

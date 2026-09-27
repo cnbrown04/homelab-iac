@@ -90,6 +90,39 @@ systemd override starts Headscale after `docker.service`.
 Warning: do step 4 immediately after step 2. Until you create the admin
 account, any person with the setup token can take control of the dashboard.
 
+## Personal devices
+
+A personal device, for example a desktop, logs in to the tailnet with Pocket
+ID. Headscale and Headplane share one OIDC client in Pocket ID, `VPN`, as the
+Headplane documentation recommends. The client has PKCE and two callback URLs:
+
+- `https://vpn.buildwithcaleb.com/oidc/callback` for Headscale.
+- `https://headplane.buildwithcaleb.com/admin/oidc/callback` for Headplane.
+
+The client ID and the client secret are `vpn_oidc_client_id` and
+`vpn_oidc_client_secret` in `secrets.sops.yml`. Ansible writes the secret to
+`/etc/headscale/oidc_client_secret`, and not to `config.yaml`, because
+Headplane can read `config.yaml`.
+
+A Pocket ID login makes a Headscale user with the Pocket ID username. That user
+is not the same as a local user with the same name.
+
+Headscale starts when Pocket ID is down (`only_start_if_oidc_is_available:
+false`). The tailnet and the pipeline do not need Pocket ID. If Pocket ID is
+down when Headscale starts, Headscale uses the CLI login until the next restart.
+Restart Headscale after Pocket ID is back:
+
+```sh
+sudo systemctl restart headscale
+```
+
+The CLI login works at all times. Run `tailscale login` on the device, then
+approve the device on `hermes`:
+
+```sh
+sudo headscale auth register --user <user> --auth-id <ID>
+```
+
 ## Headplane
 
 Headplane runs in Docker on the `pangolin` network. It uses the listener at
@@ -97,11 +130,9 @@ Headplane runs in Docker on the `pangolin` network. It uses the listener at
 
 Headplane has two logins:
 
-- **Pocket ID.** This is the normal login. The OIDC client in Pocket ID is
-  `Headplane`, with the callback URL
-  `https://headplane.buildwithcaleb.com/admin/oidc/callback` and PKCE. The
-  client ID and the client secret are in `secrets.sops.yml`. The first person
-  who logs in with OIDC becomes the owner in Headplane.
+- **Pocket ID.** This is the normal login. It uses the OIDC client `VPN`. See
+  "Personal devices". The first person who logs in with OIDC becomes the owner
+  in Headplane.
 - **A Headscale API key.** Use it when Pocket ID is down. Make a key on
   `hermes`:
 

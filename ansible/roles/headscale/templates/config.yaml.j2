@@ -36,7 +36,10 @@ policy:
   path: {{ headscale_acl_path | to_json }}
 
 dns:
-  magic_dns: false
+  magic_dns: {{ headscale_magic_dns | bool | to_json }}
+{% if headscale_magic_dns | bool %}
+  base_domain: {{ headscale_base_domain | to_json }}
+{% endif %}
   override_local_dns: false
   nameservers:
     global: []
@@ -46,6 +49,19 @@ log:
   level: info
   format: text
 
+{% if headscale_oidc_issuer | length > 0 %}
+oidc:
+  # Headscale starts when the OIDC provider is down. Only the browser login of
+  # a personal device waits for the provider.
+  only_start_if_oidc_is_available: false
+  issuer: {{ headscale_oidc_issuer | to_json }}
+  client_id: {{ headscale_oidc_client_id | to_json }}
+  client_secret_path: {{ headscale_oidc_secret_path | to_json }}
+  pkce:
+    enabled: true
+    method: S256
+
+{% endif %}
 unix_socket: /var/run/headscale/headscale.sock
 unix_socket_permission: "0770"
 

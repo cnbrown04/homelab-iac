@@ -15,6 +15,12 @@ last checked on 21 September 2026.
 | `theia` | `10.0.1.131` | `100.64.0.1` | cluster node | `pantheon` | 9.2.20 | 7.0.14-19-pve |
 | `atlas` | `10.0.1.124` | `100.64.0.3` | standalone node | none | 9.2.20 | 7.0.14-17-pve |
 
+Headscale gives each tailnet node a MagicDNS name,
+`<hostname>.vnet.buildwithcaleb.com`, for example
+`gaia.vnet.buildwithcaleb.com`. The Proxmox nodes join with
+`--accept-dns=false`, so the nodes do not use MagicDNS. Other devices on the
+tailnet use it.
+
 The full version string is `pve-manager/9.2.20/49318c671b82f31e`. The owner
 confirmed this version on `gaia` and `theia` on 26 September 2026.
 
