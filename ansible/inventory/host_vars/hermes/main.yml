@@ -56,9 +56,11 @@ pangolin_blueprint_resources:
           port: 1411
 
 headplane_base_url: https://headplane.buildwithcaleb.com
-# Log in to Headplane with Pocket ID. secrets.sops.yml holds the client ID and
-# the client secret.
+# Log in to Headplane with Pocket ID. Headplane and Headscale share the Pocket
+# ID client "VPN". secrets.sops.yml holds its ID and secret.
 headplane_oidc_issuer: "{{ pocket_id_app_url }}"
+headplane_oidc_client_id: "{{ vpn_oidc_client_id }}"
+headplane_oidc_client_secret: "{{ vpn_oidc_client_secret }}"
 
 # Pocket ID is the SSO provider. It is always a Pangolin resource. The first
 # person who opens its setup page becomes the admin, so the Pangolin login
@@ -83,5 +85,14 @@ headscale_listen_port: 8085
 headscale_listen_addr: "{{ pangolin_network_gateway }}:{{ headscale_listen_port }}"
 headscale_trusted_proxies:
   - "{{ pangolin_network_subnet }}"
-headscale_users:
-  - caleb
+# Personal devices log in with Pocket ID, so no local user is necessary. A
+# Pocket ID login makes its own Headscale user. The client is "VPN", the same
+# client as Headplane.
+headscale_users: []
+headscale_oidc_issuer: "{{ pocket_id_app_url }}"
+headscale_oidc_client_id: "{{ vpn_oidc_client_id }}"
+headscale_oidc_client_secret: "{{ vpn_oidc_client_secret }}"
+# Each node gets the name <node>.vnet.buildwithcaleb.com. The owner chose
+# this on 27 September 2026.
+headscale_magic_dns: true
+headscale_base_domain: vnet.buildwithcaleb.com
