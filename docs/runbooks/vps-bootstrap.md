@@ -21,15 +21,18 @@ services. See `AGENTS.md`, decision 2.
    ssh root@<the address of the host>
    ```
 
-2. Run the script on the host. It comes from the repository, so you copy no
-   file.
+2. Download the script to a file, read it, then run it. This method keeps the
+   script input separate from the terminal input for whiptail.
 
    ```sh
-   curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh | sudo bash
+   curl -fsSLo /tmp/vps-harden.sh https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh
+   less /tmp/vps-harden.sh
+   bash /tmp/vps-harden.sh
    ```
 
-   Caution: use `bash` and not `sh`. On Debian, `sh` is dash, and dash does not
-   have the syntax of bash. The script stops with a message if you use `sh`.
+   Caution: run `bash` as root, and not `sh`. On Debian, `sh` is dash, and dash
+   does not have the syntax of bash. The script stops with a message if you use
+   `sh`.
 
 3. Answer each question. The script makes no change before the box "Confirm".
 
@@ -41,11 +44,12 @@ services. See `AGENTS.md`, decision 2.
    sudo -v
    ```
 
-5. The test passed? Close the old port in the firewall.
+5. If you changed the SSH port, and the test passed, close the old port in the
+   firewall. If the port stayed the same, keep its UFW rule.
 
    ```sh
-   sudo ufw delete limit 22/tcp
-   sudo ufw status numbered
+   ufw delete limit <the old SSH port>/tcp
+   ufw status numbered
    ```
 
 6. The test failed? Use the first session to correct the host. The file
@@ -98,7 +102,8 @@ Caution: the URL names the branch `main`. The content of the branch changes. Use
 a tag for a host that needs the same script each time:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/v1.0.0/scripts/vps-harden.sh | sudo bash
+curl -fsSLo /tmp/vps-harden.sh https://raw.githubusercontent.com/cnbrown04/homelab-iac/v1.0.0/scripts/vps-harden.sh
+bash /tmp/vps-harden.sh
 ```
 
 ## Notes

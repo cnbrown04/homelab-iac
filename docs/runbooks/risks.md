@@ -76,9 +76,9 @@ correct for this host.
 
 The DediRock VPS uses vPanel, and not WHMCS with Virtualizor. The handoff was
 wrong for this host. The owner plans to use it for services outside the homelab.
-The owner says the host still needs hardening. Dockage is preferred, but the
-service manager is not chosen. Harden the host before service setup. Confirm the
-needed ports before you turn on UFW.
+The owner confirmed that the host is hardened on 26 September 2026. Dockage is
+preferred, but the service manager is not chosen. Decide on the service manager
+before service setup.
 
 ## 7. The import of the resources that exist — open
 

@@ -71,9 +71,8 @@ the homelab.
       already hardened. Do not run `scripts/vps-harden.sh` on it again.
 - [ ] **E4. Make an Ansible role from the script.** Ansible owns the host after
       the bootstrap. The role keeps the same configuration.
-- [ ] **E5. Harden the DediRock VPS.** Confirm its SSH access and required ports
-      before you run the script. The owner does this task. Do not run the script
-      on RackNerd again.
+- [x] **E5. Harden the DediRock VPS.** The owner confirmed setup on 26 September
+      2026. Do not run the script on RackNerd again.
 
 ## D. The rest of the build order
 

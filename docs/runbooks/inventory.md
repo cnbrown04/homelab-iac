@@ -30,7 +30,7 @@ The cluster now has no recorded workloads.
 | Host | Panel | Status |
 | --- | --- | --- |
 | RackNerd VPS | SolusVM, with the name NerdVM | in use; already hardened |
-| DediRock VPS | vPanel | needs hardening; planned host for services outside the homelab |
+| DediRock VPS | vPanel | hardened; planned host for services outside the homelab |
 
 ## The workloads
 

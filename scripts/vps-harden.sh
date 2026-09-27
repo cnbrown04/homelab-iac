@@ -41,6 +41,7 @@ TRUSTED_IP=""
 TASKS=""
 RESULTS=""
 TUI_RESULT=""
+SSH_ALLOWED_USER=""
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -384,6 +385,7 @@ Run the script again, and select the task 'user'."
 "The user ${allow_user} has no key in authorized_keys.
 
 The script stops, because a change to SSH now locks you out."
+  SSH_ALLOWED_USER="${allow_user}"
 
   # Open the new port in the firewall first. The reverse order locks you out.
   if has_task ufw && command -v ufw > /dev/null 2>&1; then
@@ -576,7 +578,15 @@ EOF
 
 show_results() {
   local port="${NEW_SSH_PORT:-${SSH_PORT}}"
-  local user="${ADMIN_USER:-<your user>}"
+  local user="${ADMIN_USER:-${SSH_ALLOWED_USER:-<your user>}}"
+  local firewall_note="The script did not change UFW."
+
+  if has_task ufw; then
+    firewall_note="Keep the UFW rule for port ${port}/tcp."
+    if [[ -n "${NEW_SSH_PORT}" && "${NEW_SSH_PORT}" != "${SSH_PORT}" ]]; then
+      firewall_note="After the test passes, delete the old rule: ufw delete limit ${SSH_PORT}/tcp"
+    fi
+  fi
 
   tui --title "The result" --msgbox \
 "${RESULTS}
@@ -587,9 +597,7 @@ Open a second terminal and test the new session now:
   ssh -p ${port} ${user}@<the address of the host>
 
 The test failed? Use this session to correct the host.
-The test passed? Delete the old port from UFW:
-
-  ufw delete limit ${SSH_PORT}/tcp
+${firewall_note}
 
 The log is ${LOG_FILE}." 26 76
 }
