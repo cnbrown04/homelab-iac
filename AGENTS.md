@@ -114,8 +114,8 @@ configure a host over ad-hoc SSH after the pipeline exists.
 
 ### The hardware
 
-- The `gaia` cluster: `gaia`, `hyperion`, `tartarus`, and `theia`, with one API
-  endpoint.
+- The `pantheon` cluster: `gaia`, `hyperion`, `tartarus`, and `theia`, with one
+  API endpoint.
 - The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
 - A RackNerd VPS. The panel is SolusVM.
 - A DediRock VPS. The panel is vPanel. The owner plans to host external services
@@ -163,8 +163,8 @@ tofu/
     vm/              # one Proxmox VM, written one time
     lxc/             # one Proxmox container, written one time
   targets/
-    pve-cluster/     # four nodes, one API endpoint, one state
-    pve-standalone/  # one node, its own API endpoint, its own state
+    pantheon/        # four nodes, one API endpoint, one state
+    atlas/           # one node, its own API endpoint, its own state
 ansible/
   inventory/         # one file for each target, and both VPS hosts
   group_vars/
@@ -196,10 +196,10 @@ the plan job needs the mesh network to reach the Proxmox API.
 4. Set up Headscale on the RackNerd VPS: the server, a name in DNS, a
    certificate for TLS, a tag for GitHub Actions, a policy rule for the Proxmox
    API port, and a pre-auth key in a GitHub secret. Join each Proxmox node.
-5. Write the `vm` module and the `lxc` module. Write the `pve-standalone`
-   target. Import each resource that exists into the state. The step is
+5. Write the `vm` module and the `lxc` module. Write the `atlas` target. Import
+   each resource that exists into the state. The step is
    complete when `tofu plan` shows no change.
-6. Do step 5 again for `pve-cluster`.
+6. Do step 5 again for `pantheon`.
 7. Write the Ansible baseline for the five Proxmox nodes and the two VPS hosts.
    The step is complete when `ansible-playbook --check` shows no change.
 8. Add the workflows with a matrix over the targets. Turn on the PR checks,

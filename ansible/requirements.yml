@@ -1,0 +1,4 @@
+# Check compatibility with ansible-core and ansible-lint before a version bump.
+collections:
+  - name: community.proxmox
+    version: 1.6.0

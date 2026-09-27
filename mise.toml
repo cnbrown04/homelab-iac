@@ -6,7 +6,7 @@
 # Versions are pinned exactly and bumped by Renovate, not by hand.
 
 [tools]
-# Creates and changes Proxmox resources. See CLAUDE.md, decision 1.
+# Creates and changes Proxmox resources. See AGENTS.md, section 4, decision 1.
 opentofu = "1.12.6"
 
 # Configures hosts that are already running. Collections live in
@@ -14,11 +14,11 @@ opentofu = "1.12.6"
 python = "3.14.7"
 ansible-core = "2.21.4"
 
-# Lints the Ansible content on every PR. Ships its own ansible-core copy;
-# see the pin comment in ansible/requirements.yml before bumping it.
+# Lints the Ansible content on every PR. Check collection compatibility in
+# ansible/requirements.yml before a version bump.
 "pypi:ansible-lint" = "26.8.0"
 
-# Secret encryption. See CLAUDE.md, decision 6.
+# Secret encryption. See AGENTS.md, section 4, decision 6.
 sops = "3.13.3"
 age = "1.3.2"
 
