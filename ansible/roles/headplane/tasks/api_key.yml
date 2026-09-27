@@ -12,6 +12,8 @@
     cmd: headscale apikeys list -o json
   register: headplane_api_key_list
   changed_when: false
+  # The task only reads, so it also runs in check mode.
+  check_mode: false
 
 # The list shows each key as a prefix, for example "hskey-api-abc-***". The
 # key in the file starts with the same text, without "-***". A template with
