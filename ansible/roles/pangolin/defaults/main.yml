@@ -12,3 +12,7 @@ pangolin_badger_version: v1.7.0
 # Traefik sends this host name to Headscale. Leave it empty to add no route.
 pangolin_headscale_domain: "{{ headscale_server_url | default('') | urlsplit('hostname') if headscale_server_url | default('') | length > 0 else '' }}"
 pangolin_headscale_upstream: "http://{{ headscale_listen_addr | default('') }}"
+
+# Each item sends the root path of a host name to another path, for example
+# {host: app.example.com, path: /admin/}.
+pangolin_root_redirects: []
