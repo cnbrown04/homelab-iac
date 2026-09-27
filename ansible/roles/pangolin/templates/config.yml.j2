@@ -26,3 +26,6 @@ flags:
     disable_signup_without_invite: true
     disable_user_create_org: false
     allow_raw_resources: true
+    # The API listens on port 3003 in the pangolin network only. Traefik has no
+    # route to it. Ansible uses it to apply blueprints.
+    enable_integration_api: true

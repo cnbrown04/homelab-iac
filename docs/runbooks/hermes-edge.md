@@ -9,7 +9,7 @@ C1 in `docs/todo.md`. Ansible deploys each part.
 | --- | --- | --- |
 | `pangolin.buildwithcaleb.com` | The Pangolin dashboard | Pangolin |
 | `vpn.buildwithcaleb.com` | Headscale | none |
-| `vpn.buildwithcaleb.com/admin` | Headplane | a Headscale API key |
+| `headplane.buildwithcaleb.com` | Headplane | Pangolin, then a Headscale API key |
 
 Two `A` records point to `192.255.220.7`: `buildwithcaleb.com` and
 `*.buildwithcaleb.com`. The wildcard record covers each name in the table and
@@ -23,19 +23,32 @@ each new Pangolin resource. The owner made the records on 27 September 2026.
 3. Traefik sends `vpn.buildwithcaleb.com` to `http://10.200.0.1:8085`.
 4. Headscale runs as a system service, and it listens on `10.200.0.1:8085`.
 
-Traefik sends the path `/admin` on `vpn.buildwithcaleb.com` to the Headplane
-container, on the `pangolin` network. Headplane uses the same listener at
-`10.200.0.1:8085` for the Headscale API.
-
 The address `10.200.0.1` is the gateway of the Docker network `pangolin`. The
 network has the fixed subnet `10.200.0.0/24`. The address is not public.
 
-The route for Headscale is in the file configuration of Traefik, and not in
-the Pangolin database. Ansible writes it. Do not make a Pangolin resource for
-`vpn.buildwithcaleb.com`.
+## Two kinds of route
+
+Traefik gets routes from two sources:
+
+- **The file configuration.** Ansible writes it from the repository. Traefik
+  serves these routes when the Pangolin app is down. The Pangolin UI does not
+  show them.
+- **The Pangolin database.** The UI shows these resources. Ansible creates them
+  with a blueprint. Traefik sends each request through the badger middleware,
+  and badger asks the Pangolin app to verify the request. When the Pangolin
+  app is down, badger returns HTTP `500`.
+
+Headscale uses the file configuration. Warning: do not make a Pangolin resource
+for `vpn.buildwithcaleb.com`. The control server must not depend on the
+Pangolin app. See decision 3 in `AGENTS.md`.
 
 Headscale has no Pangolin login. A Tailscale client cannot complete a browser
 login. Headscale does its own authentication with node keys.
+
+Headplane is a Pangolin resource on the local site. The owner chose this split
+on 27 September 2026. The blueprint is `pangolin_blueprint_resources` in
+`ansible/inventory/host_vars/hermes/main.yml`. Change a resource there, and not
+in the UI, because the next apply replaces the change.
 
 ## The firewall
 
@@ -76,7 +89,9 @@ account, any person with the setup token can take control of the dashboard.
 
 ## Headplane
 
-Headplane asks for a Headscale API key at login. Make a key on `hermes`:
+Headplane runs in Docker on the `pangolin` network. It uses the listener at
+`10.200.0.1:8085` for the Headscale API. Pangolin asks for its login first, and
+then Headplane asks for a Headscale API key. Make a key on `hermes`:
 
 ```sh
 sudo headscale apikeys create --expiration 90d
@@ -86,8 +101,39 @@ Headplane can read the Headscale configuration, but it cannot change it. Ansible
 owns that file and the policy file. Make a change in the repository, and deploy
 it with `playbooks/headscale.yml`.
 
+## The Enterprise Edition
+
+Pangolin runs the Enterprise Edition image, `fosrl/pangolin:ee-<version>`. The
+Community Edition and the Enterprise Edition use the same database, so the
+change needs no migration. The Enterprise features stay locked until you
+activate a license key. The key is free for personal use.
+
+1. Get a free license key from Pangolin.
+2. Open `https://pangolin.buildwithcaleb.com/admin/license`, and enter the key.
+
+The license key is in the Pangolin database, and not in the repository.
+
+## The blueprint setup
+
+Do these steps one time. Ansible needs three values from Pangolin.
+
+1. Open **Sites**, and add a site of the type **Local**. Record its identifier.
+2. Open **API Keys** in the organization. Make a key with the permission
+   **Apply Blueprint**. Record the key.
+3. Record the ID of the organization. The dashboard URL shows it.
+4. Put the site identifier and the organization ID in
+   `ansible/inventory/host_vars/hermes/main.yml`.
+5. Put the key in `secrets.sops.yml` as `pangolin_blueprint_api_key`.
+6. Run `ansible-playbook --diff playbooks/pangolin_resources.yml -K`.
+
+Ansible keeps the last applied blueprint in
+`/opt/stacks/pangolin/blueprint.json`. It applies the blueprint only after a
+change. Delete that file to apply the blueprint again.
+
 ## Sources
 
 - [Pangolin manual install with Docker Compose](https://docs.pangolin.net/self-host/manual/docker-compose)
 - [Headscale behind a reverse proxy](https://headscale.net/stable/ref/integration/reverse-proxy/)
 - [Headplane Docker install](https://headplane.net/install/docker)
+- [Pangolin blueprints](https://docs.pangolin.net/manage/blueprints)
+- [Pangolin integration API](https://docs.pangolin.net/self-host/advanced/integration-api)

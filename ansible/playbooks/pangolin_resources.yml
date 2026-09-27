@@ -1,0 +1,5 @@
+---
+- name: Apply the Pangolin resources on hermes
+  hosts: hermes
+  roles:
+    - role: pangolin_blueprint

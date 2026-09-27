@@ -2,7 +2,7 @@
 server:
   host: "0.0.0.0"
   port: 3000
-  base_url: {{ headplane_public_url | to_json }}
+  base_url: {{ headplane_base_url | to_json }}
   cookie_secret: {{ headplane_cookie_secret | to_json }}
   cookie_secure: true
   data_path: "/var/lib/headplane"

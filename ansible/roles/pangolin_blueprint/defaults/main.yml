@@ -1,0 +1,10 @@
+---
+pangolin_blueprint_stack_root: /opt/stacks
+# The ID of the Pangolin organization. The dashboard URL shows it.
+pangolin_blueprint_org_id: ""
+# An organization API key with the "Apply Blueprint" permission, in the
+# form <key ID>.<secret>. Keep it in secrets.sops.yml.
+pangolin_blueprint_api_key: ""
+# The blueprint, as data. See https://docs.pangolin.net/manage/blueprints.
+pangolin_blueprint_resources: {}
+pangolin_blueprint_integration_port: 3003

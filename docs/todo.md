@@ -53,6 +53,10 @@ Tailscale's public DERP relays.
 - [x] **C1.1. Deploy Pangolin.** The owner deployed Pangolin and created the
       admin account on 27 September 2026. The dashboard has a valid
       Let's Encrypt certificate.
+- [ ] **C1.2. Change Pangolin to the Enterprise Edition.** The owner chose
+      this on 27 September 2026. The image is `fosrl/pangolin:ee-<version>`.
+      The Enterprise Edition is free for personal use, but it needs a license
+      key. Activate the key at `/admin/license` on the dashboard.
 - [x] **C2. Deploy Headscale.** Ansible installed Headscale 0.29.3 on
       27 September 2026. `https://vpn.buildwithcaleb.com/health` returned
       `200`, and the certificate is valid.
@@ -73,10 +77,10 @@ Tailscale's public DERP relays.
       `.github/workflows/tailnet-check.yml` passed on 27 September 2026. Each
       node returned HTTP `200` on port `8006`, and the policy blocked port `22`.
 - [ ] **C8. Install the Headplane admin interface.** The `headplane` role
-      runs Headplane 0.7.1 in Docker at `https://vpn.buildwithcaleb.com/admin`.
-      It mounts the Headscale configuration read-only, because Ansible owns
-      that file. The owner chose this on 27 September 2026. Change the
-      Headscale configuration and policy in the repository, not in the UI.
+      runs Headplane 0.7.1 in Docker. A Pangolin blueprint publishes it at
+      `https://headplane.buildwithcaleb.com` with the Pangolin login. It mounts
+      the Headscale configuration read-only, because Ansible owns that file.
+      Headscale keeps its file route. See `docs/runbooks/hermes-edge.md`.
 
 ## E. Bootstrap `hermes`
 

@@ -1,0 +1,68 @@
+---
+- name: Check the blueprint settings
+  ansible.builtin.assert:
+    that:
+      - pangolin_blueprint_org_id | length > 0
+      - pangolin_blueprint_api_key is match('^[^.]+[.][^.]+$')
+      - pangolin_blueprint_resources is mapping
+      - pangolin_blueprint_resources | length > 0
+    fail_msg: >-
+      Set pangolin_blueprint_org_id, the blueprint, and pangolin_blueprint_api_key in
+      secrets.sops.yml. See docs/runbooks/hermes-edge.md.
+  no_log: true
+
+# The integration API has no published port. Ansible uses the address of the
+# Pangolin container on the pangolin network.
+- name: Read the Pangolin container
+  community.docker.docker_container_info:
+    name: pangolin
+  register: pangolin_blueprint_container
+
+- name: Set the URL of the integration API
+  ansible.builtin.set_fact:
+    pangolin_blueprint_api_url: >-
+      http://{{ pangolin_blueprint_container.container.NetworkSettings.Networks.pangolin.IPAddress
+      }}:{{ pangolin_blueprint_integration_port }}/v1
+
+# Ansible keeps the last blueprint that Pangolin accepted. It applies the
+# blueprint again only after a change.
+- name: Write the blueprint
+  ansible.builtin.copy:
+    content: "{{ pangolin_blueprint_resources | to_nice_json }}\n"
+    dest: "{{ pangolin_blueprint_stack_root }}/pangolin/blueprint.json"
+    owner: root
+    group: root
+    mode: "0600"
+  register: pangolin_blueprint_file
+
+# A handler cannot use rescue, and the rescue keeps a failed apply visible.
+- name: Apply the blueprint  # noqa: no-handler
+  when: pangolin_blueprint_file is changed
+  block:
+    - name: Send the blueprint to the integration API
+      ansible.builtin.uri:
+        url: "{{ pangolin_blueprint_api_url }}/org/{{ pangolin_blueprint_org_id }}/blueprint"
+        method: PUT
+        headers:
+          Authorization: "Bearer {{ pangolin_blueprint_api_key }}"
+        body_format: json
+        body:
+          blueprint: "{{ pangolin_blueprint_resources | to_json | b64encode }}"
+        status_code: 200
+      register: pangolin_blueprint_result
+      changed_when: true
+      no_log: true
+
+  rescue:
+    # A failed apply must not look like a success on the next run.
+    - name: Delete the blueprint file after a failure
+      ansible.builtin.file:
+        path: "{{ pangolin_blueprint_stack_root }}/pangolin/blueprint.json"
+        state: absent
+
+    - name: Stop after a failed apply
+      ansible.builtin.fail:
+        msg: >-
+          Pangolin did not accept the blueprint: HTTP
+          {{ pangolin_blueprint_result.status | default('unknown') }},
+          {{ pangolin_blueprint_result.json.message | default(pangolin_blueprint_result.msg | default('no message')) }}
