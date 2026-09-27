@@ -1,0 +1,54 @@
+---
+- name: Check the Compose stack inputs
+  ansible.builtin.assert:
+    that:
+      - compose_stack_name is defined
+      - compose_stack_name is match('^[a-z0-9][a-z0-9_-]*$')
+      - compose_stack_source is defined
+      - compose_stack_source is directory
+    fail_msg: "Set a valid stack name and a local Compose stack directory."
+
+- name: Create the Compose stack directory
+  ansible.builtin.file:
+    path: "{{ compose_stack_root }}/{{ compose_stack_name }}"
+    state: directory
+    owner: "{{ compose_stack_owner }}"
+    group: "{{ compose_stack_group }}"
+    mode: "0750"
+
+- name: Copy the Compose stack files
+  ansible.builtin.copy:
+    src: "{{ compose_stack_source }}/"
+    dest: "{{ compose_stack_root }}/{{ compose_stack_name }}/"
+    owner: "{{ compose_stack_owner }}"
+    group: "{{ compose_stack_group }}"
+    directory_mode: "0750"
+    mode: "0640"
+
+- name: Check the Compose stack environment
+  ansible.builtin.assert:
+    that:
+      - compose_stack_environment is mapping
+    fail_msg: "Set compose_stack_environment to a key-value map."
+
+- name: Write the Compose stack environment file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ compose_stack_root }}/{{ compose_stack_name }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  when: compose_stack_environment | length > 0
+  no_log: true
+
+- name: Delete an unused Compose stack environment file
+  ansible.builtin.file:
+    path: "{{ compose_stack_root }}/{{ compose_stack_name }}/.env"
+    state: absent
+  when: compose_stack_environment | length == 0
+
+- name: Deploy the Compose stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ compose_stack_root }}/{{ compose_stack_name }}"
+    state: present
+    pull: missing

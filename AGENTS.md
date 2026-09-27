@@ -117,10 +117,11 @@ configure a host over ad-hoc SSH after the pipeline exists.
 - The `pantheon` cluster: `gaia`, `hyperion`, `tartarus`, and `theia`, with one
   API endpoint.
 - The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
-- A RackNerd VPS. The panel is SolusVM.
-- A DediRock VPS. The panel is vPanel. The owner plans to host external services
-  on it. Dockage is a preferred option, but the owner has not chosen a service
-  manager.
+- The `hermes` host. The panel is vPanel. The owner plans to run external
+  services and Headscale on it. Ansible deploys Dockhand and all Compose stacks.
+
+Always refer to a machine by its hostname. Do not use its provider name as its
+name.
 
 `docs/runbooks/inventory.md` holds the name, the version, and the workload of
 each host. It is the only correct source for those facts.
@@ -141,13 +142,16 @@ These decisions are closed. Ask the owner before you re-open one.
    1. **Headscale is the control server, and not Tailscale.** The owner made
       this change on 21 September 2026. Headscale is an open-source control
       server for a Tailscale client. The client software stays the same.
-   2. **Headscale runs on the RackNerd VPS.** Warning: the control server must
+   2. **Headscale runs on `hermes`.** Warning: the control server must
       stay out of the homelab. A control server in the homelab has the same
       defect as a self-hosted runner. The homelab goes down, the runner cannot
       join the mesh network, and the pipeline cannot repair the homelab.
-4. **Ansible manages both VPS hosts.** No OpenTofu provider exists for SolusVM
-   or for vPanel. Use plain SSH. DediRock is the planned host for services
-   outside the homelab. Assess Dockage or another service manager before setup.
+   3. **Use Tailscale's public DERP relays.** The owner chose this on
+      27 September 2026. DERP does not use the Headscale DNS name.
+4. **Ansible manages `hermes`.** No OpenTofu provider exists for vPanel. Use
+   plain SSH. Ansible configures host services and deploys Dockhand and every
+   Docker Compose stack. Dockhand does not deploy stacks by hand.
+   The owner accepts Dockhand's BSL 1.1 license for personal homelab use.
 5. **The state is remote and encrypted.** Use an S3-compatible backend and the
    state encryption of OpenTofu.
 6. **SOPS and age encrypt the secrets.** Keep the pre-auth key for Headscale
@@ -169,7 +173,7 @@ tofu/
     pantheon/        # four nodes, one API endpoint, one state
     atlas/           # one node, its own API endpoint, its own state
 ansible/
-  inventory/         # one file for each target, and both VPS hosts
+  inventory/         # one file for each target and `hermes`
   group_vars/
   roles/
   playbooks/
@@ -198,14 +202,15 @@ the plan job needs the mesh network to reach the Proxmox API.
    `docs/runbooks/risks.md`. Use that runbook for the current risk status.
 2. Scaffold the layout. Pin the tool versions. Add Renovate.
 3. Set up the remote state backend, the state encryption, and SOPS with age.
-4. Set up Headscale on the RackNerd VPS: the server, a name in DNS, a
-   certificate for TLS, a tag for GitHub Actions, a policy rule for the Proxmox
-   API port, and a pre-auth key in a GitHub secret. Join each Proxmox node.
+4. Scaffold the Ansible inventory and roles for `hermes`. Use Ansible to
+   install Headscale, Docker, and Dockhand. Set up Headscale on `hermes`: a
+   public DNS name, TLS, a tag for GitHub Actions, and a policy rule for the
+   Proxmox API port. Use Tailscale's public DERP relays. Join each Proxmox node.
 5. Write the `vm` module and the `lxc` module. Write the `atlas` target. Import
    each resource that exists into the state. The step is
    complete when `tofu plan` shows no change.
 6. Do step 5 again for `pantheon`.
-7. Write the Ansible baseline for the five Proxmox nodes and the two VPS hosts.
+7. Complete the Ansible baseline for the five Proxmox nodes and `hermes`.
    The step is complete when `ansible-playbook --check` shows no change.
 8. Add the workflows with a matrix over the targets. Turn on the PR checks,
    then the apply job. The step is complete when a merged change applies with

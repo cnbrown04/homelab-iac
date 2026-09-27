@@ -1,7 +1,6 @@
-# The bootstrap of a VPS
+# The bootstrap of `hermes`
 
-This runbook protects a new VPS. Do it one time for each host, before Ansible
-takes control.
+This runbook protects `hermes` one time, before Ansible takes control.
 
 Warning: this is a manual step, and it stays manual. A new host has no admin
 user and no key, so the pipeline cannot reach it. After the bootstrap, Ansible
@@ -10,7 +9,7 @@ services. See `AGENTS.md`, decision 2.
 
 ## What you need
 
-- The address of the host, and the password of root from the panel.
+- The root password for `hermes` from the control panel.
 - Your public SSH key, on the machine in front of you.
 
 ## The steps
@@ -18,14 +17,14 @@ services. See `AGENTS.md`, decision 2.
 1. Log in as root with the password from the panel.
 
    ```sh
-   ssh root@<the address of the host>
+   ssh root@192.255.220.7
    ```
 
 2. Download the script to a file, read it, then run it. This method keeps the
    script input separate from the terminal input for whiptail.
 
    ```sh
-   curl -fsSLo /tmp/vps-harden.sh https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh
+    curl -fsSLo /tmp/vps-harden.sh https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh
    less /tmp/vps-harden.sh
    bash /tmp/vps-harden.sh
    ```
@@ -40,7 +39,7 @@ services. See `AGENTS.md`, decision 2.
    new user.
 
    ```sh
-   ssh -p <the port> <the admin user>@<the address of the host>
+    ssh -p 22 caleb@192.255.220.7
    sudo -v
    ```
 

@@ -1,0 +1,97 @@
+# Ansible writes this file. Traefik reads it again after each change.
+http:
+  middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+  routers:
+    main-app-router-redirect:
+      rule: "Host(`{{ pangolin_dashboard_domain }}`)"
+      service: next-service
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+        - badger
+
+    next-router:
+      rule: "Host(`{{ pangolin_dashboard_domain }}`) && !PathPrefix(`/api/v1`)"
+      service: next-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    api-router:
+      rule: "Host(`{{ pangolin_dashboard_domain }}`) && PathPrefix(`/api/v1`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    ws-router:
+      rule: "Host(`{{ pangolin_dashboard_domain }}`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+{% if pangolin_headscale_domain | length > 0 %}
+
+    # Headscale has no Pangolin login. A Tailscale client cannot complete a
+    # browser login, and Headscale does its own authentication.
+    headscale-router-redirect:
+      rule: "Host(`{{ pangolin_headscale_domain }}`)"
+      service: headscale-service
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+
+    headscale-router:
+      rule: "Host(`{{ pangolin_headscale_domain }}`)"
+      service: headscale-service
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+{% endif %}
+
+  services:
+    next-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3002"
+
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3000"
+{% if pangolin_headscale_domain | length > 0 %}
+
+    headscale-service:
+      loadBalancer:
+        servers:
+          - url: {{ pangolin_headscale_upstream | to_json }}
+{% endif %}
+
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2

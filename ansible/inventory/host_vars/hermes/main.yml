@@ -1,0 +1,26 @@
+---
+# The stack roles and stacks.yml share these values.
+compose_stack_root: /opt/stacks
+dockhand_data_dir: /opt/dockhand
+dockhand_user_id: 1000
+dockhand_group_id: 1000
+
+hermes_compose_stacks: []
+hermes_compose_stack_environment: {}
+
+# Pangolin. secrets.sops.yml holds pangolin_server_secret.
+pangolin_base_domain: buildwithcaleb.com
+pangolin_dashboard_domain: pangolin.buildwithcaleb.com
+pangolin_acme_email: ""
+pangolin_network_subnet: 10.200.0.0/24
+pangolin_network_gateway: 10.200.0.1
+
+# Headscale. Traefik in the Pangolin stack sends vpn.buildwithcaleb.com to the
+# listener on the gateway of the Pangolin network.
+# renovate: datasource=github-releases depName=juanfont/headscale extractVersion=^v(?<version>.+)$
+headscale_version: 0.29.3
+headscale_server_url: https://vpn.buildwithcaleb.com
+headscale_listen_port: 8085
+headscale_listen_addr: "{{ pangolin_network_gateway }}:{{ headscale_listen_port }}"
+headscale_trusted_proxies:
+  - "{{ pangolin_network_subnet }}"

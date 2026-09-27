@@ -1,0 +1,15 @@
+---
+- name: Configure hermes
+  hosts: hermes
+  roles:
+    - role: common
+    - role: fail2ban
+      tags: [security]
+    - role: crowdsec
+      tags: [security]
+    - role: docker
+      tags: [docker]
+    - role: dockhand
+      tags: [dockhand]
+    - role: pangolin
+      tags: [pangolin]

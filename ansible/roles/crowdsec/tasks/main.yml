@@ -1,0 +1,17 @@
+---
+- name: Install CrowdSec and its firewall bouncer
+  ansible.builtin.apt:
+    name: "{{ crowdsec_packages }}"
+    state: present
+
+- name: Start and enable CrowdSec
+  ansible.builtin.systemd_service:
+    name: crowdsec
+    enabled: true
+    state: started
+
+- name: Start and enable the CrowdSec firewall bouncer
+  ansible.builtin.systemd_service:
+    name: crowdsec-firewall-bouncer
+    enabled: true
+    state: started

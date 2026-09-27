@@ -1,0 +1,5 @@
+---
+- name: Configure Headscale on hermes
+  hosts: hermes
+  roles:
+    - role: headscale

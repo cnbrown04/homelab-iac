@@ -53,7 +53,7 @@ before task C6. Do not set the action's `tags` input; the Headscale key supplies
 the tag.
 
 The method is confirmed. Test a GitHub Actions job that reaches the Proxmox API
-in task C7.
+in task C7. The owner chose Tailscale's public DERP relays on 27 September 2026.
 
 Sources:
 
@@ -61,13 +61,14 @@ Sources:
 - [Headscale node registration](https://headscale.net/stable/ref/registration/)
 - [Headscale pre-auth key flags](https://github.com/juanfont/headscale/blob/main/cmd/headscale/cli/preauthkeys.go)
 
-### New risk: the port on the RackNerd VPS
+### The public port on `hermes` — closed
 
-Headscale needs a public name in DNS and a certificate for TLS. The RackNerd VPS
-runs Pangolin, and Pangolin uses port 443. A conflict is possible.
+Headscale needs a public DNS name and TLS. Pangolin uses port 443 on `hermes`.
+Traefik in the Pangolin stack terminates TLS for `vpn.buildwithcaleb.com`, and
+it sends the traffic to Headscale on a private address. Tailscale manages the
+public DERP relay names; they do not use the Headscale domain.
 
-Action: put Headscale behind the reverse proxy of Pangolin, or give Headscale
-another port. Record the answer before task C2 in `docs/todo.md`.
+See `docs/runbooks/hermes-edge.md`.
 
 ## 5. The rights of the user for the provider — documented
 
@@ -75,18 +76,26 @@ The provider needs API access for normal VM and container work. SSH is optional.
 See `docs/runbooks/proxmox-user.md` for the SSH-backed features and documented
 `sudo` rights. Add no SSH rights until a target uses one of those features.
 
-## 6. The panel and use of each VPS — panel facts closed, DediRock plan open
+## 6. The panel and use of `hermes` — panel facts closed, migration open
 
-The RackNerd VPS uses SolusVM. The name of the panel is NerdVM. The handoff was
-correct for this host.
+The owner confirmed that `hermes` uses vPanel and is hardened. The owner plans
+to run the external services and Headscale on `hermes`. The owner chose
+Tailscale's public DERP relays and Dockhand for Docker Compose stacks. The owner
+accepts Dockhand's BSL 1.1 license for personal homelab use.
+The license changes to Apache 2.0 on 1 January 2029. Inventory all services and
+their data before migration.
 
-The DediRock VPS uses vPanel, and not WHMCS with Virtualizor. The handoff was
-wrong for this host. The owner plans to use it for services outside the homelab.
-The owner confirmed that the host is hardened on 26 September 2026. Dockage is
-preferred, but the service manager is not chosen. Decide on the service manager
-before service setup.
+Source: [Dockhand license](https://github.com/Finsys/dockhand/blob/main/LICENSE.txt)
 
-## 7. The import of the resources that exist — open
+## 7. Dockhand access — open
+
+Dockhand can control Docker through the Docker socket. This access can give an
+attacker control of the host. The first launch has authentication disabled.
+
+Action: enable authentication before you expose the UI. Keep the UI private.
+Assess a Docker socket proxy before setup.
+
+## 8. The import of the resources that exist — open
 
 No VM is in the OpenTofu state now. The plan tries to create a copy of each VM
 if you do not import it first.
@@ -101,7 +110,7 @@ The owner deleted the Talos cluster and TrueNAS VM. The owner reinstalled
 The owner recorded VMID `100`, name `haos-18.2`, on `atlas`. The host has no
 containers. Write and run the import step for VMID `100` before any apply.
 
-## 8. The new install on `prometheus` — closed
+## 9. The new install on `prometheus` — closed
 
 The owner reinstalled Proxmox VE on `prometheus` and renamed it `gaia`. The owner
 renamed `helios` to `theia`. The `pantheon` cluster now has `gaia`, `hyperion`,
@@ -110,7 +119,7 @@ renamed `helios` to `theia`. The `pantheon` cluster now has `gaia`, `hyperion`,
 The reinstall is complete. The owner confirmed the Proxmox versions on `gaia`
 and `theia` on 26 September 2026.
 
-## 9. Recovery of remote state — closed
+## 10. Recovery of remote state — closed
 
 The owner selected Cloudflare R2 for remote state. OpenTofu can use R2's S3 API
 and conditional writes for state locks. R2 does not provide object versioning.

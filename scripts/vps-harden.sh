@@ -13,7 +13,7 @@ fi
 #
 # This script is a one-time bootstrap. Run it on a new host, one time, before
 # Ansible takes control. Ansible owns the configuration after the first run.
-# See AGENTS.md, decision 2, and docs/runbooks/vps-bootstrap.md.
+# See AGENTS.md, decision 2, and docs/runbooks/hermes-bootstrap.md.
 #
 # The script uses whiptail, the text interface of Debian and Ubuntu.
 #

@@ -1,0 +1,24 @@
+---
+- name: Check the host operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "This role supports Debian and Ubuntu hosts only."
+
+- name: Check the host name
+  ansible.builtin.assert:
+    that:
+      - ansible_hostname == inventory_hostname
+    fail_msg: >-
+      The host name {{ ansible_hostname }} does not match the inventory name
+      {{ inventory_hostname }}. Correct the inventory before you continue.
+
+- name: Refresh the APT package index
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_base_packages }}"
+    state: present

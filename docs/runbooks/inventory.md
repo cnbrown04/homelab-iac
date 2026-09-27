@@ -1,7 +1,7 @@
 # Inventory of the homelab
 
 This document records the hosts, the versions, and the workloads. The owner
-updated the host and workload facts on 26 September 2026. The Proxmox versions
+updated the host and workload facts on 27 September 2026. The Proxmox versions
 for `gaia` and `theia` were checked on 26 September 2026. The other nodes were
 last checked on 21 September 2026.
 
@@ -25,20 +25,22 @@ The owner reinstalled Proxmox VE on `prometheus` and renamed it `gaia`. The owne
 also renamed `helios` to `theia`. The Talos cluster and TrueNAS VM were deleted.
 The cluster now has no recorded workloads.
 
-## The VPS hosts
+## The host `hermes`
 
-| Host | Panel | Status |
-| --- | --- | --- |
-| RackNerd VPS | SolusVM, with the name NerdVM | in use; already hardened |
-| DediRock VPS | vPanel | hardened; planned host for services outside the homelab |
+| Host | Address | SSH user | SSH port | Panel | Status |
+| --- | --- | --- | --- | --- | --- |
+| `hermes` | `192.255.220.7` | `caleb` | `22` | vPanel | hardened; Ansible-managed |
 
 ## The workloads
 
 | Workload | Host | Type |
 | --- | --- | --- |
 | Home Assistant (`haos-18.2`, VMID `100`) | `atlas` | VM, running |
-| CrowdSec, Fail2ban, Pangolin, and more | RackNerd VPS | software on the host |
-| Services outside the homelab | DediRock VPS | planned; Dockage is preferred but not chosen |
+| CrowdSec and Fail2ban | `hermes` | running |
+| Pangolin (new install) | `hermes` | planned; Ansible deploys it |
+| Headscale control server | `hermes` | planned; setup not started |
+| Dockhand | `hermes` | planned; Ansible deploys it |
+| Docker Compose stacks | `hermes` | planned; Ansible deploys them |
 
 No workload is recorded on the `pantheon` cluster. The Talos cluster and TrueNAS VM
 were deleted before the `prometheus` reinstall.

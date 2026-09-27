@@ -1,0 +1,13 @@
+---
+headscale_version: ""
+headscale_server_url: ""
+headscale_listen_addr: ""
+headscale_trusted_proxies: []
+headscale_acl_path: /etc/headscale/acl.hujson
+headscale_architecture_map:
+  x86_64: amd64
+  aarch64: arm64
+
+# The subnet of the reverse proxy. UFW lets it reach the listener. Leave it
+# empty if the listener is on the loopback address.
+headscale_proxy_subnet: "{{ headscale_trusted_proxies | first | default('') }}"

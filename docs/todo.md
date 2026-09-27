@@ -31,45 +31,58 @@ See `docs/runbooks/risks.md` for the full text of each risk.
 - [x] **B4. Correct the old comments.** Point the comments in `mise.toml` and
       `.gitignore` to `AGENTS.md`.
 
-## C. Set up Headscale — build order step 4
+## C. Set up Ansible and Headscale — build order step 4
 
 The owner replaced Tailscale with Headscale on 21 September 2026. Headscale is
 an open-source control server. The client software of Tailscale stays the same.
 
 Warning: Headscale must run out of the homelab. See decision 3 in `AGENTS.md`.
-The RackNerd VPS is the correct host, because it is public and it does not need
-the homelab.
+The `hermes` host runs Headscale and the external services. Headscale uses
+Tailscale's public DERP relays.
 
-- [ ] **C1. Choose the name in DNS and the port.** Caution: the RackNerd VPS
-      runs Pangolin, and Pangolin uses port 443. Headscale needs TLS on a public
-      port. Put Headscale behind the reverse proxy of Pangolin, or give it
-      another port. Record the answer in a new runbook.
-- [ ] **C2. Write the Ansible role for Headscale.** The role installs the
-      server, writes the configuration, and starts the service. Do not install
-      it by hand.
-- [ ] **C3. Set the policy.** Headscale uses an access control list. Give the
-      tag for GitHub Actions access to the Proxmox API port only.
-- [ ] **C4. Choose the relay.** Headscale uses the public relays of Tailscale by
-      default. Decide if that is acceptable, or run a relay on the VPS.
-- [ ] **C5. Join each Proxmox node.** The five nodes and both VPS hosts join the
-      mesh network. Use a pre-auth key with a tag.
+- [x] **C0. Choose the Compose manager.** The owner chose Dockhand and
+      accepted its BSL 1.1 license for personal homelab use on 27 September 2026.
+- [ ] **C0.1. List all workloads to move.** Record each service, its data,
+      configuration, ports, DNS names, and backup needs before setup.
+- [ ] **C0.2. Protect the Dockhand interface.** Enable authentication before
+      Pangolin exposes the UI. Keep the UI private, and assess a Docker socket
+      proxy before setup.
+- [x] **C1. Choose the Headscale DNS name and route.** Traefik in the Pangolin
+      stack sends `vpn.buildwithcaleb.com` to Headscale. See
+      `docs/runbooks/hermes-edge.md`.
+- [ ] **C1.1. Deploy Pangolin.** The `pangolin` role deploys a new install.
+      The DNS records exist. Run `playbooks/hermes.yml`, and create the admin
+      account. The runbook gives the steps.
+- [ ] **C2. Deploy Headscale.** The role installs the pinned package, writes
+      the configuration and policy, and starts the service. A local test of
+      the configuration and policy passed with Headscale 0.29.3. Run
+      `playbooks/headscale.yml` after task C1.1.
+- [ ] **C3. Set the policy.** The policy file gives `tag:github-actions`
+      access to TCP port `8006` on `tag:proxmox` only. It gives no access to
+      other nodes. Decide the access for the devices of the owner.
+- [x] **C4. Choose the relay.** The owner chose Tailscale's public DERP relays
+      on 27 September 2026.
+- [ ] **C5. Join each Proxmox node.** The five nodes and `hermes` join the
+      mesh network. Use a pre-auth key with a tag. Ansible installs the
+      Tailscale client. No Proxmox node has the client now.
 - [ ] **C6. Create the pre-auth key for the pipeline.** The key makes an
       ephemeral node with the tag for GitHub Actions. Choose the key expiry;
       Headscale defaults to one hour. Put the key in a GitHub secret.
 - [ ] **C7. Test the join from a runner.** A job must reach the Proxmox API.
       Task A4 gives the method.
+- [ ] **C8. Install the Headplane admin interface.** Install the full
+      Headplane on `hermes` after Headscale runs. Route it through Pangolin.
+      Do not use Headplane Limited Mode, because its features are limited.
+      The owner chose this on 27 September 2026.
 
-## E. The bootstrap of a VPS — complete
+## E. Bootstrap `hermes`
 
 - [x] **E1. Write the hardening script.** `scripts/vps-harden.sh` protects a new
       VPS. It uses whiptail, the text interface of Debian and Ubuntu.
-- [x] **E2. Write the runbook.** `docs/runbooks/vps-bootstrap.md`.
-- [x] **E3. Confirm the RackNerd VPS hardening.** The owner says the host is
-      already hardened. Do not run `scripts/vps-harden.sh` on it again.
-- [ ] **E4. Make an Ansible role from the script.** Ansible owns the host after
+- [x] **E2. Write the runbook.** `docs/runbooks/hermes-bootstrap.md`.
+- [x] **E3. Confirm the `hermes` hardening.** The owner confirmed setup.
+- [ ] **E4. Make an Ansible role from the script.** Ansible owns `hermes` after
       the bootstrap. The role keeps the same configuration.
-- [x] **E5. Harden the DediRock VPS.** The owner confirmed setup on 26 September
-      2026. Do not run the script on RackNerd again.
 
 ## D. The rest of the build order
 
@@ -83,8 +96,5 @@ the homelab.
 - [ ] **D3. Step 6.** Do step 5 again for the `pantheon` cluster. See the current
       versions in `docs/runbooks/inventory.md`.
 - [ ] **D4. Step 7.** Write the Ansible baseline for the five Proxmox nodes and
-      the two VPS hosts.
+      `hermes`.
 - [ ] **D5. Step 8.** Add the workflows with a matrix over the targets.
-- [ ] **D6. Assess a service manager for DediRock.** The owner prefers Dockage or
-      a similar tool for services outside the homelab. Confirm host readiness
-      and choose the tool before setup.

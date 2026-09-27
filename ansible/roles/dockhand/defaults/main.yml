@@ -1,0 +1,5 @@
+---
+dockhand_data_dir: /opt/dockhand
+dockhand_compose_stack_root: /opt/stacks
+dockhand_user_id: 1000
+dockhand_group_id: 1000
