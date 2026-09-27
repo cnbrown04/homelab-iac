@@ -37,9 +37,9 @@ The cluster now has no recorded workloads.
 | --- | --- | --- |
 | Home Assistant (`haos-18.2`, VMID `100`) | `atlas` | VM, running |
 | CrowdSec and Fail2ban | `hermes` | running |
-| Pangolin (new install) | `hermes` | planned; Ansible deploys it |
-| Headscale control server | `hermes` | planned; setup not started |
-| Dockhand | `hermes` | planned; Ansible deploys it |
+| Pangolin (new install) | `hermes` | running; Ansible deploys it |
+| Headscale control server (0.29.3) | `hermes` | running; Ansible deploys it |
+| Dockhand | `hermes` | running; UI private, no login yet |
 | Docker Compose stacks | `hermes` | planned; Ansible deploys them |
 
 No workload is recorded on the `pantheon` cluster. The Talos cluster and TrueNAS VM

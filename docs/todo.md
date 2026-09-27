@@ -50,13 +50,12 @@ Tailscale's public DERP relays.
 - [x] **C1. Choose the Headscale DNS name and route.** Traefik in the Pangolin
       stack sends `vpn.buildwithcaleb.com` to Headscale. See
       `docs/runbooks/hermes-edge.md`.
-- [ ] **C1.1. Deploy Pangolin.** The `pangolin` role deploys a new install.
-      The DNS records exist. Run `playbooks/hermes.yml`, and create the admin
-      account. The runbook gives the steps.
-- [ ] **C2. Deploy Headscale.** The role installs the pinned package, writes
-      the configuration and policy, and starts the service. A local test of
-      the configuration and policy passed with Headscale 0.29.3. Run
-      `playbooks/headscale.yml` after task C1.1.
+- [x] **C1.1. Deploy Pangolin.** The owner deployed Pangolin and created the
+      admin account on 27 September 2026. The dashboard has a valid
+      Let's Encrypt certificate.
+- [x] **C2. Deploy Headscale.** Ansible installed Headscale 0.29.3 on
+      27 September 2026. `https://vpn.buildwithcaleb.com/health` returned
+      `200`, and the certificate is valid.
 - [ ] **C3. Set the policy.** The policy file gives `tag:github-actions`
       access to TCP port `8006` on `tag:proxmox` only. It gives no access to
       other nodes. Decide the access for the devices of the owner.
