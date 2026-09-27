@@ -118,7 +118,7 @@ configure a host over ad-hoc SSH after the pipeline exists.
   API endpoint.
 - The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
 - The `hermes` host. The panel is vPanel. The owner plans to run external
-  services and Headscale on it. Ansible deploys Dockhand and all Compose stacks.
+  services and Headscale on it. Ansible deploys Dockge and all Compose stacks.
 
 Always refer to a machine by its hostname. Do not use its provider name as its
 name.
@@ -149,9 +149,9 @@ These decisions are closed. Ask the owner before you re-open one.
    3. **Use Tailscale's public DERP relays.** The owner chose this on
       27 September 2026. DERP does not use the Headscale DNS name.
 4. **Ansible manages `hermes`.** No OpenTofu provider exists for vPanel. Use
-   plain SSH. Ansible configures host services and deploys Dockhand and every
-   Docker Compose stack. Dockhand does not deploy stacks by hand.
-   The owner accepts Dockhand's BSL 1.1 license for personal homelab use.
+   plain SSH. Ansible configures host services and deploys Dockge and every
+   Docker Compose stack. Dockge does not deploy stacks by hand. The owner
+   changed from Dockhand to Dockge on 27 September 2026.
 5. **The state is remote and encrypted.** Use an S3-compatible backend and the
    state encryption of OpenTofu.
 6. **SOPS and age encrypt the secrets.** Keep the pre-auth key for Headscale
@@ -203,7 +203,7 @@ the plan job needs the mesh network to reach the Proxmox API.
 2. Scaffold the layout. Pin the tool versions. Add Renovate.
 3. Set up the remote state backend, the state encryption, and SOPS with age.
 4. Scaffold the Ansible inventory and roles for `hermes`. Use Ansible to
-   install Headscale, Docker, and Dockhand. Set up Headscale on `hermes`: a
+   install Headscale, Docker, and Dockge. Set up Headscale on `hermes`: a
    public DNS name, TLS, a tag for GitHub Actions, and a policy rule for the
    Proxmox API port. Use Tailscale's public DERP relays. Join each Proxmox node.
 5. Write the `vm` module and the `lxc` module. Write the `atlas` target. Import

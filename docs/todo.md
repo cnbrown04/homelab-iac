@@ -40,13 +40,13 @@ Warning: Headscale must run out of the homelab. See decision 3 in `AGENTS.md`.
 The `hermes` host runs Headscale and the external services. Headscale uses
 Tailscale's public DERP relays.
 
-- [x] **C0. Choose the Compose manager.** The owner chose Dockhand and
-      accepted its BSL 1.1 license for personal homelab use on 27 September 2026.
+- [x] **C0. Choose the Compose manager.** The owner chose Dockhand, then
+      changed to Dockge on 27 September 2026. Dockge has the MIT license.
 - [ ] **C0.1. List all workloads to move.** Record each service, its data,
       configuration, ports, DNS names, and backup needs before setup.
-- [ ] **C0.2. Protect the Dockhand interface.** Enable authentication before
-      Pangolin exposes the UI. Keep the UI private, and assess a Docker socket
-      proxy before setup.
+- [ ] **C0.2. Protect the Dockge interface.** The Pangolin login protects
+      `dockge.buildwithcaleb.com`. Make the Dockge admin account immediately
+      after the first deployment. See risk 7.
 - [x] **C1. Choose the Headscale DNS name and route.** Traefik in the Pangolin
       stack sends `vpn.buildwithcaleb.com` to Headscale. See
       `docs/runbooks/hermes-edge.md`.

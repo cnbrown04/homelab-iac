@@ -40,7 +40,7 @@ The cluster now has no recorded workloads.
 | Pangolin Enterprise Edition | `hermes` | running; Ansible deploys it |
 | Headscale control server (0.29.3) | `hermes` | running; Ansible deploys it |
 | Headplane (0.7.1) | `hermes` | planned; Ansible deploys it |
-| Dockhand | `hermes` | running; UI private, no login yet |
+| Dockge (1.5.0) | `hermes` | planned; Ansible deploys it behind the Pangolin login |
 | Docker Compose stacks | `hermes` | planned; Ansible deploys them |
 
 No workload is recorded on the `pantheon` cluster. The Talos cluster and TrueNAS VM

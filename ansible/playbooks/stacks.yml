@@ -9,7 +9,6 @@
         compose_stack_name: "{{ item }}"
         compose_stack_source: "{{ playbook_dir }}/../stacks/{{ item }}"
         compose_stack_environment: "{{ hermes_compose_stack_environment.get(item, {}) }}"
-        compose_stack_group: "{{ dockhand_group_id }}"
       loop: "{{ hermes_compose_stacks }}"
       loop_control:
         label: "{{ item }}"

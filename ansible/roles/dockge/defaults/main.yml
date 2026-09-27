@@ -1,0 +1,5 @@
+---
+# Dockge runs from this directory, out of the stacks directory, so that it
+# does not manage its own stack.
+dockge_root: /opt
+dockge_stacks_dir: /opt/stacks

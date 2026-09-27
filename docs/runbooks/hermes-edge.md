@@ -10,6 +10,7 @@ C1 in `docs/todo.md`. Ansible deploys each part.
 | `pangolin.buildwithcaleb.com` | The Pangolin dashboard | Pangolin |
 | `vpn.buildwithcaleb.com` | Headscale | none |
 | `headplane.buildwithcaleb.com` | Headplane | Pangolin, then a Headscale API key |
+| `dockge.buildwithcaleb.com` | Dockge | Pangolin, then Dockge |
 
 Two `A` records point to `192.255.220.7`: `buildwithcaleb.com` and
 `*.buildwithcaleb.com`. The wildcard record covers each name in the table and
@@ -45,7 +46,7 @@ Pangolin app. See decision 3 in `AGENTS.md`.
 Headscale has no Pangolin login. A Tailscale client cannot complete a browser
 login. Headscale does its own authentication with node keys.
 
-Headplane is a Pangolin resource on the local site. The owner chose this split
+Headplane and Dockge are Pangolin resources on the local site. The owner chose this split
 on 27 September 2026. The blueprint is `pangolin_blueprint_resources` in
 `ansible/inventory/host_vars/hermes/main.yml`. Change a resource there, and not
 in the UI, because the next apply replaces the change.

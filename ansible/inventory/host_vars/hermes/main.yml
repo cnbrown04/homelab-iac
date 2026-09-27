@@ -1,9 +1,6 @@
 ---
 # The stack roles and stacks.yml share these values.
 compose_stack_root: /opt/stacks
-dockhand_data_dir: /opt/dockhand
-dockhand_user_id: 1000
-dockhand_group_id: 1000
 
 hermes_compose_stacks: []
 hermes_compose_stack_environment: {}
@@ -36,6 +33,17 @@ pangolin_blueprint_resources:
           method: http
           hostname: headplane
           port: 3000
+    dockge:
+      name: Dockge
+      mode: http
+      full-domain: dockge.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_local_site }}"
+          method: http
+          hostname: dockge
+          port: 5001
 
 headplane_base_url: https://headplane.buildwithcaleb.com
 

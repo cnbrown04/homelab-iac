@@ -1,0 +1,20 @@
+name: dockge
+services:
+  dockge:
+    image: louislam/dockge:1.5.0
+    container_name: dockge
+    restart: unless-stopped
+    # No published port. Traefik gets to Dockge on the pangolin network.
+    environment:
+      DOCKGE_STACKS_DIR: /opt/stacks
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+      # The path must be the same on the host and in the container.
+      - /opt/stacks:/opt/stacks
+    networks:
+      - pangolin
+
+networks:
+  pangolin:
+    external: true

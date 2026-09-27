@@ -2,7 +2,7 @@
 
 Ansible configures machines that already run. Inventory entries use the host
 names of those machines. Compose files stay in this folder and Ansible deploys
-them. Dockhand does not act as a deployment source.
+them. Dockge does not act as a deployment source.
 
 ## Set up the controller
 
@@ -43,7 +43,7 @@ sops inventory/host_vars/hermes/secrets.sops.yml
 
 ## The order of the plays
 
-1. `playbooks/hermes.yml` installs Docker, Dockhand, and Pangolin.
+1. `playbooks/hermes.yml` installs Docker, Pangolin, and Dockge.
 2. `playbooks/headscale.yml` installs Headscale. Headscale listens on the
    gateway address of the Pangolin network, so Pangolin must run first.
 
@@ -53,8 +53,9 @@ The first run on a new host cannot use `--check`. Docker is not installed, so
 the tasks for Docker and Compose fail in check mode.
 
 See `docs/runbooks/hermes-edge.md` for the route from Pangolin to Headscale.
-The Dockhand stack has no published web port. Add a private proxy route only
-after you create the first admin account of Dockhand.
+The Dockge stack has no published port. A Pangolin blueprint publishes it at
+`dockge.buildwithcaleb.com` behind the Pangolin login. Dockge can change a
+stack, but the next Ansible run replaces a change to a stack that Ansible owns.
 
 ## The Proxmox nodes
 

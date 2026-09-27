@@ -86,20 +86,25 @@ See `docs/runbooks/proxmox-user.md` for the SSH-backed features and documented
 
 The owner confirmed that `hermes` uses vPanel and is hardened. The owner plans
 to run the external services and Headscale on `hermes`. The owner chose
-Tailscale's public DERP relays and Dockhand for Docker Compose stacks. The owner
-accepts Dockhand's BSL 1.1 license for personal homelab use.
-The license changes to Apache 2.0 on 1 January 2029. Inventory all services and
-their data before migration.
+Tailscale's public DERP relays. On 27 September 2026 the owner changed the
+Compose manager from Dockhand to Dockge. Dockge has the MIT license, so the
+BSL 1.1 license of Dockhand no longer applies. Inventory all services and their
+data before migration.
 
-Source: [Dockhand license](https://github.com/Finsys/dockhand/blob/main/LICENSE.txt)
+Source: [Dockge license](https://github.com/louislam/dockge/blob/master/LICENSE)
 
-## 7. Dockhand access — open
+## 7. Dockge access — open
 
-Dockhand can control Docker through the Docker socket. This access can give an
-attacker control of the host. The first launch has authentication disabled.
+Dockge controls Docker through the Docker socket. This access can give an
+attacker control of the host. On the first visit, Dockge asks the visitor to
+make the admin account.
 
-Action: enable authentication before you expose the UI. Keep the UI private.
-Assess a Docker socket proxy before setup.
+The Pangolin login protects `dockge.buildwithcaleb.com`, so only a Pangolin
+user gets to that first page. Dockge has no published port.
+
+Action: make the Dockge admin account immediately after the first deployment.
+Assess a Docker socket proxy later. Dockge needs write access to Docker, so a
+proxy gives less protection than for a read-only tool.
 
 ## 8. The import of the resources that exist — open
 
