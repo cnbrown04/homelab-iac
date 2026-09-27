@@ -24,3 +24,5 @@ headscale_listen_port: 8085
 headscale_listen_addr: "{{ pangolin_network_gateway }}:{{ headscale_listen_port }}"
 headscale_trusted_proxies:
   - "{{ pangolin_network_subnet }}"
+headscale_users:
+  - caleb

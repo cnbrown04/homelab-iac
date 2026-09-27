@@ -4,6 +4,8 @@ headscale_server_url: ""
 headscale_listen_addr: ""
 headscale_trusted_proxies: []
 headscale_acl_path: /etc/headscale/acl.hujson
+# Each name is a Headscale user. A user owns personal devices.
+headscale_users: []
 headscale_architecture_map:
   x86_64: amd64
   aarch64: arm64

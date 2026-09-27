@@ -9,6 +9,13 @@
   },
 
   "grants": [
+    // The devices of the owner get to every node on every port.
+    {
+      "src": ["autogroup:member"],
+      "dst": ["*"],
+      "ip": ["*"],
+    },
+
     // A pipeline job gets to the Proxmox API port only. See AGENTS.md.
     {
       "src": ["tag:github-actions"],

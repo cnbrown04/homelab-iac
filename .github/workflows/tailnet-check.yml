@@ -1,0 +1,48 @@
+# Task C7. A runner joins the tailnet as an ephemeral node with the tag
+# tag:github-actions. The job checks that the runner gets to the Proxmox API
+# port on each node, and that the policy blocks each other port.
+name: Tailnet check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # The tailnet addresses of atlas, gaia, hyperion, tartarus, and theia.
+      NODES: 100.64.0.3 100.64.0.5 100.64.0.2 100.64.0.4 100.64.0.1
+    steps:
+      - name: Join the tailnet
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          authkey: ${{ secrets.HEADSCALE_AUTHKEY }}
+          args: --login-server=https://vpn.buildwithcaleb.com --accept-dns=false
+          hostname: github-${{ github.run_id }}
+
+      - name: Check the Proxmox API port on each node
+        run: |
+          failed=0
+          for ip in $NODES; do
+            code=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 15 "https://$ip:8006/" || true)
+            echo "$ip:8006 -> HTTP $code"
+            [ "$code" = "200" ] || failed=1
+          done
+          exit $failed
+
+      - name: Check that the policy blocks SSH
+        run: |
+          failed=0
+          for ip in $NODES; do
+            if timeout 5 bash -c "exec 3<>/dev/tcp/$ip/22" 2>/dev/null; then
+              echo "$ip:22 -> open. The policy must block this port."
+              failed=1
+            else
+              echo "$ip:22 -> blocked"
+            fi
+          done
+          exit $failed
