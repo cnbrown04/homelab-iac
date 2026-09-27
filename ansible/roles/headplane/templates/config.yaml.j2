@@ -1,0 +1,22 @@
+# Ansible writes this file. See https://headplane.net/configuration/.
+server:
+  host: "0.0.0.0"
+  port: 3000
+  base_url: {{ headplane_public_url | to_json }}
+  cookie_secret: {{ headplane_cookie_secret | to_json }}
+  cookie_secure: true
+  data_path: "/var/lib/headplane"
+
+headscale:
+  url: {{ headplane_headscale_url | to_json }}
+  public_url: {{ headplane_public_url | to_json }}
+  # The file is read-only. Headplane shows the settings but cannot change them.
+  config_path: "/etc/headscale/config.yaml"
+
+integration:
+  agent:
+    enabled: false
+  docker:
+    enabled: false
+  proc:
+    enabled: false

@@ -1,0 +1,53 @@
+---
+- name: Check the Headplane settings
+  ansible.builtin.assert:
+    that:
+      - headplane_cookie_secret | length == 32
+      - headplane_headscale_url is match('^http://.+:[0-9]+$')
+      - headplane_public_url is match('^https://')
+    fail_msg: >-
+      Set a cookie secret of exactly 32 characters in secrets.sops.yml, and
+      the Headscale listener and server URL.
+  no_log: true
+
+# Docker makes a directory if the source of a bind mount does not exist.
+- name: Check that the Headscale configuration exists
+  ansible.builtin.stat:
+    path: /etc/headscale/config.yaml
+  register: headplane_headscale_config
+
+- name: Stop if Headscale is not installed
+  ansible.builtin.assert:
+    that:
+      - headplane_headscale_config.stat.exists
+      - headplane_headscale_config.stat.isreg
+    fail_msg: "Deploy Headscale before Headplane."
+
+- name: Create the Headplane directories
+  ansible.builtin.file:
+    path: "{{ headplane_stack_root }}/headplane/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  loop:
+    - ""
+    - data
+
+- name: Write the Headplane configuration
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ headplane_stack_root }}/headplane/config.yaml"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart Headplane
+
+- name: Deploy the Headplane Compose stack
+  ansible.builtin.include_role:
+    name: compose_stack
+  vars:
+    compose_stack_name: headplane
+    compose_stack_source: "{{ playbook_dir }}/../stacks/headplane"
+    compose_stack_root: "{{ headplane_stack_root }}"

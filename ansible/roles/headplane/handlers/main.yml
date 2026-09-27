@@ -1,0 +1,5 @@
+---
+- name: Restart Headplane
+  community.docker.docker_compose_v2:
+    project_src: "{{ headplane_stack_root }}/headplane"
+    state: restarted

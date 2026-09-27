@@ -1,0 +1,18 @@
+name: headplane
+services:
+  headplane:
+    image: ghcr.io/tale/headplane:0.7.1
+    container_name: headplane
+    restart: unless-stopped
+    # No published port. Traefik gets to Headplane on the pangolin network.
+    volumes:
+      - ./config.yaml:/etc/headplane/config.yaml:ro
+      - ./data:/var/lib/headplane
+      # Read-only. Ansible owns the Headscale configuration.
+      - /etc/headscale/config.yaml:/etc/headscale/config.yaml:ro
+    networks:
+      - pangolin
+
+networks:
+  pangolin:
+    external: true
