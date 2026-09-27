@@ -81,17 +81,19 @@ Tailscale's public DERP relays.
       the Headscale configuration read-only, because Ansible owns that file.
       Headscale keeps its file route. See `docs/runbooks/hermes-edge.md`. The
       owner confirmed the login on 27 September 2026.
-- [ ] **C9. Turn on MagicDNS.** The owner chose the base domain
+- [x] **C9. Turn on MagicDNS.** The owner chose the base domain
       `vnet.buildwithcaleb.com` on 27 September 2026. Headscale refuses
       `vpn.buildwithcaleb.com`, because that is the host name of the server.
       The Proxmox nodes keep `--accept-dns=false`. A local test with
-      Headscale 0.29.3 passed `configtest`.
-- [ ] **C10. Log in personal devices with Pocket ID.** Headscale uses Pocket
+      Headscale 0.29.3 passed `configtest`. On 27 September 2026 the desktop
+      of the owner reached `gaia.vnet.buildwithcaleb.com`.
+- [x] **C10. Log in personal devices with Pocket ID.** Headscale uses Pocket
       ID through OIDC, with PKCE. Headscale starts when Pocket ID is down. A
       local test with Headscale 0.29.3 and an issuer that did not answer
-      showed that Headscale started and `/health` returned `200`. Delete the
-      local user `caleb` after the first Pocket ID login. See
-      `docs/runbooks/hermes-edge.md`.
+      showed that Headscale started and `/health` returned `200`. On
+      27 September 2026 the desktop of the owner joined as the OIDC user, and
+      the owner deleted the local user `caleb`. Headplane and Headscale share
+      the Pocket ID client `VPN`. See `docs/runbooks/hermes-edge.md`.
 
 ## E. Bootstrap `hermes`
 
@@ -121,7 +123,7 @@ upgrade to Headscale 0.30.
       as the owner chose. The Pangolin login protects it during the setup of
       the first admin. See `docs/runbooks/hermes-edge.md`. The owner made the
       admin account on 27 September 2026.
-- [ ] **F2. Give Headplane a login that does not expire.** Headplane does not
+- [x] **F2. Give Headplane a login that does not expire.** Headplane does not
       renew its Headscale API key, and each API key has an expiry. Do these
       steps:
       - Log in to Headplane with Pocket ID through OIDC, with PKCE (`S256`).
@@ -138,6 +140,7 @@ upgrade to Headscale 0.30.
       Headscale 0.29.3 accepts an API key of 3650 days. The `headplane` role
       does these steps. A test against Headscale 0.29.3 passed: a new key, no
       change on the next run, and a renewal of a key with 100 days left.
+      On 27 September 2026 the owner logged in to Headplane with Pocket ID.
 - [ ] **F3. Give the pipeline a login that does not expire.**
       - Done on 27 September 2026: the key in `HEADSCALE_AUTHKEY` is a
         reusable, ephemeral key with `tag:github-actions`. It is key ID 3, and

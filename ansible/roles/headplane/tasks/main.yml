@@ -50,6 +50,18 @@
   no_log: true
   notify: Restart Headplane
 
+# Headplane mounts the Headscale configuration as one file. Ansible replaces
+# that file with a new file, and the mount keeps the old file. A restart of
+# Headplane mounts the new file.
+- name: Record the checksum of the Headscale configuration
+  ansible.builtin.copy:
+    content: "{{ headplane_headscale_config.stat.checksum }}\n"
+    dest: "{{ headplane_stack_root }}/headplane/headscale-config.sha1"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart Headplane
+
 - name: Make or renew the Headscale API key
   ansible.builtin.include_tasks: api_key.yml
 

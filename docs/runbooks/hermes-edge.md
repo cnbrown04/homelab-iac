@@ -152,6 +152,10 @@ root path of `headplane.buildwithcaleb.com` to `/admin/`. The variable is
 `pangolin_root_redirects`. The route has the priority `200`, and the Pangolin
 route has the priority `100`, so the redirect comes first.
 
+Headplane mounts `/etc/headscale/config.yaml` as one file. When Ansible
+changes that file, the mount keeps the old file. So the `headplane` role
+restarts Headplane after each change to the Headscale configuration.
+
 Headplane can read the Headscale configuration, but it cannot change it. Ansible
 owns that file and the policy file. Make a change in the repository, and deploy
 it with `playbooks/headscale.yml`.

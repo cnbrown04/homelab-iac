@@ -36,18 +36,29 @@
       The address {{ headscale_listen_ip }} is not on this host. Deploy the
       Pangolin stack before Headscale.
 
-- name: Download the pinned Headscale package
-  ansible.builtin.get_url:
-    url: "{{ headscale_release_url }}/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
-    dest: "/tmp/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
-    owner: root
-    group: root
-    mode: "0644"
+- name: Read the installed packages
+  ansible.builtin.package_facts:
+    manager: apt
 
-- name: Install Headscale
-  ansible.builtin.apt:
-    deb: "/tmp/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
-    state: present
+# The package goes to /tmp, and Ubuntu clears /tmp at boot. So Ansible
+# downloads and installs the package only when the version is different.
+- name: Install the pinned Headscale package
+  when: >-
+    ansible_facts['packages']['headscale'] | default([]) | map(attribute='version')
+    | list != [headscale_version]
+  block:
+    - name: Download the pinned Headscale package
+      ansible.builtin.get_url:
+        url: "{{ headscale_release_url }}/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
+        dest: "/tmp/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install Headscale
+      ansible.builtin.apt:
+        deb: "/tmp/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
+        state: present
 
 - name: Create the directory for the Headscale unit override
   ansible.builtin.file:
@@ -116,6 +127,8 @@
   ansible.builtin.command:
     cmd: headscale configtest
   changed_when: false
+  # The task only reads, so it also runs in check mode.
+  check_mode: false
 
 - name: Start and enable Headscale
   ansible.builtin.systemd_service:
@@ -128,6 +141,8 @@
     cmd: headscale users list -o json
   register: headscale_user_list
   changed_when: false
+  # The task only reads, so it also runs in check mode.
+  check_mode: false
 
 # Headscale returns null when no user exists.
 - name: Create each Headscale user
