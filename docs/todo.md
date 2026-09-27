@@ -99,9 +99,60 @@ Tailscale's public DERP relays.
 
 ## F. Operate `hermes`
 
-Do these tasks in order. Task F1 comes first, because `hermes` has no backup.
+Do these tasks in order. The owner chose to do the backups late. Warning:
+`hermes` has no backup until task F6 is complete. Do task F6 before the
+upgrade to Headscale 0.30.
 
-- [ ] **F1. Back up `hermes`.** Nothing backs up `hermes` now. Write an Ansible
+- [x] **F1. Deploy Pocket ID.** The owner chose Pocket ID as the SSO provider
+      on 27 September 2026. Pocket ID 2.16.0 has the BSD-2-Clause license. It
+      uses passkeys only. The `pocket_id` role deploys it in Docker on
+      `hermes`, at `auth.buildwithcaleb.com`. It is always a Pangolin resource,
+      as the owner chose. The Pangolin login protects it during the setup of
+      the first admin. See `docs/runbooks/hermes-edge.md`. The owner made the
+      admin account on 27 September 2026.
+- [ ] **F2. Give Headplane a login that does not expire.** Headplane does not
+      renew its Headscale API key, and each API key has an expiry. Do these
+      steps:
+      - Log in to Headplane with Pocket ID through OIDC, with PKCE (`S256`).
+        The redirect URL is
+        `https://headplane.buildwithcaleb.com/admin/oidc/callback`.
+      - Ansible makes the Headscale API key for Headplane on `hermes`, with an
+        expiry of 3650 days. It writes the key to a file, and Headplane reads
+        the file through `headscale.api_key_path`. The key does not go into the
+        repository or into SOPS.
+      - On each run, Ansible makes a new key when the old key has less than
+        365 days left. Then it restarts Headplane and expires the old key.
+      The key stays on `hermes`, and Headscale runs as root there, so a long
+      expiry adds almost no risk. A test on 27 September 2026 showed that
+      Headscale 0.29.3 accepts an API key of 3650 days.
+- [ ] **F3. Give the pipeline a login that does not expire.**
+      - Now: replace the key in `HEADSCALE_AUTHKEY` before 26 December 2026.
+        Make a reusable, ephemeral key with `tag:github-actions` and an expiry
+        of 3650 days. The policy limits the key to port `8006` on
+        `tag:proxmox`.
+      - After the upgrade to Headscale 0.30: use an OAuth client. Run
+        `headscale oauth-clients create --scope auth_keys --tag
+        tag:github-actions`. An OAuth client has no expiry. Store
+        `tskey-client-<id>-<secret>?baseURL=https://vpn.buildwithcaleb.com` in
+        `HEADSCALE_AUTHKEY`, and add `--advertise-tags=tag:github-actions` to
+        the `args` of the action. Keep the `authkey` input, because
+        `oauth-secret` breaks `baseURL`. Each job then gets a new single-use
+        key. Delete the pre-auth key.
+      - Warning: Headscale 0.30 moves all keys into one new table, and the
+        migration cannot be reversed. Do task F6 before the upgrade. Do not
+        merge a Renovate pull request for 0.30 without a backup.
+      Source: the 0.30.0 section of the Headscale changelog, and
+      `docs/ref/api.md` on the `main` branch.
+- [ ] **F4. Install the Renovate app.** `renovate.json` exists, but the
+      Renovate app is not installed on the repository. On 27 September 2026
+      the repository had no Dependency Dashboard issue and no Renovate pull
+      request. Install the app, and merge the onboarding pull request.
+      Headscale 0.29.4 is the first expected update.
+- [ ] **F5. Check `hermes` with no change.** Run
+      `ansible-playbook playbooks/site.yml --check --diff --limit hermes -K`.
+      Correct each task that shows a change. This is the `hermes` part of
+      task D4.
+- [ ] **F6. Back up `hermes`.** Nothing backs up `hermes` now. Write an Ansible
       role that runs restic on a systemd timer, and sends encrypted backups to
       R2. Keep the restic password in SOPS. Back up these paths:
       - `/var/lib/headscale`: the database and the noise private key. Without
@@ -111,29 +162,10 @@ Do these tasks in order. Task F1 comes first, because `hermes` has no backup.
       - `/opt/stacks/pangolin/config`: the Pangolin database, the license,
         the Gerbil key, and the Let's Encrypt certificates.
       - `/opt/stacks/headplane/data` and `/opt/dockge/data`.
+      - `/opt/stacks/pocket-id/data`: the users and passkeys. The key in
+        `pocket_id_encryption_key` must be available for a restore.
       Write a restore test in a runbook, and do the test one time.
-- [ ] **F2. Replace the credentials that expire.** Headscale 0.29.3 has no key
-      that does not expire. Each pre-auth key and each API key has an expiry.
-      Headscale has no OAuth client for a machine. See decision 6 in
-      `AGENTS.md`. Choose a method for each credential, and record it here:
-      - The pipeline key in `HEADSCALE_AUTHKEY` expires on 26 December 2026.
-        One method: a scheduled workflow or Ansible task makes a new key and
-        replaces the GitHub secret before the expiry.
-      - The Headscale API key for the Headplane login expires after 90 days.
-        One method: log in to Headplane with OIDC. Then Ansible writes
-        `headscale.api_key` in the Headplane configuration, and makes a new
-        key before the expiry. Choose the OIDC provider first. The owner plans
-        SSO for Proxmox, so one provider can serve both.
-- [ ] **F3. Install the Renovate app.** `renovate.json` exists, but the
-      Renovate app is not installed on the repository. On 27 September 2026
-      the repository had no Dependency Dashboard issue and no Renovate pull
-      request. Install the app, and merge the onboarding pull request.
-      Headscale 0.29.4 is the first expected update.
-- [ ] **F4. Check `hermes` with no change.** Run
-      `ansible-playbook playbooks/site.yml --check --diff --limit hermes -K`.
-      Correct each task that shows a change. This is the `hermes` part of
-      task D4.
-- [ ] **F5. Deploy `hermes` from the pipeline.** A workflow runs Ansible for
+- [ ] **F7. Deploy `hermes` from the pipeline.** A workflow runs Ansible for
       `hermes` after a merge. The runner needs SSH access to `hermes`, the sudo
       password in a GitHub secret, and `SOPS_AGE_KEY`. This is the `hermes`
       part of task D5.

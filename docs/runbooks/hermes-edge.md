@@ -9,6 +9,7 @@ C1 in `docs/todo.md`. Ansible deploys each part.
 | --- | --- | --- |
 | `pangolin.buildwithcaleb.com` | The Pangolin dashboard | Pangolin |
 | `vpn.buildwithcaleb.com` | Headscale | none |
+| `auth.buildwithcaleb.com` | Pocket ID | passkeys (Pangolin during setup) |
 | `headplane.buildwithcaleb.com` | Headplane | Pangolin, then a Headscale API key |
 | `dockge.buildwithcaleb.com` | Dockge | Pangolin, then Dockge |
 
@@ -46,10 +47,11 @@ Pangolin app. See decision 3 in `AGENTS.md`.
 Headscale has no Pangolin login. A Tailscale client cannot complete a browser
 login. Headscale does its own authentication with node keys.
 
-Headplane and Dockge are Pangolin resources on the local site. The owner chose this split
-on 27 September 2026. The blueprint is `pangolin_blueprint_resources` in
-`ansible/inventory/host_vars/hermes/main.yml`. Change a resource there, and not
-in the UI, because the next apply replaces the change.
+Headplane, Dockge, and Pocket ID are Pangolin resources on the local site.
+The owner chose this split on 27 September 2026. The blueprint is
+`pangolin_blueprint_resources` in `ansible/inventory/host_vars/hermes/main.yml`.
+Change a resource there, and not in the UI, because the next apply replaces the
+change.
 
 ## The firewall
 
@@ -106,6 +108,51 @@ route has the priority `100`, so the redirect comes first.
 Headplane can read the Headscale configuration, but it cannot change it. Ansible
 owns that file and the policy file. Make a change in the repository, and deploy
 it with `playbooks/headscale.yml`.
+
+## Pocket ID
+
+Pocket ID is the SSO provider. It uses passkeys only. It is always a Pangolin
+resource, because the owner chose this on 27 September 2026. When the Pangolin
+app is down, Pocket ID is down, and each SSO login stops until Pangolin is
+back. Headscale does not use Pocket ID, so the tailnet and the pipeline
+continue to work.
+
+The first person who opens the setup page becomes the admin. The variable
+`pocket_id_setup_mode` puts the Pangolin login in front of Pocket ID during
+the setup.
+
+Make the first admin:
+
+1. Keep `pocket_id_setup_mode: true`. From `ansible/`, deploy Pocket ID and
+   apply the blueprint:
+
+   ```sh
+   ansible-playbook --diff playbooks/hermes.yml -K
+   ansible-playbook --diff playbooks/pangolin_resources.yml -K
+   ```
+
+2. Open `https://auth.buildwithcaleb.com/setup`. Log in to Pangolin, then make
+   the Pocket ID admin account with a passkey.
+3. Set `pocket_id_setup_mode: false` in
+   `ansible/inventory/host_vars/hermes/main.yml`, and apply the blueprint
+   again. The resource stays, but it has no Pangolin login.
+
+   ```sh
+   ansible-playbook --diff playbooks/pangolin_resources.yml -K
+   ```
+
+After step 2, Pocket ID refuses a second setup.
+
+Step 3 is necessary for each OIDC login. An OIDC client, for example Headplane
+or Proxmox, calls Pocket ID from its server: the discovery document, the token
+endpoint, and the signing keys. Those calls have no Pangolin session, so a
+Pangolin login in front of Pocket ID blocks them.
+
+Pangolin keeps its local login when it also uses Pocket ID. When Pocket ID is
+down, log in to Pangolin with the local account.
+
+Warning: `pocket_id_encryption_key` in `secrets.sops.yml` encrypts the data of
+Pocket ID. Without the key, a backup of the data is not usable.
 
 ## The Enterprise Edition
 
