@@ -8,15 +8,15 @@ that lasts.
 
 ## 1. The version of Proxmox VE — closed
 
-Every one of the five nodes runs `pve-manager/9.2.20`. The kernel is
-`7.0.14-17-pve`.
+The five nodes reported `pve-manager/9.2.20` and kernel `7.0.14-17-pve` on
+21 September 2026. On 26 September, `gaia` and `theia` reported
+`pve-manager/9.2.20` and kernel `7.0.14-19-pve` after the reinstall and rename.
 
-The version is on the 9.x line. The bpg provider supports 9.x in full. No node
-runs 7.x or 8.x, so no feature has a limit for that reason. See
-`docs/runbooks/inventory.md` for the table.
+Every node runs the 9.x line in the latest recorded check. The bpg provider
+supports 9.x in full. See `docs/runbooks/inventory.md` for the check dates.
 
-Caution: the kernel number is 7.0.14-17, but the kernel number is not the
-version of Proxmox VE. Read `pve-manager` only.
+Caution: the kernel number is not the version of Proxmox VE. Read `pve-manager`
+only.
 
 ## 2. The 0.x line of the provider — open, and it stays open
 
@@ -69,41 +69,37 @@ Action: read the current documents of the provider. Create a dedicated user with
 the exact rights that the documents give. Do not guess the rights. Record the
 steps in a new runbook.
 
-## 6. The panel of each VPS — closed for RackNerd, on hold for DediRock
+## 6. The panel and use of each VPS — panel facts closed, DediRock plan open
 
 The RackNerd VPS uses SolusVM. The name of the panel is NerdVM. The handoff was
 correct for this host.
 
 The DediRock VPS uses vPanel, and not WHMCS with Virtualizor. The handoff was
-wrong for this host. The owner tests the host now, so no work goes to DediRock.
-Ask the owner before you add DediRock to the inventory of Ansible.
+wrong for this host. The owner plans to use it for services outside the homelab.
+The owner says the host still needs hardening. Dockage is preferred, but the
+service manager is not chosen. Harden the host before service setup. Confirm the
+needed ports before you turn on UFW.
 
 ## 7. The import of the resources that exist — open
 
 No VM is in the OpenTofu state now. The plan tries to create a copy of each VM
 if you do not import it first.
 
-These workloads exist:
+This workload remains:
 
-- A Talos cluster of three nodes, on `prometheus`.
-- A TrueNAS VM, on `prometheus`.
 - Home Assistant, on `atlas`.
 
-Warning: `prometheus` gets a new install of Proxmox VE, and a new name, `gaia`.
-A new install deletes the workloads on the host. Import a workload from `atlas`
-first, and import a workload from the cluster after the new install is complete.
+The owner deleted the Talos cluster and TrueNAS VM. The owner reinstalled
+`prometheus` as `gaia`; no workload is recorded on the cluster now.
 
-Action: run `qm list` and `pct list` on `atlas`. Record the identity number and
-the name of each VM. Then write the import step for each one.
+The owner recorded VMID `100`, name `haos-18.2`, on `atlas`. The host has no
+containers. Write and run the import step for VMID `100` before any apply.
 
-## 8. The new install on `prometheus` — new risk, open
+## 8. The new install on `prometheus` — closed
 
-The owner installs Proxmox VE again on `prometheus`, and gives the host the new
-name `gaia`.
+The owner reinstalled Proxmox VE on `prometheus` and renamed it `gaia`. The owner
+renamed `helios` to `theia`. The cluster now has `gaia`, `hyperion`, `tartarus`,
+and `theia`.
 
-This risk changes the build order. Step 5 uses `pve-standalone`, which is
-`atlas`, so step 5 is safe now. Step 6 uses `pve-cluster`, which holds
-`prometheus`. Do not start step 6 before the new install is complete.
-
-Action: ask the owner when `gaia` is ready. Then update
-`docs/runbooks/inventory.md`.
+The reinstall is complete. The owner confirmed the Proxmox versions on `gaia`
+and `theia` on 26 September 2026.

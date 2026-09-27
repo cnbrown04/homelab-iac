@@ -13,13 +13,14 @@ See `docs/runbooks/risks.md` for the full text of each risk.
 - [ ] **A2. Get the rights of the user for the provider.** Read the current
       documents of the provider. Write the exact rights into a new runbook,
       `docs/runbooks/proxmox-user.md`. Do not guess a right.
-- [ ] **A3. List the resources on `atlas`.** Run `qm list` and `pct list` on the
-      host. Record each identity number and each name in
-      `docs/runbooks/inventory.md`. **The owner does this task.**
+- [x] **A3. List the resources on `atlas`.** The owner recorded VMID `100`,
+      `haos-18.2`, and no containers in `docs/runbooks/inventory.md`.
 - [ ] **A4. Find how a runner joins a Headscale network.** This task replaces
       the old risk 4. See section C.
-- [ ] **A5. Ask when `gaia` is ready.** The new install on `prometheus` blocks
-      step 6. **The owner does this task.**
+- [x] **A5. Confirm that `gaia` is ready.** The owner confirmed the reinstall
+      and the new cluster membership on 26 September 2026.
+- [x] **A6. Check Proxmox versions on `gaia` and `theia`.** The owner recorded
+      `pve-manager/9.2.20` and kernel `7.0.14-19-pve` in the inventory.
 
 ## B. Scaffold the repository — build order step 2
 
@@ -66,11 +67,13 @@ the homelab.
 - [x] **E1. Write the hardening script.** `scripts/vps-harden.sh` protects a new
       VPS. It uses whiptail, the text interface of Debian and Ubuntu.
 - [x] **E2. Write the runbook.** `docs/runbooks/vps-bootstrap.md`.
-- [ ] **E3. Run the script on the RackNerd VPS.** The host runs CrowdSec,
-      Fail2ban, and Pangolin now. Caution: select only the tasks that the host
-      does not have. **The owner does this task.**
+- [x] **E3. Confirm the RackNerd VPS hardening.** The owner says the host is
+      already hardened. Do not run `scripts/vps-harden.sh` on it again.
 - [ ] **E4. Make an Ansible role from the script.** Ansible owns the host after
       the bootstrap. The role keeps the same configuration.
+- [ ] **E5. Harden the DediRock VPS.** Confirm its SSH access and required ports
+      before you run the script. The owner does this task. Do not run the script
+      on RackNerd again.
 
 ## D. The rest of the build order
 
@@ -78,8 +81,11 @@ the homelab.
       SOPS with age.
 - [ ] **D2. Step 5.** Write the `vm` module and the `lxc` module. Write the
       `pve-standalone` target for `atlas`. Import Home Assistant.
-- [ ] **D3. Step 6.** Do step 5 again for the `pantheon` cluster. Warning: wait
-      for `gaia`. See task A5.
+- [ ] **D3. Step 6.** Do step 5 again for the `gaia` cluster. Confirm the
+      current node versions first. See task A6.
 - [ ] **D4. Step 7.** Write the Ansible baseline for the five Proxmox nodes and
       the two VPS hosts.
 - [ ] **D5. Step 8.** Add the workflows with a matrix over the targets.
+- [ ] **D6. Assess a service manager for DediRock.** The owner prefers Dockage or
+      a similar tool for services outside the homelab. Confirm host readiness
+      and choose the tool before setup.

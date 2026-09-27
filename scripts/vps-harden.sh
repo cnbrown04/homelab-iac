@@ -29,7 +29,6 @@ readonly LOG_FILE="/var/log/vps-harden.log"
 readonly SSHD_DROPIN="/etc/ssh/sshd_config.d/99-hardening.conf"
 readonly SYSCTL_FILE="/etc/sysctl.d/99-hardening.conf"
 readonly BACKTITLE="VPS hardening"
-readonly SCRIPT_URL="https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh"
 
 # The answers from the operator. The script collects them before it makes a
 # change, so the work runs without a question.
@@ -63,7 +62,6 @@ die() {
     # The box is a help, and not a need. A failure here must not hide the text.
     tui --title "Failure" --msgbox "${message}" 12 70 || true
   fi
-  restore_terminal
   printf 'Failure: %s\n' "${message}" >&2
   exit 1
 }
@@ -100,65 +98,36 @@ require_apt() {
   fi
 }
 
-# Run whiptail. It reads the keyboard from /dev/tty, and not from stdin.
-#
-# The reason: `curl ... | bash` gives the script to bash on stdin. bash and
-# whiptail cannot both read one file descriptor. The arrow keys go to bash, and
-# the terminal shows ^[OA instead.
+# Run whiptail on the controlling terminal. Save its answer in a temporary file.
+# This keeps the menu and keyboard away from a pipe or command substitution.
 tui() {
-  whiptail --backtitle "$BACKTITLE" "$@" < /dev/tty
-}
+  local output_file status
+  output_file="$(mktemp /tmp/vps-harden.XXXXXX)" || return 1
 
-# whiptail puts the terminal in the mode for an application. A failure leaves
-# the terminal in that mode, and the arrow keys make ^[OA. Put the mode back.
-restore_terminal() {
-  [[ -e /dev/tty ]] || return 0
-  printf '\033[?1l\033>\033[?25h' > /dev/tty 2> /dev/null || true
-  stty sane < /dev/tty 2> /dev/null || true
-}
-
-# The script comes from a pipe, so bash reads it from stdin. Get the script
-# again as a file, then start it again. bash then reads the file, and stdin
-# stays free for the keyboard.
-relaunch_from_file() {
-  # A file or a terminal on stdin needs no change.
-  [[ -t 0 ]] && return 0
-  # The second start must not start a third one.
-  [[ -n "${VPS_HARDEN_CHILD:-}" ]] && return 0
-
-  if ! ( exec < /dev/tty ) 2> /dev/null; then
-    printf 'Failure: the script has no terminal, so it cannot show the menu.\n' >&2
-    printf 'Run the script from a terminal of SSH.\n' >&2
-    exit 1
-  fi
-
-  local getter
-  if command -v curl > /dev/null 2>&1; then
-    getter="curl -fsSL"
-  elif command -v wget > /dev/null 2>&1; then
-    getter="wget -qO-"
+  if whiptail --output-fd 3 --backtitle "$BACKTITLE" "$@" \
+    </dev/tty >/dev/tty 2>/dev/tty 3>"${output_file}"; then
+    status=0
   else
-    printf 'Failure: the host has no curl and no wget.\n' >&2
+    status=$?
+  fi
+
+  if (( status == 0 )); then
+    cat -- "${output_file}"
+  fi
+  rm -f -- "${output_file}"
+  return "${status}"
+}
+
+require_terminal() {
+  if [[ ! -r /dev/tty || ! -w /dev/tty ]]; then
+    printf 'Failure: run this script from an interactive terminal.\n' >&2
     exit 1
   fi
 
-  local tmp
-  tmp="$(mktemp /tmp/vps-harden.XXXXXX.sh)"
-  if ! ${getter} "${SCRIPT_URL}" > "${tmp}" 2> /dev/null; then
-    rm -f "${tmp}"
-    printf 'Failure: the script cannot get %s\n' "${SCRIPT_URL}" >&2
+  if [[ -z "${TERM:-}" || "${TERM}" == "dumb" ]]; then
+    printf 'Failure: TERM must name a terminal that supports a text menu.\n' >&2
     exit 1
   fi
-  # A short file means the download failed. Do not run it.
-  if [[ "$(wc -c < "${tmp}")" -lt 1000 ]]; then
-    rm -f "${tmp}"
-    printf 'Failure: the file from %s is too short.\n' "${SCRIPT_URL}" >&2
-    exit 1
-  fi
-
-  export VPS_HARDEN_CHILD=1
-  export VPS_HARDEN_TMP="${tmp}"
-  exec bash "${tmp}" "$@" < /dev/tty
 }
 
 require_whiptail() {
@@ -260,8 +229,10 @@ ask_ssh_port() {
 Keep this port, or give a new port. A high port makes less noise in the
 log, but it is not a protection." 13 74 "${SSH_PORT}" 3>&1 1>&2 2>&3)" || exit 0
 
-  [[ "${NEW_SSH_PORT}" =~ ^[0-9]+$ ]] && (( NEW_SSH_PORT > 0 )) \
-    && (( NEW_SSH_PORT < 65536 )) || die "The port ${NEW_SSH_PORT} is not valid."
+  if [[ ! "${NEW_SSH_PORT}" =~ ^[0-9]+$ ]] \
+    || (( NEW_SSH_PORT < 1 || NEW_SSH_PORT > 65535 )); then
+    die "The port ${NEW_SSH_PORT} is not valid."
+  fi
 }
 
 ask_extra_ports() {
@@ -607,10 +578,9 @@ The log is ${LOG_FILE}." 26 76
 }
 
 main() {
-  relaunch_from_file "$@"
-  trap 'restore_terminal; rm -f "${VPS_HARDEN_TMP:-}"' EXIT
   require_root
   require_apt
+  require_terminal
   require_whiptail
 
   touch "$LOG_FILE"
@@ -639,5 +609,4 @@ main() {
   show_results
 }
 
-# Caution: keep the call and the exit on one line. See attach_terminal.
-main "$@"; exit $?
+main "$@"

@@ -111,8 +111,9 @@ curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/v1.0.0/script
 - Fail2ban and CrowdSec do the same job in two ways. Fail2ban reads the log of
   this host. CrowdSec also uses the list of addresses from the community. Both
   is acceptable, and each one uses a different action.
-- The pipe is stdin, so whiptail cannot read the keyboard. The script attaches
-  stdin to `/dev/tty` at the start. A host with no terminal gets a message with
-  the two commands that download the file first.
+- Whiptail needs an interactive terminal. The script sends the menu and keyboard
+  to `/dev/tty`, so a pipe from `curl` does not take keyboard input.
+- The script needs a `TERM` value that supports a text menu. It stops with an
+  error if no interactive terminal exists or `TERM` is empty or `dumb`.
 - The script does not open the ports for Headscale. Task C1 in `docs/todo.md`
   gives the port.
