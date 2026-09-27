@@ -40,6 +40,7 @@ EXTRA_PORTS=""
 TRUSTED_IP=""
 TASKS=""
 RESULTS=""
+TUI_RESULT=""
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -98,10 +99,11 @@ require_apt() {
   fi
 }
 
-# Run whiptail on the controlling terminal. Save its answer in a temporary file.
-# This keeps the menu and keyboard away from a pipe or command substitution.
+# Run whiptail on the controlling terminal. Keep the menu out of command
+# substitutions, because the script can run from a pipe.
 tui() {
   local output_file status
+  TUI_RESULT=""
   output_file="$(mktemp /tmp/vps-harden.XXXXXX)" || return 1
 
   if whiptail --output-fd 3 --backtitle "$BACKTITLE" "$@" \
@@ -112,7 +114,7 @@ tui() {
   fi
 
   if (( status == 0 )); then
-    cat -- "${output_file}"
+    TUI_RESULT="$(<"${output_file}")"
   fi
   rm -f -- "${output_file}"
   return "${status}"
@@ -177,7 +179,7 @@ Do you want to continue?" 18 72 || exit 0
 }
 
 choose_tasks() {
-  TASKS="$(tui --title "Tasks" --checklist \
+  if ! tui --title "Tasks" --checklist \
 "Select each task. Use SPACE to select, and TAB to move to OK." 20 74 10 \
     "updates"  "Install the updates, and turn on the automatic updates" ON \
     "user"     "Create an admin user with an SSH key"                  ON \
@@ -185,9 +187,11 @@ choose_tasks() {
     "ufw"      "Set up the firewall UFW"                               ON \
     "fail2ban" "Install Fail2ban for SSH"                              ON \
     "crowdsec" "Install CrowdSec and the bouncer for the firewall"     ON \
-    "sysctl"   "Protect the kernel with sysctl"                        ON \
-    3>&1 1>&2 2>&3)" || exit 0
+    "sysctl"   "Protect the kernel with sysctl"                        ON; then
+    exit 0
+  fi
 
+  TASKS="${TUI_RESULT}"
   TASKS="${TASKS//\"/}"
   [[ -n "${TASKS}" ]] || die "You selected no task."
 }
@@ -195,19 +199,25 @@ choose_tasks() {
 ask_admin_user() {
   has_task user || return 0
 
-  ADMIN_USER="$(tui --title "The admin user" \
+  if ! tui --title "The admin user" \
     --inputbox "Give the name of the admin user. The user gets sudo." \
-    10 70 "admin" 3>&1 1>&2 2>&3)" || exit 0
+    10 70 "admin"; then
+    exit 0
+  fi
+  ADMIN_USER="${TUI_RESULT}"
 
   [[ "${ADMIN_USER}" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
     || die "The name '${ADMIN_USER}' is not a correct name for a user."
   [[ "${ADMIN_USER}" != "root" ]] || die "Do not use root as the admin user."
 
-  ADMIN_KEY="$(tui --title "The public key" \
+  if ! tui --title "The public key" \
     --inputbox \
 "Paste the public SSH key of the user.
 
-The key starts with ssh-ed25519 or ssh-rsa." 12 74 "" 3>&1 1>&2 2>&3)" || exit 0
+The key starts with ssh-ed25519 or ssh-rsa." 12 74 ""; then
+    exit 0
+  fi
+  ADMIN_KEY="${TUI_RESULT}"
 
   local key_file
   key_file="$(mktemp)"
@@ -222,12 +232,15 @@ The key starts with ssh-ed25519 or ssh-rsa." 12 74 "" 3>&1 1>&2 2>&3)" || exit 0
 ask_ssh_port() {
   has_task ssh || return 0
 
-  NEW_SSH_PORT="$(tui --title "The port of SSH" \
+  if ! tui --title "The port of SSH" \
     --inputbox \
 "The current port is ${SSH_PORT}.
 
 Keep this port, or give a new port. A high port makes less noise in the
-log, but it is not a protection." 13 74 "${SSH_PORT}" 3>&1 1>&2 2>&3)" || exit 0
+log, but it is not a protection." 13 74 "${SSH_PORT}"; then
+    exit 0
+  fi
+  NEW_SSH_PORT="${TUI_RESULT}"
 
   if [[ ! "${NEW_SSH_PORT}" =~ ^[0-9]+$ ]] \
     || (( NEW_SSH_PORT < 1 || NEW_SSH_PORT > 65535 )); then
@@ -238,27 +251,31 @@ log, but it is not a protection." 13 74 "${SSH_PORT}" 3>&1 1>&2 2>&3)" || exit 0
 ask_extra_ports() {
   has_task ufw || return 0
 
-  EXTRA_PORTS="$(tui --title "The open ports" \
+  if ! tui --title "The open ports" \
     --inputbox \
 "Give each other port that must stay open. Put a space between two ports.
 Add /udp for a port of UDP.
 
 The firewall blocks every other port. The port of SSH is always open.
 
-Example: 80/tcp 443/tcp 51820/udp" 15 74 "80/tcp 443/tcp" 3>&1 1>&2 2>&3)" \
-    || exit 0
+Example: 80/tcp 443/tcp 51820/udp" 15 74 "80/tcp 443/tcp"; then
+    exit 0
+  fi
+  EXTRA_PORTS="${TUI_RESULT}"
 }
 
 ask_trusted_ip() {
   has_task fail2ban || has_task crowdsec || return 0
 
-  TRUSTED_IP="$(tui --title "Your address" \
+  if ! tui --title "Your address" \
     --inputbox \
 "Fail2ban and CrowdSec do not ban this address.
 
 The script found the address of this session. Correct it if it is wrong.
-Leave it empty if you want no exception." 14 74 "${TRUSTED_IP}" \
-    3>&1 1>&2 2>&3)" || exit 0
+Leave it empty if you want no exception." 14 74 "${TRUSTED_IP}"; then
+    exit 0
+  fi
+  TRUSTED_IP="${TUI_RESULT}"
 }
 
 confirm_start() {
