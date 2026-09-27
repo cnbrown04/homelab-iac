@@ -166,10 +166,13 @@ upgrade to Headscale 0.30.
       the repository had no Dependency Dashboard issue and no Renovate pull
       request. Install the app, and merge the onboarding pull request.
       Headscale 0.29.4 is the first expected update.
-- [ ] **F5. Check `hermes` with no change.** Run
+- [x] **F5. Check `hermes` with no change.** Run
       `ansible-playbook playbooks/site.yml --check --diff --limit hermes -K`.
       Correct each task that shows a change. This is the `hermes` part of
       task D4.
+      On 27 September 2026 the check showed `ok=88 changed=0 failed=0`. The
+      read-only command tasks run in check mode, and the Headscale package
+      installs only on a version change.
 - [ ] **F6. Back up `hermes`.** Nothing backs up `hermes` now. Write an Ansible
       role that runs restic on a systemd timer, and sends encrypted backups to
       R2. Keep the restic password in SOPS. Back up these paths:
