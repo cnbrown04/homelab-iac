@@ -1,0 +1,5 @@
+---
+common_base_packages:
+  - ca-certificates
+  - sudo
+  - python3-debian

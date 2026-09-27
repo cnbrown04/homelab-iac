@@ -1,0 +1,41 @@
+---
+- name: Create the Dockhand data directory
+  ansible.builtin.file:
+    path: "{{ dockhand_data_dir }}"
+    state: directory
+    owner: "{{ dockhand_user_id }}"
+    group: "{{ dockhand_group_id }}"
+    mode: "0750"
+
+- name: Create the Compose stack root
+  ansible.builtin.file:
+    path: "{{ dockhand_compose_stack_root }}"
+    state: directory
+    owner: "{{ dockhand_user_id }}"
+    group: "{{ dockhand_group_id }}"
+    mode: "0750"
+
+- name: Read the Docker socket permissions
+  ansible.builtin.stat:
+    path: /var/run/docker.sock
+  register: dockhand_docker_socket
+
+- name: Check the Docker socket
+  ansible.builtin.assert:
+    that:
+      - dockhand_docker_socket.stat.exists
+      - dockhand_docker_socket.stat.gid is defined
+    fail_msg: "The Docker socket is absent. Run the Docker role first."
+
+- name: Deploy the Dockhand Compose stack
+  ansible.builtin.include_role:
+    name: compose_stack
+  vars:
+    compose_stack_name: dockhand
+    compose_stack_source: "{{ playbook_dir }}/../stacks/dockhand"
+    compose_stack_root: "{{ dockhand_compose_stack_root }}"
+    compose_stack_group: "{{ dockhand_group_id }}"
+    compose_stack_environment:
+      DOCKER_GID: "{{ dockhand_docker_socket.stat.gid }}"
+      DOCKHAND_PUID: "{{ dockhand_user_id }}"
+      DOCKHAND_PGID: "{{ dockhand_group_id }}"

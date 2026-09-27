@@ -1,0 +1,14 @@
+---
+pangolin_stack_root: /opt/stacks
+pangolin_base_domain: ""
+pangolin_dashboard_domain: ""
+pangolin_acme_email: ""
+pangolin_server_secret: ""
+pangolin_network_subnet: 10.200.0.0/24
+pangolin_network_gateway: 10.200.0.1
+# renovate: datasource=github-releases depName=fosrl/badger
+pangolin_badger_version: v1.7.0
+
+# Traefik sends this host name to Headscale. Leave it empty to add no route.
+pangolin_headscale_domain: "{{ headscale_server_url | default('') | urlsplit('hostname') if headscale_server_url | default('') | length > 0 else '' }}"
+pangolin_headscale_upstream: "http://{{ headscale_listen_addr | default('') }}"

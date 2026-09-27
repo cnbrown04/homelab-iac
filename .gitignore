@@ -1,5 +1,6 @@
 # Local scratch context. Never committed.
 context/
+ansible/.ansible/
 
 # OpenTofu state is remote and encrypted. See AGENTS.md, section 4, decision 5.
 *.tfstate

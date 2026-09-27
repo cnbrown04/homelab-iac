@@ -1,0 +1,64 @@
+---
+- name: Check the Pangolin settings
+  ansible.builtin.assert:
+    that:
+      - pangolin_base_domain | length > 0
+      - pangolin_dashboard_domain is match('^[a-z0-9.-]+$')
+      - pangolin_dashboard_domain is search('[.]' ~ (pangolin_base_domain | regex_escape) ~ '$')
+      - pangolin_server_secret | length >= 32
+    fail_msg: >-
+      Set the base domain, a dashboard domain under it, and a server secret of
+      32 characters or more in secrets.sops.yml before you deploy Pangolin.
+  no_log: true
+
+- name: Create the Pangolin configuration directories
+  ansible.builtin.file:
+    path: "{{ pangolin_stack_root }}/pangolin/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  loop:
+    - config
+    - config/traefik
+    - config/traefik/logs
+    - config/letsencrypt
+
+- name: Write the Pangolin configuration
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: "{{ pangolin_stack_root }}/pangolin/config/config.yml"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart Pangolin
+
+- name: Write the static Traefik configuration
+  ansible.builtin.template:
+    src: traefik_config.yml.j2
+    dest: "{{ pangolin_stack_root }}/pangolin/config/traefik/traefik_config.yml"
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart Pangolin
+
+# Traefik watches this file, so a change needs no restart.
+- name: Write the dynamic Traefik configuration
+  ansible.builtin.template:
+    src: dynamic_config.yml.j2
+    dest: "{{ pangolin_stack_root }}/pangolin/config/traefik/dynamic_config.yml"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Deploy the Pangolin Compose stack
+  ansible.builtin.include_role:
+    name: compose_stack
+  vars:
+    compose_stack_name: pangolin
+    compose_stack_source: "{{ playbook_dir }}/../stacks/pangolin"
+    compose_stack_root: "{{ pangolin_stack_root }}"
+    compose_stack_environment:
+      PANGOLIN_NETWORK_SUBNET: "{{ pangolin_network_subnet }}"
+      PANGOLIN_NETWORK_GATEWAY: "{{ pangolin_network_gateway }}"

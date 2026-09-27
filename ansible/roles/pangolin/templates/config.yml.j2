@@ -1,0 +1,28 @@
+# Ansible writes this file. See https://docs.pangolin.net/ for each option.
+gerbil:
+    start_port: 51820
+    base_endpoint: {{ pangolin_dashboard_domain | to_json }}
+
+app:
+    dashboard_url: {{ ('https://' ~ pangolin_dashboard_domain) | to_json }}
+    log_level: "info"
+    telemetry:
+        anonymous_usage: false
+
+domains:
+    domain1:
+        base_domain: {{ pangolin_base_domain | to_json }}
+
+server:
+    secret: {{ pangolin_server_secret | to_json }}
+    cors:
+        origins: [{{ ('https://' ~ pangolin_dashboard_domain) | to_json }}]
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["X-CSRF-Token", "Content-Type"]
+        credentials: false
+
+flags:
+    require_email_verification: false
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: true

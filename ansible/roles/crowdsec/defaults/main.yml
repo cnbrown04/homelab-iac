@@ -1,0 +1,4 @@
+---
+crowdsec_packages:
+  - crowdsec
+  - crowdsec-firewall-bouncer-iptables

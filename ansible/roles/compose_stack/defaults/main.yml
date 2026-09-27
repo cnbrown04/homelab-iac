@@ -1,0 +1,5 @@
+---
+compose_stack_root: /opt/stacks
+compose_stack_environment: {}
+compose_stack_owner: root
+compose_stack_group: root

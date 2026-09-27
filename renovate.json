@@ -3,9 +3,21 @@
   "extends": ["config:recommended"],
   "enabledManagers": [
     "ansible-galaxy",
+    "custom.regex",
+    "docker-compose",
     "github-actions",
     "mise",
     "terraform"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update a version that has a renovate comment in Ansible variables",
+      "managerFilePatterns": ["/^ansible/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[A-Za-z0-9_]+: \"?(?<currentValue>[^\"\\s]+)\"?"
+      ]
+    }
   ],
   "dependencyDashboard": true
 }

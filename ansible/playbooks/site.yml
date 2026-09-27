@@ -1,0 +1,9 @@
+---
+- name: Configure hermes
+  ansible.builtin.import_playbook: hermes.yml
+- name: Configure Headscale on hermes
+  ansible.builtin.import_playbook: headscale.yml
+- name: Deploy Hermes application stacks
+  ansible.builtin.import_playbook: stacks.yml
+- name: Configure Proxmox hosts
+  ansible.builtin.import_playbook: proxmox_nodes.yml

@@ -1,0 +1,19 @@
+// Ansible installs this policy. Headscale denies each connection that no
+// grant allows.
+{
+  // The tags have no owner. Only a pre-auth key from the Headscale CLI can
+  // put a tag on a node.
+  "tagOwners": {
+    "tag:github-actions": [],
+    "tag:proxmox": [],
+  },
+
+  "grants": [
+    // A pipeline job gets to the Proxmox API port only. See AGENTS.md.
+    {
+      "src": ["tag:github-actions"],
+      "dst": ["tag:proxmox"],
+      "ip": ["tcp:8006"],
+    },
+  ],
+}
