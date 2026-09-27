@@ -7,6 +7,8 @@ services:
     # No published port. Traefik gets to Headplane on the pangolin network.
     volumes:
       - ./config.yaml:/etc/headplane/config.yaml:ro
+      # Ansible makes and renews this key.
+      - ./headscale_api_key:/etc/headplane/headscale_api_key:ro
       - ./data:/var/lib/headplane
       # Read-only. Ansible owns the Headscale configuration.
       - /etc/headscale/config.yaml:/etc/headscale/config.yaml:ro

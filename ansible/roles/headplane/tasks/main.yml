@@ -6,9 +6,14 @@
       - headplane_headscale_url is match('^http://.+:[0-9]+$')
       - headplane_public_url is match('^https://')
       - headplane_base_url is match('^https://')
+      - headplane_oidc_issuer | length == 0 or headplane_oidc_issuer is match('^https://[^/]+$')
+      - headplane_oidc_issuer | length == 0 or headplane_oidc_client_id | length > 0
+      - headplane_oidc_issuer | length == 0 or headplane_oidc_client_secret | length > 0
+      - headplane_api_key_renew_days < headplane_api_key_expiry_days
     fail_msg: >-
       Set a cookie secret of exactly 32 characters in secrets.sops.yml, and
-      the Headscale listener, the server URL, and the Headplane URL.
+      the Headscale listener, the server URL, and the Headplane URL. With an
+      OIDC issuer, also set the client ID and the client secret.
   no_log: true
 
 # Docker makes a directory if the source of a bind mount does not exist.
@@ -45,6 +50,9 @@
   no_log: true
   notify: Restart Headplane
 
+- name: Make or renew the Headscale API key
+  ansible.builtin.include_tasks: api_key.yml
+
 - name: Deploy the Headplane Compose stack
   ansible.builtin.include_role:
     name: compose_stack
@@ -52,3 +60,15 @@
     compose_stack_name: headplane
     compose_stack_source: "{{ playbook_dir }}/../stacks/headplane"
     compose_stack_root: "{{ headplane_stack_root }}"
+
+# Headplane reads the key at start. Restart it before the old key stops.
+- name: Restart Headplane with the new key
+  ansible.builtin.meta: flush_handlers
+
+- name: Expire the old key
+  ansible.builtin.command:
+    cmd: "headscale apikeys expire --id {{ headplane_api_key_current.id }}"
+  changed_when: true
+  when:
+    - headplane_api_key_renew | bool
+    - headplane_api_key_current is mapping

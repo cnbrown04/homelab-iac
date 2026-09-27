@@ -12,7 +12,20 @@ headscale:
   public_url: {{ headplane_public_url | to_json }}
   # The file is read-only. Headplane shows the settings but cannot change them.
   config_path: "/etc/headscale/config.yaml"
+  # Ansible makes this key and renews it. See the headplane role.
+  api_key_path: "/etc/headplane/headscale_api_key"
 
+{% if headplane_oidc_issuer | length > 0 %}
+oidc:
+  enabled: true
+  issuer: {{ headplane_oidc_issuer | to_json }}
+  client_id: {{ headplane_oidc_client_id | to_json }}
+  client_secret: {{ headplane_oidc_client_secret | to_json }}
+  use_pkce: true
+  # Keep the API key login. It works when the OIDC provider is down.
+  disable_api_key_login: false
+
+{% endif %}
 integration:
   agent:
     enabled: false

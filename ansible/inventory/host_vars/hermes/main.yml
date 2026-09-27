@@ -56,6 +56,9 @@ pangolin_blueprint_resources:
           port: 1411
 
 headplane_base_url: https://headplane.buildwithcaleb.com
+# Log in to Headplane with Pocket ID. secrets.sops.yml holds the client ID and
+# the client secret.
+headplane_oidc_issuer: "{{ pocket_id_app_url }}"
 
 # Pocket ID is the SSO provider. It is always a Pangolin resource. The first
 # person who opens its setup page becomes the admin, so the Pangolin login
