@@ -48,9 +48,13 @@
         body_format: json
         body:
           blueprint: "{{ pangolin_blueprint_resources | to_json | b64encode }}"
-        status_code: 200
+        # Pangolin answers 201 when it creates the blueprint record.
+        status_code: [200, 201]
       register: pangolin_blueprint_result
       changed_when: true
+      failed_when: >-
+        pangolin_blueprint_result.status not in [200, 201]
+        or not (pangolin_blueprint_result.json.success | default(false))
       no_log: true
 
   rescue:

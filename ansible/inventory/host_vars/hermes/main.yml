@@ -17,8 +17,8 @@ pangolin_network_gateway: 10.200.0.1
 
 # The Pangolin organization and the local site. Copy each value from the
 # Pangolin dashboard. secrets.sops.yml holds pangolin_blueprint_api_key.
-pangolin_blueprint_org_id: ""
-pangolin_local_site: ""
+pangolin_blueprint_org_id: pantheon-homelab
+pangolin_local_site: hermes-local
 
 # Pangolin resources. Headscale is not here: a Pangolin resource sends each
 # request through the Pangolin app, and Headscale must not depend on it.
@@ -38,6 +38,11 @@ pangolin_blueprint_resources:
           port: 3000
 
 headplane_base_url: https://headplane.buildwithcaleb.com
+
+# Headplane serves only /admin. Traefik sends the root path there.
+pangolin_root_redirects:
+  - host: headplane.buildwithcaleb.com
+    path: /admin/
 
 # Headscale. Traefik in the Pangolin stack sends vpn.buildwithcaleb.com to the
 # listener on the gateway of the Pangolin network.

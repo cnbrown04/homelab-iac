@@ -8,6 +8,12 @@ http:
     redirect-to-https:
       redirectScheme:
         scheme: https
+{% for item in pangolin_root_redirects %}
+    root-redirect-{{ loop.index }}:
+      redirectRegex:
+        regex: {{ ('^https?://[^/]+/$') | to_json }}
+        replacement: {{ ('https://' ~ item.host ~ item.path) | to_json }}
+{% endfor %}
 
   routers:
     main-app-router-redirect:
@@ -68,6 +74,22 @@ http:
       tls:
         certResolver: letsencrypt
 {% endif %}
+{% for item in pangolin_root_redirects %}
+
+    # The root path of {{ item.host }} goes to {{ item.path }}. The priority is
+    # higher than the priority of the Pangolin route (100). The redirect has
+    # no content, so it comes before the Pangolin login.
+    root-redirect-{{ loop.index }}:
+      rule: "Host(`{{ item.host }}`) && Path(`/`)"
+      priority: 200
+      service: noop@internal
+      entryPoints:
+        - websecure
+      middlewares:
+        - root-redirect-{{ loop.index }}
+      tls:
+        certResolver: letsencrypt
+{% endfor %}
 
   services:
     next-service:
