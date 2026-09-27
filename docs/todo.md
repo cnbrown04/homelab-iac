@@ -124,7 +124,9 @@ upgrade to Headscale 0.30.
         365 days left. Then it restarts Headplane and expires the old key.
       The key stays on `hermes`, and Headscale runs as root there, so a long
       expiry adds almost no risk. A test on 27 September 2026 showed that
-      Headscale 0.29.3 accepts an API key of 3650 days.
+      Headscale 0.29.3 accepts an API key of 3650 days. The `headplane` role
+      does these steps. A test against Headscale 0.29.3 passed: a new key, no
+      change on the next run, and a renewal of a key with 100 days left.
 - [ ] **F3. Give the pipeline a login that does not expire.**
       - Now: replace the key in `HEADSCALE_AUTHKEY` before 26 December 2026.
         Make a reusable, ephemeral key with `tag:github-actions` and an expiry

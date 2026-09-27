@@ -1,0 +1,62 @@
+---
+# Make the Headscale API key of Headplane, or renew it before it expires.
+- name: Read the Headscale API key of Headplane
+  ansible.builtin.slurp:
+    src: "{{ headplane_stack_root }}/headplane/headscale_api_key"
+  register: headplane_api_key_file
+  failed_when: false
+  no_log: true
+
+- name: Read the Headscale API keys
+  ansible.builtin.command:
+    cmd: headscale apikeys list -o json
+  register: headplane_api_key_list
+  changed_when: false
+
+# The list shows each key as a prefix, for example "hskey-api-abc-***". The
+# key in the file starts with the same text, without "-***". A template with
+# statements gives a string, so the loop writes JSON and the next task reads it.
+- name: Find the current key in the list
+  ansible.builtin.set_fact:
+    headplane_api_key_current_json: >-
+      {%- set key = headplane_api_key_file.content | default('') | b64decode | trim -%}
+      {%- set now = ansible_facts['date_time']['epoch'] | int -%}
+      {%- set ns = namespace(found=none) -%}
+      {%- for item in headplane_api_key_list.stdout | from_json | default([], true) -%}
+        {%- set start = item.prefix | regex_replace('-[*]+$', '') -%}
+        {%- if key | length > 0 and key.startswith(start) and item.expiration.seconds | int > now -%}
+          {%- set ns.found = {'id': item.id, 'days_left': ((item.expiration.seconds | int) - now) // 86400} -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ ns.found | to_json }}
+  no_log: true
+
+- name: Read the current key data
+  ansible.builtin.set_fact:
+    headplane_api_key_current: "{{ headplane_api_key_current_json | from_json }}"
+
+- name: Decide if Headplane needs a new key
+  ansible.builtin.set_fact:
+    headplane_api_key_renew: >-
+      {{ headplane_api_key_current is not mapping
+         or headplane_api_key_current.days_left < headplane_api_key_renew_days }}
+
+- name: Make a new Headscale API key for Headplane
+  when: headplane_api_key_renew | bool
+  block:
+    - name: Create the key
+      ansible.builtin.command:
+        cmd: "headscale apikeys create --expiration {{ headplane_api_key_expiry_days }}d"
+      register: headplane_api_key_new
+      changed_when: true
+      no_log: true
+
+    - name: Write the key file
+      ansible.builtin.copy:
+        content: "{{ headplane_api_key_new.stdout | trim }}\n"
+        dest: "{{ headplane_stack_root }}/headplane/headscale_api_key"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+      notify: Restart Headplane

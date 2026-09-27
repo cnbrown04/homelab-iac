@@ -93,12 +93,28 @@ account, any person with the setup token can take control of the dashboard.
 ## Headplane
 
 Headplane runs in Docker on the `pangolin` network. It uses the listener at
-`10.200.0.1:8085` for the Headscale API. Pangolin asks for its login first, and
-then Headplane asks for a Headscale API key. Make a key on `hermes`:
+`10.200.0.1:8085` for the Headscale API. Pangolin asks for its login first.
 
-```sh
-sudo headscale apikeys create --expiration 90d
-```
+Headplane has two logins:
+
+- **Pocket ID.** This is the normal login. The OIDC client in Pocket ID is
+  `Headplane`, with the callback URL
+  `https://headplane.buildwithcaleb.com/admin/oidc/callback` and PKCE. The
+  client ID and the client secret are in `secrets.sops.yml`. The first person
+  who logs in with OIDC becomes the owner in Headplane.
+- **A Headscale API key.** Use it when Pocket ID is down. Make a key on
+  `hermes`:
+
+  ```sh
+  sudo headscale apikeys create --expiration 1d
+  ```
+
+Headplane also needs its own Headscale API key for its server. Ansible makes
+this key on `hermes`, with an expiry of 3650 days, and writes it to
+`/opt/stacks/headplane/headscale_api_key`. On each run of
+`playbooks/headscale.yml`, Ansible makes a new key when the old key has less
+than 365 days left. Then it restarts Headplane and expires the old key. The key
+does not go into the repository. Delete the file to make a new key.
 
 Headplane serves only the path `/admin`. A file route in Traefik sends the
 root path of `headplane.buildwithcaleb.com` to `/admin/`. The variable is

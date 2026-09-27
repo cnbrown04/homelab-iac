@@ -7,3 +7,15 @@ headplane_headscale_url: "http://{{ headscale_listen_addr | default('') }}"
 headplane_public_url: "{{ headscale_server_url | default('') }}"
 # The public URL of Headplane, without the /admin path.
 headplane_base_url: ""
+
+# OIDC login. Keep the client secret in secrets.sops.yml. Leave the issuer
+# empty to use the API key login only.
+headplane_oidc_issuer: ""
+headplane_oidc_client_id: ""
+headplane_oidc_client_secret: ""
+
+# The Headscale API key for Headplane. Ansible makes it on the host, and the
+# key does not go into the repository. Ansible makes a new key when the old
+# key has less than headplane_api_key_renew_days left.
+headplane_api_key_expiry_days: 3650
+headplane_api_key_renew_days: 365
