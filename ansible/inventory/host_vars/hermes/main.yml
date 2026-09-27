@@ -15,7 +15,28 @@ pangolin_acme_email: ""
 pangolin_network_subnet: 10.200.0.0/24
 pangolin_network_gateway: 10.200.0.1
 
-pangolin_headplane_enabled: true
+# The Pangolin organization and the local site. Copy each value from the
+# Pangolin dashboard. secrets.sops.yml holds pangolin_blueprint_api_key.
+pangolin_blueprint_org_id: ""
+pangolin_local_site: ""
+
+# Pangolin resources. Headscale is not here: a Pangolin resource sends each
+# request through the Pangolin app, and Headscale must not depend on it.
+pangolin_blueprint_resources:
+  public-resources:
+    headplane:
+      name: Headplane
+      mode: http
+      full-domain: headplane.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_local_site }}"
+          method: http
+          hostname: headplane
+          port: 3000
+
+headplane_base_url: https://headplane.buildwithcaleb.com
 
 # Headscale. Traefik in the Pangolin stack sends vpn.buildwithcaleb.com to the
 # listener on the gateway of the Pangolin network.

@@ -67,18 +67,6 @@ http:
         - websecure
       tls:
         certResolver: letsencrypt
-{% if pangolin_headplane_enabled | bool %}
-
-    # Headplane is under /admin, as the Headplane docs describe. Headplane
-    # asks for a Headscale API key at login.
-    headplane-router:
-      rule: "Host(`{{ pangolin_headscale_domain }}`) && PathPrefix(`/admin`)"
-      service: headplane-service
-      entryPoints:
-        - websecure
-      tls:
-        certResolver: letsencrypt
-{% endif %}
 {% endif %}
 
   services:
@@ -97,13 +85,6 @@ http:
       loadBalancer:
         servers:
           - url: {{ pangolin_headscale_upstream | to_json }}
-{% if pangolin_headplane_enabled | bool %}
-
-    headplane-service:
-      loadBalancer:
-        servers:
-          - url: "http://headplane:3000"
-{% endif %}
 {% endif %}
 
 tcp:

@@ -5,9 +5,10 @@
       - headplane_cookie_secret | length == 32
       - headplane_headscale_url is match('^http://.+:[0-9]+$')
       - headplane_public_url is match('^https://')
+      - headplane_base_url is match('^https://')
     fail_msg: >-
       Set a cookie secret of exactly 32 characters in secrets.sops.yml, and
-      the Headscale listener and server URL.
+      the Headscale listener, the server URL, and the Headplane URL.
   no_log: true
 
 # Docker makes a directory if the source of a bind mount does not exist.

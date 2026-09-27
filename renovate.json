@@ -1,6 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "enabledManagers": [
     "ansible-galaxy",
     "custom.regex",
@@ -13,11 +15,26 @@
     {
       "customType": "regex",
       "description": "Update a version that has a renovate comment in Ansible variables",
-      "managerFilePatterns": ["/^ansible/.+\\.ya?ml$/"],
+      "managerFilePatterns": [
+        "/^ansible/.+\\.ya?ml$/"
+      ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[A-Za-z0-9_]+: \"?(?<currentValue>[^\"\\s]+)\"?"
       ]
     }
   ],
-  "dependencyDashboard": true
+  "dependencyDashboard": true,
+  "packageRules": [
+    {
+      "description": "Pangolin Enterprise Edition tags have the form ee-<version>",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/fosrl/pangolin",
+        "fosrl/pangolin"
+      ],
+      "versioning": "regex:^ee-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+    }
+  ]
 }
