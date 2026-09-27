@@ -10,27 +10,6 @@
       - dockge_docker_socket.stat.exists
     fail_msg: "The Docker socket is absent. Run the Docker role first."
 
-# Dockge replaced Dockhand on 27 September 2026. Delete these tasks after the
-# change is on each host.
-- name: Read the old Dockhand stack
-  ansible.builtin.stat:
-    path: "{{ dockge_stacks_dir }}/dockhand/compose.yaml"
-  register: dockge_old_dockhand
-
-- name: Stop and delete the old Dockhand stack
-  community.docker.docker_compose_v2:
-    project_src: "{{ dockge_stacks_dir }}/dockhand"
-    state: absent
-  when: dockge_old_dockhand.stat.exists
-
-- name: Delete the old Dockhand directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - "{{ dockge_stacks_dir }}/dockhand"
-    - /opt/dockhand
-
 - name: Create the stacks directory
   ansible.builtin.file:
     path: "{{ dockge_stacks_dir }}"

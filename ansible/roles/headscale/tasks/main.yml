@@ -5,16 +5,16 @@
       - headscale_version is match('^[0-9]+[.][0-9]+[.][0-9]+$')
       - headscale_server_url is match('^https://')
       - headscale_listen_addr | length > 0
-      - ansible_distribution | lower in ["debian", "ubuntu"]
-      - ansible_distribution_release | length > 0
-      - ansible_architecture in headscale_architecture_map
+      - ansible_facts['distribution'] | lower in ["debian", "ubuntu"]
+      - ansible_facts['distribution_release'] | length > 0
+      - ansible_facts['architecture'] in headscale_architecture_map
     fail_msg: >-
       Set a supported OS, CPU architecture, pinned Headscale version, HTTPS
       server URL, and private listener before you deploy Headscale.
 
 - name: Set the Headscale package architecture
   ansible.builtin.set_fact:
-    headscale_package_architecture: "{{ headscale_architecture_map[ansible_architecture] }}"
+    headscale_package_architecture: "{{ headscale_architecture_map[ansible_facts['architecture']] }}"
     headscale_release_url: >-
       https://github.com/juanfont/headscale/releases/download/v{{ headscale_version }}
     headscale_listen_ip: "{{ headscale_listen_addr | regex_replace(':[0-9]+$', '') }}"
@@ -25,7 +25,7 @@
 - name: Check that the listener address exists on the host
   ansible.builtin.assert:
     that:
-      - headscale_listen_ip is match('^127[.]') or headscale_listen_ip in ansible_all_ipv4_addresses
+      - headscale_listen_ip is match('^127[.]') or headscale_listen_ip in ansible_facts['all_ipv4_addresses']
     fail_msg: >-
       The address {{ headscale_listen_ip }} is not on this host. Deploy the
       Pangolin stack before Headscale.
