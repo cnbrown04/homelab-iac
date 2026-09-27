@@ -9,6 +9,7 @@ C1 in `docs/todo.md`. Ansible deploys each part.
 | --- | --- | --- |
 | `pangolin.buildwithcaleb.com` | The Pangolin dashboard | Pangolin |
 | `vpn.buildwithcaleb.com` | Headscale | none |
+| `vpn.buildwithcaleb.com/admin` | Headplane | a Headscale API key |
 
 Two `A` records point to `192.255.220.7`: `buildwithcaleb.com` and
 `*.buildwithcaleb.com`. The wildcard record covers each name in the table and
@@ -21,6 +22,10 @@ each new Pangolin resource. The owner made the records on 27 September 2026.
 2. Traefik uses the network of Gerbil, and it terminates TLS.
 3. Traefik sends `vpn.buildwithcaleb.com` to `http://10.200.0.1:8085`.
 4. Headscale runs as a system service, and it listens on `10.200.0.1:8085`.
+
+Traefik sends the path `/admin` on `vpn.buildwithcaleb.com` to the Headplane
+container, on the `pangolin` network. Headplane uses the same listener at
+`10.200.0.1:8085` for the Headscale API.
 
 The address `10.200.0.1` is the gateway of the Docker network `pangolin`. The
 network has the fixed subnet `10.200.0.0/24`. The address is not public.
@@ -69,7 +74,20 @@ systemd override starts Headscale after `docker.service`.
 Warning: do step 4 immediately after step 2. Until you create the admin
 account, any person with the setup token can take control of the dashboard.
 
+## Headplane
+
+Headplane asks for a Headscale API key at login. Make a key on `hermes`:
+
+```sh
+sudo headscale apikeys create --expiration 90d
+```
+
+Headplane can read the Headscale configuration, but it cannot change it. Ansible
+owns that file and the policy file. Make a change in the repository, and deploy
+it with `playbooks/headscale.yml`.
+
 ## Sources
 
 - [Pangolin manual install with Docker Compose](https://docs.pangolin.net/self-host/manual/docker-compose)
 - [Headscale behind a reverse proxy](https://headscale.net/stable/ref/integration/reverse-proxy/)
+- [Headplane Docker install](https://headplane.net/install/docker)

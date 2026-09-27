@@ -39,6 +39,7 @@ The cluster now has no recorded workloads.
 | CrowdSec and Fail2ban | `hermes` | running |
 | Pangolin (new install) | `hermes` | running; Ansible deploys it |
 | Headscale control server (0.29.3) | `hermes` | running; Ansible deploys it |
+| Headplane (0.7.1) | `hermes` | planned; Ansible deploys it |
 | Dockhand | `hermes` | running; UI private, no login yet |
 | Docker Compose stacks | `hermes` | planned; Ansible deploys them |
 

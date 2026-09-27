@@ -34,7 +34,7 @@ Both target roots pin this version and commit a lock file.
 Renovate can update the pin. Review the changelog for each provider update; see
 risk 2.
 
-## 4. The way a runner joins the network — method confirmed, test open
+## 4. The way a runner joins the network — closed
 
 The owner replaced Tailscale with Headscale on 21 September 2026. Headscale is
 an open-source control server. The client software of Tailscale stays the same,
@@ -52,8 +52,14 @@ one hour by default. Choose a longer expiry that fits the key rotation plan
 before task C6. Do not set the action's `tags` input; the Headscale key supplies
 the tag.
 
-The method is confirmed. Test a GitHub Actions job that reaches the Proxmox API
-in task C7. The owner chose Tailscale's public DERP relays on 27 September 2026.
+The owner chose Tailscale's public DERP relays on 27 September 2026. The test
+passed on the same day: run 36350927486 of `tailnet-check.yml` reached port
+`8006` on each node, and the policy blocked port `22`.
+
+The action marks the `authkey` input as deprecated, and it recommends an OAuth
+client. Headscale has no OAuth client, so the pre-auth key stays. See
+decision 6 in `AGENTS.md`. Read the release notes of each new major version of
+the action, because a future version can delete the input.
 
 Sources:
 

@@ -65,16 +65,18 @@ Tailscale's public DERP relays.
 - [x] **C5. Join each Proxmox node.** The `tailscale` role joined the five
       nodes with `tag:proxmox` on 27 September 2026. A second run showed no
       change. `docs/runbooks/inventory.md` holds the tailnet addresses.
-- [ ] **C6. Create the pre-auth key for the pipeline.** The key is reusable
-      and ephemeral, and it has the tag `tag:github-actions`. Put it in the
-      GitHub secret `HEADSCALE_AUTHKEY`. Record its expiry date here.
-- [ ] **C7. Test the join from a runner.** Run the workflow
-      `.github/workflows/tailnet-check.yml`. It must reach port `8006` on each
-      node, and the policy must block port `22`.
-- [ ] **C8. Install the Headplane admin interface.** Install the full
-      Headplane on `hermes` after Headscale runs. Route it through Pangolin.
-      Do not use Headplane Limited Mode, because its features are limited.
-      The owner chose this on 27 September 2026.
+- [x] **C6. Create the pre-auth key for the pipeline.** The key is reusable
+      and ephemeral, and it has the tag `tag:github-actions`. It is in the
+      GitHub secret `HEADSCALE_AUTHKEY`. Warning: the key expires on
+      26 December 2026. Make a new key and replace the secret before that date.
+- [x] **C7. Test the join from a runner.** Run 36350927486 of
+      `.github/workflows/tailnet-check.yml` passed on 27 September 2026. Each
+      node returned HTTP `200` on port `8006`, and the policy blocked port `22`.
+- [ ] **C8. Install the Headplane admin interface.** The `headplane` role
+      runs Headplane 0.7.1 in Docker at `https://vpn.buildwithcaleb.com/admin`.
+      It mounts the Headscale configuration read-only, because Ansible owns
+      that file. The owner chose this on 27 September 2026. Change the
+      Headscale configuration and policy in the repository, not in the UI.
 
 ## E. Bootstrap `hermes`
 

@@ -3,3 +3,5 @@
   hosts: hermes
   roles:
     - role: headscale
+    - role: headplane
+      tags: [headplane]
