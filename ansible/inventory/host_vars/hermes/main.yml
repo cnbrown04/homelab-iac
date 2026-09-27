@@ -79,7 +79,7 @@ pangolin_root_redirects:
 # Headscale. Traefik in the Pangolin stack sends vpn.buildwithcaleb.com to the
 # listener on the gateway of the Pangolin network.
 # renovate: datasource=github-releases depName=juanfont/headscale extractVersion=^v(?<version>.+)$
-headscale_version: 0.29.3
+headscale_version: 0.29.4
 headscale_server_url: https://vpn.buildwithcaleb.com
 headscale_listen_port: 8085
 headscale_listen_addr: "{{ pangolin_network_gateway }}:{{ headscale_listen_port }}"
