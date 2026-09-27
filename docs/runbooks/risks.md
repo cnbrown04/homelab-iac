@@ -26,32 +26,40 @@ broke a configuration. The releases 0.102.0 and 0.109.0 are two examples.
 Action: read the changelog for every version bump of the provider. A Renovate
 pull request for the provider needs a human to read the changelog.
 
-## 3. The version number of the provider — open
+## 3. The version number of the provider — closed
 
-The handoff names 0.113.1, but the source was a search result. Another page
-showed 0.110.0.
+OpenTofu 1.12.6 resolved `bpg/proxmox` version `0.114.0` on 26 September 2026.
+Both target roots pin this version and commit a lock file.
 
-Action: run `tofu init` in a target, then read `.terraform.lock.hcl`. Record the
-version here. Do this in step 2 or step 5.
+Renovate can update the pin. Review the changelog for each provider update; see
+risk 2.
 
-## 4. The way a runner joins the network — open, and it changed
+## 4. The way a runner joins the network — method confirmed, test open
 
 The owner replaced Tailscale with Headscale on 21 September 2026. Headscale is
 an open-source control server. The client software of Tailscale stays the same,
 but the control server is not the service of Tailscale.
 
-Two facts are open:
+The official action uses `tailscale/github-action@v4`. Its `authkey` input
+accepts the pre-auth key, and its `args` input passes extra arguments to
+`tailscale up`. Headscale documents `tailscale up --login-server <URL>
+--authkey <KEY>` for this login method.
 
-- The handoff names `tailscale/github-action@v4`, but the source was a search
-  snippet. The correct tag is not confirmed.
-- The action logs in to the service of Tailscale by default. A custom control
-  server needs a login server option. The method is not confirmed.
+Set `args: --login-server=https://<Headscale DNS name>` and store the reusable,
+ephemeral, tagged pre-auth key in the GitHub secret. Create the key with
+`--reusable --ephemeral --tags tag:github-actions`. Headscale keys expire after
+one hour by default. Choose a longer expiry that fits the key rotation plan
+before task C6. Do not set the action's `tags` input; the Headscale key supplies
+the tag.
 
-Headscale has no OAuth client, so the pre-auth key takes the place of the OAuth
-client in decision 6.
+The method is confirmed. Test a GitHub Actions job that reaches the Proxmox API
+in task C7.
 
-Action: read the official documents of the action and of Headscale. Record the
-method here. Then test a job that reaches the Proxmox API.
+Sources:
+
+- [Tailscale GitHub Action v4 inputs](https://github.com/tailscale/github-action/blob/v4/action.yml)
+- [Headscale node registration](https://headscale.net/stable/ref/registration/)
+- [Headscale pre-auth key flags](https://github.com/juanfont/headscale/blob/main/cmd/headscale/cli/preauthkeys.go)
 
 ### New risk: the port on the RackNerd VPS
 
@@ -61,13 +69,11 @@ runs Pangolin, and Pangolin uses port 443. A conflict is possible.
 Action: put Headscale behind the reverse proxy of Pangolin, or give Headscale
 another port. Record the answer before task C2 in `docs/todo.md`.
 
-## 5. The rights of the user for the provider — open
+## 5. The rights of the user for the provider — documented
 
-The provider uses SSH for some operations, and it can need sudo on the node.
-
-Action: read the current documents of the provider. Create a dedicated user with
-the exact rights that the documents give. Do not guess the rights. Record the
-steps in a new runbook.
+The provider needs API access for normal VM and container work. SSH is optional.
+See `docs/runbooks/proxmox-user.md` for the SSH-backed features and documented
+`sudo` rights. Add no SSH rights until a target uses one of those features.
 
 ## 6. The panel and use of each VPS — panel facts closed, DediRock plan open
 
@@ -90,7 +96,7 @@ This workload remains:
 - Home Assistant, on `atlas`.
 
 The owner deleted the Talos cluster and TrueNAS VM. The owner reinstalled
-`prometheus` as `gaia`; no workload is recorded on the cluster now.
+`prometheus` as `gaia`; no workload is recorded on the `pantheon` cluster now.
 
 The owner recorded VMID `100`, name `haos-18.2`, on `atlas`. The host has no
 containers. Write and run the import step for VMID `100` before any apply.
@@ -98,8 +104,17 @@ containers. Write and run the import step for VMID `100` before any apply.
 ## 8. The new install on `prometheus` — closed
 
 The owner reinstalled Proxmox VE on `prometheus` and renamed it `gaia`. The owner
-renamed `helios` to `theia`. The cluster now has `gaia`, `hyperion`, `tartarus`,
-and `theia`.
+renamed `helios` to `theia`. The `pantheon` cluster now has `gaia`, `hyperion`,
+`tartarus`, and `theia`.
 
 The reinstall is complete. The owner confirmed the Proxmox versions on `gaia`
 and `theia` on 26 September 2026.
+
+## 9. Recovery of remote state — closed
+
+The owner selected Cloudflare R2 for remote state. OpenTofu can use R2's S3 API
+and conditional writes for state locks. R2 does not provide object versioning.
+The owner confirmed that both roots initialized against R2, and that a separate
+versioned backup and restore test are complete.
+
+Keep the tested backup process active. Do not rely on R2 for object versioning.

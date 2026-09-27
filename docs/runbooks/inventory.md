@@ -9,17 +9,17 @@ last checked on 21 September 2026.
 
 | Host | Role | Cluster | `pve-manager` | Kernel |
 | --- | --- | --- | --- | --- |
-| `tartarus` | cluster node | `gaia` | 9.2.20 | 7.0.14-17-pve |
-| `gaia` | cluster node | `gaia` | 9.2.20 | 7.0.14-19-pve |
-| `hyperion` | cluster node | `gaia` | 9.2.20 | 7.0.14-17-pve |
-| `theia` | cluster node | `gaia` | 9.2.20 | 7.0.14-19-pve |
+| `tartarus` | cluster node | `pantheon` | 9.2.20 | 7.0.14-17-pve |
+| `gaia` | cluster node | `pantheon` | 9.2.20 | 7.0.14-19-pve |
+| `hyperion` | cluster node | `pantheon` | 9.2.20 | 7.0.14-17-pve |
+| `theia` | cluster node | `pantheon` | 9.2.20 | 7.0.14-19-pve |
 | `atlas` | standalone node | none | 9.2.20 | 7.0.14-17-pve |
 
 The full version string is `pve-manager/9.2.20/49318c671b82f31e`. The owner
 confirmed this version on `gaia` and `theia` on 26 September 2026.
 
-The cluster `gaia` is the `pve-cluster` target. The host `atlas` is the
-`pve-standalone` target.
+The `pantheon` cluster uses the `pantheon` target. The standalone host `atlas`
+uses the `atlas` target.
 
 The owner reinstalled Proxmox VE on `prometheus` and renamed it `gaia`. The owner
 also renamed `helios` to `theia`. The Talos cluster and TrueNAS VM were deleted.
@@ -40,7 +40,7 @@ The cluster now has no recorded workloads.
 | CrowdSec, Fail2ban, Pangolin, and more | RackNerd VPS | software on the host |
 | Services outside the homelab | DediRock VPS | planned; Dockage is preferred but not chosen |
 
-No workload is recorded on the `gaia` cluster. The Talos cluster and TrueNAS VM
+No workload is recorded on the `pantheon` cluster. The Talos cluster and TrueNAS VM
 were deleted before the `prometheus` reinstall.
 
 On 26 September 2026, `qm list` showed VMID `100`, name `haos-18.2`, running.
