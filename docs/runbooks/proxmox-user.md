@@ -46,7 +46,12 @@ pveum user token add tofu@pve homelab-iac --privsep 0 --comment "homelab-iac"
 
 The user is in the realm `pve`, so it has no Linux account and no password.
 The last command shows the token secret one time. The full token is
-`tofu@pve!homelab-iac=<secret>`.
+`tofu@pve!homelab-iac=<secret>`. Store it as `atlas_api_token` or
+`pantheon_api_token` in `secrets/tofu.sops.yaml`. See
+`docs/runbooks/tofu-state.md`.
+
+On 28 September 2026 the owner made the user and the token on `atlas` and on
+the `pantheon` cluster (through `gaia`).
 
 A guest with a raw USB or PCI device needs `root@pam` to change that device.
 The token can read the guest and change the other parts.

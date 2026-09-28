@@ -216,8 +216,11 @@ their move.
       only change in the apply was the notes of the VM. The token `tofu@pve`
       has the role `IaCProvisioner`; see `docs/runbooks/proxmox-user.md`. A
       plan of a test container against `atlas` checked the `lxc` module.
-- [ ] **D3. Step 6.** Do step 5 again for the `pantheon` cluster. See the current
-      versions in `docs/runbooks/inventory.md`.
+- [x] **D3. Step 6.** Do step 5 again for the `pantheon` cluster. On
+      28 September 2026 the owner made `tofu@pve` and its token on the cluster.
+      The token saw the four nodes online, through `gaia` and `hyperion`. The
+      cluster has no guest, so nothing needed an import. `tofu plan` showed no
+      change. `atlas` has only VMID `100`, and OpenTofu manages it.
 - [ ] **D4. Step 7.** Write the Ansible baseline for the five Proxmox nodes and
       `hermes`.
 - [ ] **D5. Step 8.** Add the workflows with a matrix over the targets.

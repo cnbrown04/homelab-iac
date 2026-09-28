@@ -3,8 +3,8 @@
 This OpenTofu root manages the standalone Proxmox VE node `atlas`. It has its
 own state.
 
-`vms.tf` lists the VMs as data. To add a VM, add one entry to the map. Do not
-write a new resource block.
+`vms.tf` lists the VMs, and `containers.tf` lists the containers. To add a
+guest, add one entry to a map. Do not write a new resource block.
 
 | Entry | VMID | The VM |
 | --- | --- | --- |
