@@ -35,7 +35,7 @@ The cluster now has no recorded workloads.
 
 | Host | Address | SSH user | SSH port | Panel | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `hermes` | `192.255.220.7` | `caleb` | `22` | vPanel | hardened; Ansible-managed |
+| `hermes` | `192.255.220.7` | `iac-admin` (Ansible), `caleb` (owner) | `22` | vPanel | hardened; Ansible-managed |
 
 ## The workloads
 
@@ -44,7 +44,7 @@ The cluster now has no recorded workloads.
 | Home Assistant (`haos-18.2`, VMID `100`) | `atlas` | VM, running |
 | CrowdSec and Fail2ban | `hermes` | running |
 | Pangolin Enterprise Edition | `hermes` | running; Ansible deploys it |
-| Headscale control server (0.29.3) | `hermes` | running; Ansible deploys it |
+| Headscale control server (0.29.4) | `hermes` | running; Ansible deploys it |
 | Headplane (0.7.1) | `hermes` | planned; Ansible deploys it |
 | Pocket ID (2.16.0) | `hermes` | running at `auth.buildwithcaleb.com`; a Pangolin resource |
 | Dockge (1.5.0) | `hermes` | planned; Ansible deploys it behind the Pangolin login |

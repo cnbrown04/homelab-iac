@@ -1,0 +1,17 @@
+---
+# Handlers run in this order. A reload with a bad file stops SSH, so the check
+# comes first. If the check fails, the host fails, and the reload does not run.
+- name: Check the SSH configuration
+  ansible.builtin.command:
+    cmd: sshd -t
+  changed_when: false
+  listen: SSH configuration changed
+
+# Ubuntu can start SSH from a socket. Then the service does not run, and each
+# new connection reads the configuration. try-reload-or-restart reloads the
+# service only when it runs. The systemd module has no such state.
+- name: Reload SSH  # noqa: command-instead-of-module
+  ansible.builtin.command:
+    cmd: systemctl try-reload-or-restart ssh.service
+  changed_when: true
+  listen: SSH configuration changed

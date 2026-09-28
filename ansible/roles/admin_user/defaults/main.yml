@@ -2,5 +2,7 @@
 admin_user_name: ""
 # A URL that returns public SSH keys, one on each line.
 admin_user_ssh_keys_url: ""
+# Public keys in addition to the keys at the URL, for example a pipeline key.
+admin_user_extra_ssh_keys: []
 # A SHA-512 crypt hash. The password is for sudo.
 admin_user_password_hash: ""
