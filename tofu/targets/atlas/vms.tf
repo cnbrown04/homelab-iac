@@ -6,7 +6,7 @@ locals {
       vm_id       = 100
       name        = "haos-18.2"
       description = "Home Assistant OS. OpenTofu manages this VM from homelab-iac."
-      tags        = ["community-script"]
+      tags        = ["homeassistant"]
       bios        = "ovmf"
       machine     = "q35"
       # The VM has no cpu line, so it runs qemu64.
