@@ -7,6 +7,7 @@ ansible/.ansible/
 *.tfstate.*
 .terraform/
 .terraform.lock.hcl.bak
+*.tfplan
 crash.log
 
 # Decrypted secrets. Only the SOPS-encrypted form belongs in git.
