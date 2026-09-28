@@ -186,13 +186,16 @@ upgrade to Headscale 0.30.
       - `/opt/stacks/pocket-id/data`: the users and passkeys. The key in
         `pocket_id_encryption_key` must be available for a restore.
       Write a restore test in a runbook, and do the test one time.
-- [ ] **F7. Deploy `hermes` from the pipeline.** The workflow
+- [x] **F7. Deploy `hermes` from the pipeline.** The workflow
       `.github/workflows/ansible-hermes.yml` runs a check on each pull
       request, and an apply after a merge to `main`. The apply waits for the
       approval of the owner. The runner logs in as `iac-admin` with its own
       key. Do the one-time setup in `docs/runbooks/pipeline-hermes.md`. This is
       the `hermes` part of task D5. The Proxmox nodes are not in the pipeline,
-      because `tag:github-actions` gets port `8006` only.
+      because `tag:github-actions` gets port `8006` only. On 28 September 2026
+      pull request 4 passed the check job (run 36361354941). After the merge,
+      the apply job (run 36361957940) showed `changed=0` in the apply and in
+      the check after it.
 
 C0.1 is also open for `hermes`: list the workloads on the old VPS before
 their move.

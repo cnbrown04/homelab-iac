@@ -8,7 +8,8 @@ Ansible:
 - **A push to `main`**: lint, then the apply job. The apply job uses the GitHub
   environment `hermes`, so it waits for the approval of the owner. See
   decision 7 in `AGENTS.md`. After the apply, a check run must show no change,
-  or the job fails.
+  or the job fails. That step turns off color, because a color code at the
+  start of the recap line hides the host name from `grep`.
 
 The pipeline deploys `hermes` only. It cannot reach the Proxmox nodes: the
 runner joins the tailnet as `tag:github-actions`, and the policy gives that tag
