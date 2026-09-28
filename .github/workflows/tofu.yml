@@ -1,0 +1,65 @@
+# Plans and applies the OpenTofu targets.
+#
+# - A pull request: format and validate, then a plan for each target.
+# - A push to main: a plan for each target. A target with changes waits for the
+#   approval of the owner, then the saved plan is applied.
+name: OpenTofu
+
+on:
+  pull_request:
+    paths:
+      - "tofu/**"
+      - "secrets/tofu.sops.yaml"
+      - "scripts/tofu-env.sh"
+      - "mise.toml"
+      - ".github/workflows/tofu.yml"
+      - ".github/workflows/tofu-target.yml"
+      - ".github/actions/tofu-setup/**"
+  push:
+    branches: [main]
+    paths:
+      - "tofu/**"
+      - "secrets/tofu.sops.yaml"
+      - "scripts/tofu-env.sh"
+      - "mise.toml"
+      - ".github/workflows/tofu.yml"
+      - ".github/workflows/tofu-target.yml"
+      - ".github/actions/tofu-setup/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      - name: Check the format
+        run: tofu fmt -check -recursive -diff tofu
+      - name: Validate each target
+        run: |
+          for target in tofu/targets/*/; do
+            echo "Validate $target"
+            tofu -chdir="$target" init -backend=false -no-color > /dev/null
+            tofu -chdir="$target" validate -no-color
+          done
+
+  target:
+    # A pull request from a fork gets no secrets, so the plan runs only for a
+    # branch of this repository.
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [atlas, pantheon]
+    uses: ./.github/workflows/tofu-target.yml
+    with:
+      target: ${{ matrix.target }}
+      apply: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
