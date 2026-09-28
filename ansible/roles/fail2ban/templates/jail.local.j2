@@ -1,0 +1,14 @@
+# Ansible writes this file. See the fail2ban role.
+[DEFAULT]
+# The journal holds the log. A new Debian and a new Ubuntu keep no auth.log.
+backend = systemd
+ignoreip = {{ fail2ban_ignore_ip | join(' ') }}
+bantime = 1h
+findtime = 10m
+maxretry = 5
+banaction = ufw
+
+[sshd]
+enabled = true
+port = {{ fail2ban_ssh_port }}
+mode = aggressive

@@ -1,0 +1,4 @@
+---
+# Limit the automatic upgrades to the security updates of Debian. Use it on a
+# Proxmox node: an unattended upgrade of Proxmox packages can break a cluster.
+unattended_upgrades_debian_security_only: false

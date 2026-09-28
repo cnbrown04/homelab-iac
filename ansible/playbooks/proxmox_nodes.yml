@@ -5,5 +5,11 @@
     - role: common
     - role: admin_user
       tags: [admin_user]
+    - role: ssh_hardening
+      tags: [security]
+    - role: sysctl_hardening
+      tags: [security]
+    - role: unattended_upgrades
+      tags: [security]
     - role: tailscale
       tags: [tailscale]

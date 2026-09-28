@@ -3,6 +3,20 @@
 admin_user_extra_ssh_keys:
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJ20dWgJFxvs+kNgHVrRNqLvmMbekLjQoi5U/yzzJHZ github-actions hermes"
 
+# The SSH settings are the defaults of the ssh_hardening role, the same as
+# scripts/vps-harden.sh. Only these users can log in.
+ssh_hardening_allow_users:
+  - caleb
+  - iac-admin
+
+# The firewall. Docker publishes the ports of Gerbil (UDP 51820, UDP 21820,
+# and UDP 443) with its own iptables rules, so they are not here. The headscale
+# role adds the rule for the Pangolin network.
+ufw_rules:
+  - {rule: allow, port: "22", proto: tcp}
+  - {rule: allow, port: "80", proto: tcp}
+  - {rule: allow, port: "443", proto: tcp}
+
 # The stack roles and stacks.yml share these values.
 compose_stack_root: /opt/stacks
 

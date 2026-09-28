@@ -1,6 +1,7 @@
 ---
 # Handlers run in this order. A reload with a bad file stops SSH, so the check
-# comes first. If the check fails, the host fails, and the reload does not run.
+# of the whole configuration comes first. If the check fails, the host fails,
+# and the reload does not run.
 - name: Check the SSH configuration
   ansible.builtin.command:
     cmd: sshd -t

@@ -1,0 +1,9 @@
+// Ansible writes this file. See the unattended_upgrades role.
+// APT reads this file after 50unattended-upgrades. It clears the list of
+// origins, then allows the security updates of Debian only. The Proxmox
+// repositories are not in the list, so their packages do not upgrade.
+#clear Unattended-Upgrade::Origins-Pattern;
+Unattended-Upgrade::Origins-Pattern {
+        "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+        "origin=Debian,codename=${distro_codename},label=Debian-Security";
+};

@@ -1,8 +1,52 @@
 ---
+# Debian and Ubuntu have no current CrowdSec package. The repository of
+# CrowdSec is on packagecloud. These tasks write the same files as the install
+# script of CrowdSec.
+- name: Create the APT key directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Read the CrowdSec signing key
+  ansible.builtin.stat:
+    path: /etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg
+  register: crowdsec_signing_key
+
+- name: Install the CrowdSec signing key
+  when: not crowdsec_signing_key.stat.exists
+  block:
+    - name: Download the CrowdSec signing key
+      ansible.builtin.get_url:
+        url: https://packagecloud.io/crowdsec/crowdsec/gpgkey
+        dest: /tmp/crowdsec-gpgkey.asc
+        mode: "0644"
+
+    - name: Convert the key to a keyring
+      ansible.builtin.command:
+        cmd: >-
+          gpg --batch --yes --dearmor
+          -o /etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg
+          /tmp/crowdsec-gpgkey.asc
+        creates: /etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg
+
+- name: Configure the CrowdSec repository
+  ansible.builtin.copy:
+    src: crowdsec_crowdsec.list
+    dest: /etc/apt/sources.list.d/crowdsec_crowdsec.list
+    owner: root
+    group: root
+    mode: "0644"
+  register: crowdsec_repository
+
+# The index needs a refresh only after a change to the CrowdSec repository.
 - name: Install CrowdSec and its firewall bouncer
   ansible.builtin.apt:
     name: "{{ crowdsec_packages }}"
     state: present
+    update_cache: "{{ crowdsec_repository is changed }}"
 
 - name: Start and enable CrowdSec
   ansible.builtin.systemd_service:

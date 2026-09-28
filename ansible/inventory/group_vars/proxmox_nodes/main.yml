@@ -5,3 +5,17 @@
 tailscale_login_server: https://vpn.buildwithcaleb.com
 tailscale_tags:
   - tag:proxmox
+
+# The cluster uses root SSH between its nodes, with keys. So root keeps key
+# login, and no AllowUsers list limits the users. The owner chose this on
+# 28 September 2026.
+ssh_hardening_options:
+  PermitRootLogin: "prohibit-password"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  PubkeyAuthentication: "yes"
+  PermitEmptyPasswords: "no"
+
+# Only the security updates of Debian upgrade by themselves. Proxmox packages
+# never do.
+unattended_upgrades_debian_security_only: true

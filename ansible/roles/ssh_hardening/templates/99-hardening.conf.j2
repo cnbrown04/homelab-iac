@@ -1,0 +1,7 @@
+# Ansible writes this file. See the ssh_hardening role.
+{% for name, value in ssh_hardening_options.items() %}
+{{ name }} {{ value }}
+{% endfor %}
+{% if ssh_hardening_allow_users | length > 0 %}
+AllowUsers {{ ssh_hardening_allow_users | join(' ') }}
+{% endif %}

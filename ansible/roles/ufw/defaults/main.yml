@@ -1,0 +1,5 @@
+---
+# Each rule has rule (allow or limit), port, and an optional proto (tcp or
+# udp). A rule with no proto opens TCP and UDP. The headscale role adds its own
+# rule for the Pangolin network.
+ufw_rules: []

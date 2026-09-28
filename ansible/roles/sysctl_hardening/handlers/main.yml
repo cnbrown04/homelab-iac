@@ -1,0 +1,5 @@
+---
+- name: Load the kernel settings
+  ansible.builtin.command:
+    cmd: sysctl --system
+  changed_when: true

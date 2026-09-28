@@ -1,0 +1,24 @@
+---
+# Each item is one line of the drop-in, in this order. Quote each value, so
+# YAML does not read "no" as false. These defaults are the settings of
+# scripts/vps-harden.sh.
+ssh_hardening_options:
+  Port: "22"
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  PubkeyAuthentication: "yes"
+  PermitEmptyPasswords: "no"
+  AuthenticationMethods: "publickey"
+  MaxAuthTries: "3"
+  MaxSessions: "4"
+  LoginGraceTime: "30"
+  X11Forwarding: "no"
+  AllowAgentForwarding: "no"
+  AllowTcpForwarding: "no"
+  ClientAliveInterval: "300"
+  ClientAliveCountMax: "2"
+
+# Only these users can log in. Leave the list empty to allow each user.
+ssh_hardening_allow_users: []
