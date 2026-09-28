@@ -90,6 +90,10 @@ jobs:
           -e @"$RUNNER_TEMP/become.json"
       - name: Check that a second run changes nothing
         working-directory: ansible
+        # No color codes, so the recap line starts with the host name.
+        env:
+          ANSIBLE_FORCE_COLOR: "0"
+          ANSIBLE_NOCOLOR: "1"
         run: |
           ansible-playbook playbooks/site.yml --check --limit hermes \
             -e @"$RUNNER_TEMP/become.json" | tee "$RUNNER_TEMP/verify.txt"
