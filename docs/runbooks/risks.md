@@ -106,20 +106,12 @@ Action: make the Dockge admin account immediately after the first deployment.
 Assess a Docker socket proxy later. Dockge needs write access to Docker, so a
 proxy gives less protection than for a read-only tool.
 
-## 8. The import of the resources that exist — open
+## 8. The import of the resources that exist — closed
 
-No VM is in the OpenTofu state now. The plan tries to create a copy of each VM
-if you do not import it first.
-
-This workload remains:
-
-- Home Assistant, on `atlas`.
-
-The owner deleted the Talos cluster and TrueNAS VM. The owner reinstalled
-`prometheus` as `gaia`; no workload is recorded on the `pantheon` cluster now.
-
-The owner recorded VMID `100`, name `haos-18.2`, on `atlas`. The host has no
-containers. Write and run the import step for VMID `100` before any apply.
+On 28 September 2026 OpenTofu imported Home Assistant (VMID `100`, `haos-18.2`)
+on `atlas`. After the apply, `tofu plan` showed no change. `atlas` has no
+containers. The `pantheon` cluster has no workload, so it has nothing to
+import.
 
 ## 9. The new install on `prometheus` — closed
 

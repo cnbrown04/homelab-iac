@@ -161,11 +161,14 @@ upgrade to Headscale 0.30.
         merge a Renovate pull request for 0.30 without a backup.
       Source: the 0.30.0 section of the Headscale changelog, and
       `docs/ref/api.md` on the `main` branch.
-- [ ] **F4. Install the Renovate app.** `renovate.json` exists, but the
+- [x] **F4. Install the Renovate app.** `renovate.json` exists, but the
       Renovate app is not installed on the repository. On 27 September 2026
       the repository had no Dependency Dashboard issue and no Renovate pull
       request. Install the app, and merge the onboarding pull request.
       Headscale 0.29.4 is the first expected update.
+      The owner installed the app on 27 September 2026. Renovate opened the
+      Dependency Dashboard (issue 3) and pull requests 1 and 2. The owner
+      merged both, and Ansible deployed Headscale 0.29.4.
 - [x] **F5. Check `hermes` with no change.** Run
       `ansible-playbook playbooks/site.yml --check --diff --limit hermes -K`.
       Correct each task that shows a change. This is the `hermes` part of
@@ -207,8 +210,12 @@ their move.
       the separate backup and restore test are complete. `.sops.yaml` has the
       age recipient. The local encrypt/decrypt test passed, and the owner added
       the private key as a GitHub secret.
-- [ ] **D2. Step 5.** Write the `vm` module and the `lxc` module. Write the
-      `atlas` target. Import Home Assistant.
+- [x] **D2. Step 5.** Write the `vm` module and the `lxc` module. Write the
+      `atlas` target. Import Home Assistant. On 28 September 2026 the owner
+      applied the import of VMID `100`, and `tofu plan` showed no change. The
+      only change in the apply was the notes of the VM. The token `tofu@pve`
+      has the role `IaCProvisioner`; see `docs/runbooks/proxmox-user.md`. A
+      plan of a test container against `atlas` checked the `lxc` module.
 - [ ] **D3. Step 6.** Do step 5 again for the `pantheon` cluster. See the current
       versions in `docs/runbooks/inventory.md`.
 - [ ] **D4. Step 7.** Write the Ansible baseline for the five Proxmox nodes and
