@@ -78,6 +78,28 @@
       no_log: true
       when: proxmox_web_oidc_realm not in (proxmox_web_realms.stdout | from_json | map(attribute='realm') | list)
 
+    # The list of realms does not show the default flag, so read the realm.
+    - name: Read the OIDC realm
+      ansible.builtin.command:
+        cmd: "pvesh get /access/domains/{{ proxmox_web_oidc_realm }} --output-format json"
+      register: proxmox_web_realm
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Set the default flag of the OIDC realm
+      ansible.builtin.command:
+        argv:
+          - pveum
+          - realm
+          - modify
+          - "{{ proxmox_web_oidc_realm }}"
+          - "--default={{ proxmox_web_oidc_default | ternary(1, 0) }}"
+      changed_when: true
+      when:
+        - proxmox_web_realm.rc == 0
+        - (proxmox_web_realm.stdout | from_json).get('default', 0) | int != (proxmox_web_oidc_default | ternary(1, 0))
+
     - name: Read the groups
       ansible.builtin.command:
         cmd: pvesh get /access/groups --output-format json

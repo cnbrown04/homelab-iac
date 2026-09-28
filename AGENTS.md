@@ -185,7 +185,9 @@ These decisions are closed. Ask the owner before you re-open one.
 12. **The Proxmox web UI:** an nftables rule sends port 443 to 8006. ACME uses
     the Cloudflare DNS-01 challenge, with the account `caleb@auburn.edu`.
     Members of the Pocket ID group `proxmox-admins` get the role
-    Administrator. `root@pam` stays as the fallback login.
+    Administrator. `pocketid` is the default realm on the login page.
+    `root@pam` stays as the fallback login. Run the role by hand: no pipeline
+    reaches the nodes.
 
 ### The repository
 
@@ -227,7 +229,9 @@ tofu -chdir=tofu/targets/atlas plan
   plan with changes, waits for approval in the environment `atlas` or
   `pantheon`, applies the saved plan, then plans again.
 - The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
-  SSH. Run their playbook by hand.
+  SSH. Run their playbook by hand. The owner chose this on 28 September 2026.
+  Do not open SSH to `tag:proxmox` for a pipeline. OpenTofu still deploys the
+  guests through the API.
 
 ### Secrets
 
