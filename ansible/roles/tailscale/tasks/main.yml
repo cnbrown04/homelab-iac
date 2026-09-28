@@ -8,7 +8,15 @@
       - ansible_facts['distribution_release'] | length > 0
     fail_msg: "Set the login server and at least one tag. The host must run Debian or Ubuntu."
 
+# The package tailscale-archive-keyring owns this file and updates it. Ansible
+# downloads the key only for the first install.
+- name: Read the Tailscale APT signing key
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/tailscale-archive-keyring.gpg
+  register: tailscale_signing_key
+
 - name: Download the Tailscale APT signing key
+  when: not tailscale_signing_key.stat.exists
   ansible.builtin.get_url:
     url: "https://pkgs.tailscale.com/stable/{{ ansible_facts['distribution'] | lower }}/{{ ansible_facts['distribution_release'] }}.noarmor.gpg"
     dest: /usr/share/keyrings/tailscale-archive-keyring.gpg

@@ -1,0 +1,99 @@
+# Deploys hermes with Ansible.
+#
+# - A pull request: lint, then a check run that shows the changes.
+# - A push to main: lint, then an apply. The environment "hermes" needs the
+#   approval of the owner. See decision 7 in AGENTS.md.
+name: Ansible hermes
+
+on:
+  pull_request:
+    paths:
+      - "ansible/**"
+      - "mise.toml"
+      - ".github/workflows/ansible-hermes.yml"
+      - ".github/actions/ansible-setup/**"
+  push:
+    branches: [main]
+    paths:
+      - "ansible/**"
+      - "mise.toml"
+      - ".github/workflows/ansible-hermes.yml"
+      - ".github/actions/ansible-setup/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One run at a time for hermes. A new run waits, and does not cancel an apply.
+concurrency:
+  group: ansible-hermes
+  cancel-in-progress: false
+
+env:
+  ANSIBLE_FORCE_COLOR: "1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/ansible-setup
+      - name: Lint
+        working-directory: ansible
+        run: ansible-lint
+      - name: Check the syntax
+        working-directory: ansible
+        run: ansible-playbook --syntax-check playbooks/site.yml
+
+  check:
+    # A pull request from a fork gets no secrets, so the job runs only for a
+    # branch of this repository.
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/ansible-setup
+        with:
+          ssh-key: ${{ secrets.HERMES_SSH_KEY }}
+          become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
+      - name: Show the changes for hermes
+        working-directory: ansible
+        run: >-
+          ansible-playbook playbooks/site.yml --check --diff --limit hermes
+          -e @"$RUNNER_TEMP/become.json"
+
+  apply:
+    if: github.event_name != 'pull_request'
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: hermes
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/ansible-setup
+        with:
+          ssh-key: ${{ secrets.HERMES_SSH_KEY }}
+          become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
+      - name: Apply to hermes
+        working-directory: ansible
+        run: >-
+          ansible-playbook playbooks/site.yml --diff --limit hermes
+          -e @"$RUNNER_TEMP/become.json"
+      - name: Check that a second run changes nothing
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/site.yml --check --limit hermes \
+            -e @"$RUNNER_TEMP/become.json" | tee "$RUNNER_TEMP/verify.txt"
+          if grep -E '^hermes .*changed=[1-9]' "$RUNNER_TEMP/verify.txt"; then
+            echo "::error::The check run after the apply shows a change. The playbook is not idempotent."
+            exit 1
+          fi
