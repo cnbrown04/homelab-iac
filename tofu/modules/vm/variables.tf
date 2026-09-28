@@ -19,10 +19,15 @@ variable "description" {
   default     = ""
 }
 
+# Proxmox makes each tag lowercase. An uppercase tag shows a change in each plan.
 variable "tags" {
-  description = "The tags of the VM."
+  description = "The tags of the VM, in lowercase."
   type        = list(string)
   default     = []
+  validation {
+    condition     = alltrue([for tag in var.tags : tag == lower(tag)])
+    error_message = "Use lowercase tags. Proxmox makes each tag lowercase."
+  }
 }
 
 variable "on_boot" {

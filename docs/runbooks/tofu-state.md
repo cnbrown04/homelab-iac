@@ -43,7 +43,8 @@ tofu plan
 | `state_encryption_passphrase` | `TF_VAR_state_encryption_passphrase` |
 | `atlas_api_token`, `pantheon_api_token` | `PROXMOX_VE_API_TOKEN` |
 
-The pipeline uses GitHub secrets with the same values.
+The pipeline uses the same file and script, with the GitHub secret
+`SOPS_AGE_KEY`. See `docs/runbooks/pipeline-tofu.md`.
 
 The target roots set separate state keys and use native S3 lock files. Do not
 run `tofu init` until the R2 bucket and credentials exist. OpenTofu saves backend

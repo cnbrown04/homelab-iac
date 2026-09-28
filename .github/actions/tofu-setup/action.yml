@@ -1,0 +1,42 @@
+name: Set up OpenTofu
+description: >-
+  Install the toolchain, export the secrets of one target from
+  secrets/tofu.sops.yaml, and join the tailnet.
+inputs:
+  target:
+    description: The OpenTofu target, atlas or pantheon.
+    required: true
+  sops-age-key:
+    description: The age private key. It decrypts secrets/tofu.sops.yaml.
+    required: true
+  headscale-authkey:
+    description: The pre-auth key for the tailnet.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install the toolchain from mise.toml
+      uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+
+    # tofu-env.sh is the same script as on a workstation. The mask stops a
+    # value from showing in the log.
+    - name: Export the secrets of the target
+      shell: bash
+      env:
+        SOPS_AGE_KEY: ${{ inputs.sops-age-key }}
+        TARGET: ${{ inputs.target }}
+      run: |
+        # shellcheck source=/dev/null
+        source scripts/tofu-env.sh "$TARGET"
+        for name in AWS_ENDPOINT_URL_S3 AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY \
+            TF_VAR_state_encryption_passphrase PROXMOX_VE_API_TOKEN; do
+          echo "::add-mask::${!name}"
+          echo "$name=${!name}" >> "$GITHUB_ENV"
+        done
+
+    - name: Join the tailnet
+      uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+      with:
+        authkey: ${{ inputs.headscale-authkey }}
+        args: --login-server=https://vpn.buildwithcaleb.com --accept-dns=false
+        hostname: github-tofu-${{ inputs.target }}-${{ github.run_id }}

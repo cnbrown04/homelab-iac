@@ -223,4 +223,8 @@ their move.
       change. `atlas` has only VMID `100`, and OpenTofu manages it.
 - [ ] **D4. Step 7.** Write the Ansible baseline for the five Proxmox nodes and
       `hermes`.
-- [ ] **D5. Step 8.** Add the workflows with a matrix over the targets.
+- [ ] **D5. Step 8.** Add the workflows with a matrix over the targets. The
+      workflow `.github/workflows/tofu.yml` plans `atlas` and `pantheon` on
+      each pull request, and applies a saved plan after the approval of the
+      owner. See `docs/runbooks/pipeline-tofu.md`. The step is complete when a
+      merged change applies with no manual step.
