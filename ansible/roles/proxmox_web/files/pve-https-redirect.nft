@@ -1,0 +1,11 @@
+#!/usr/sbin/nft -f
+# Ansible writes this file. See the proxmox_web role.
+# Port 443 goes to the web UI on port 8006. The rule matches only traffic to an
+# address of this node, so the traffic of a guest is not changed.
+destroy table inet pve_https
+table inet pve_https {
+  chain prerouting {
+    type nat hook prerouting priority dstnat; policy accept;
+    tcp dport 443 fib daddr type local redirect to :8006
+  }
+}

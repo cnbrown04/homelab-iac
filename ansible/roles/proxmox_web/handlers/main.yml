@@ -1,0 +1,11 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+# A check run writes no unit, so the service does not exist yet.
+- name: Load the redirect rule
+  ansible.builtin.systemd_service:
+    name: pve-https-redirect
+    state: restarted
+  when: not ansible_check_mode

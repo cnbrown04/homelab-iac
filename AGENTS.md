@@ -126,6 +126,8 @@ Always refer to a machine by its hostname, not by its provider.
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster has no guest.
+The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
+Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
 Ansible logs in to each host as `iac-admin`, with sudo and a password. The
 password is the same on each host.
 
@@ -177,8 +179,13 @@ These decisions are closed. Ask the owner before you re-open one.
 10. **The baseline of a Proxmox node:** SSH with keys only (root keeps key
     login, for the cluster), the kernel settings of `sysctl_hardening`, and
     automatic Debian security updates only. No Fail2ban, CrowdSec, or UFW.
+    The `proxmox_web` role adds the web certificate, port 443, and SSO.
 11. **Dockge is the Compose manager.** Ansible deploys each stack. Dockge does
     not.
+12. **The Proxmox web UI:** an nftables rule sends port 443 to 8006. ACME uses
+    the Cloudflare DNS-01 challenge, with the account `caleb@auburn.edu`.
+    Members of the Pocket ID group `proxmox-admins` get the role
+    Administrator. `root@pam` stays as the fallback login.
 
 ### The repository
 
@@ -262,6 +269,13 @@ tofu -chdir=tofu/targets/atlas plan
 - Color codes in Ansible output break `grep` in a workflow. Turn off color.
 - A copy of a live SQLite file can be broken. The backup script uses
   `sqlite3 .backup` first.
+- ACME for a `.vnet` name must use DNS-01. The public wildcard record sends
+  the name to `hermes`, so HTTP-01 fails.
+- The OpenID client of Proxmox has no PKCE, so its Pocket ID client has PKCE
+  off. Proxmox names an OIDC group `<group>-<realm>`, from the group name, not
+  the display name.
+- The Proxmox web UI keeps the permissions of a user until the page loads
+  again. After a change of groups, reload the page.
 
 ### Open work
 
@@ -272,7 +286,8 @@ tofu -chdir=tofu/targets/atlas plan
   `tskey-client-...?baseURL=https://vpn.buildwithcaleb.com` in
   `HEADSCALE_AUTHKEY`, and add `--advertise-tags=tag:github-actions`. Keep the
   `authkey` input of the action.
-- Renovate pull requests 5 to 8 are open.
+- Renovate closed its open pull requests after the history rewrite of
+  28 September 2026. Check that it opens them again.
 
 ### Do not
 

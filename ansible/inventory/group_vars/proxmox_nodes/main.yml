@@ -19,3 +19,13 @@ ssh_hardening_options:
 # Only the security updates of Debian upgrade by themselves. Proxmox packages
 # never do.
 unattended_upgrades_debian_security_only: true
+
+# The web UI at https://<node>.vnet.buildwithcaleb.com, with a Let's Encrypt
+# certificate and the Pocket ID login. secrets.sops.yml holds the Cloudflare
+# token and the OIDC client. The owner chose these on 28 September 2026.
+proxmox_web_base_domain: vnet.buildwithcaleb.com
+proxmox_web_acme_email: caleb@auburn.edu
+proxmox_web_cloudflare_token: "{{ proxmox_cloudflare_dns_token }}"
+proxmox_web_oidc_issuer: https://auth.buildwithcaleb.com
+proxmox_web_oidc_client_id: "{{ proxmox_oidc_client_id }}"
+proxmox_web_oidc_client_secret: "{{ proxmox_oidc_client_secret }}"

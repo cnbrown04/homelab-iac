@@ -1,0 +1,124 @@
+---
+# ACME account. Proxmox keeps one list of accounts for each API endpoint.
+- name: Read the ACME accounts
+  ansible.builtin.command:
+    cmd: pvesh get /cluster/acme/account --output-format json
+  register: proxmox_web_accounts
+  changed_when: false
+  check_mode: false
+
+# pvenode waits for the task. It shows the terms of service of the directory,
+# and asks to accept them. The owner accepts the terms when the role runs.
+- name: Register the ACME account
+  ansible.builtin.command:
+    argv:
+      - pvenode
+      - acme
+      - account
+      - register
+      - default
+      - "{{ proxmox_web_acme_email }}"
+      - "--directory={{ proxmox_web_acme_directory }}"
+    stdin: "y"
+  changed_when: true
+  when: "'default' not in (proxmox_web_accounts.stdout | from_json | map(attribute='name') | list)"
+
+# The DNS plugin of Cloudflare. Proxmox takes the plugin data in base64.
+- name: Read the ACME plugins
+  ansible.builtin.command:
+    cmd: pvesh get /cluster/acme/plugins --output-format json
+  register: proxmox_web_plugins
+  changed_when: false
+  check_mode: false
+
+- name: Add the Cloudflare DNS plugin
+  ansible.builtin.command:
+    argv:
+      - pvesh
+      - create
+      - /cluster/acme/plugins
+      - --id=cloudflare
+      - --type=dns
+      - --api=cf
+      - "--data={{ ('CF_Token=' ~ proxmox_web_cloudflare_token ~ '\n') | b64encode }}"
+  changed_when: true
+  no_log: true
+  when: "'cloudflare' not in (proxmox_web_plugins.stdout | from_json | map(attribute='plugin') | list)"
+
+# The OpenID Connect realm, and the group that gets Administrator.
+- name: Configure the OIDC realm
+  when: proxmox_web_oidc_issuer | length > 0
+  block:
+    - name: Read the realms
+      ansible.builtin.command:
+        cmd: pvesh get /access/domains --output-format json
+      register: proxmox_web_realms
+      changed_when: false
+      check_mode: false
+
+    - name: Add the OIDC realm
+      ansible.builtin.command:
+        argv:
+          - pveum
+          - realm
+          - add
+          - "{{ proxmox_web_oidc_realm }}"
+          - --type=openid
+          - "--issuer-url={{ proxmox_web_oidc_issuer }}"
+          - "--client-id={{ proxmox_web_oidc_client_id }}"
+          - "--client-key={{ proxmox_web_oidc_client_secret }}"
+          - --username-claim=preferred_username
+          - --autocreate=1
+          - --groups-claim=groups
+          - --groups-autocreate=1
+          - --groups-overwrite=1
+          - --scopes=openid email profile groups
+          - --comment=Pocket ID
+      changed_when: true
+      no_log: true
+      when: proxmox_web_oidc_realm not in (proxmox_web_realms.stdout | from_json | map(attribute='realm') | list)
+
+    - name: Read the groups
+      ansible.builtin.command:
+        cmd: pvesh get /access/groups --output-format json
+      register: proxmox_web_groups
+      changed_when: false
+      check_mode: false
+
+    - name: Add the admin group
+      ansible.builtin.command:
+        argv:
+          - pveum
+          - group
+          - add
+          - "{{ proxmox_web_oidc_admin_group }}-{{ proxmox_web_oidc_realm }}"
+          - --comment=Administrators from Pocket ID
+      changed_when: true
+      when: >-
+        (proxmox_web_oidc_admin_group ~ '-' ~ proxmox_web_oidc_realm)
+        not in (proxmox_web_groups.stdout | from_json | map(attribute='groupid') | list)
+
+    - name: Read the permissions
+      ansible.builtin.command:
+        cmd: pvesh get /access/acl --output-format json
+      register: proxmox_web_acl
+      changed_when: false
+      check_mode: false
+
+    - name: Give the admin group the role Administrator
+      ansible.builtin.command:
+        argv:
+          - pveum
+          - acl
+          - modify
+          - /
+          - "--groups={{ proxmox_web_oidc_admin_group }}-{{ proxmox_web_oidc_realm }}"
+          - --roles=Administrator
+      changed_when: true
+      when: >-
+        proxmox_web_acl.stdout | from_json
+        | selectattr('type', 'equalto', 'group')
+        | selectattr('ugid', 'equalto', proxmox_web_oidc_admin_group ~ '-' ~ proxmox_web_oidc_realm)
+        | selectattr('path', 'equalto', '/')
+        | selectattr('roleid', 'equalto', 'Administrator')
+        | list | length == 0

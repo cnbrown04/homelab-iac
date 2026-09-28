@@ -1,0 +1,14 @@
+# Ansible writes this file. See the proxmox_web role.
+[Unit]
+Description=Send port 443 to the Proxmox web UI on port 8006
+After=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/pve-https-redirect.nft
+ExecStop=/usr/sbin/nft destroy table inet pve_https
+
+[Install]
+WantedBy=multi-user.target

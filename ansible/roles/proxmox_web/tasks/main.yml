@@ -1,0 +1,24 @@
+---
+- name: Check the web settings
+  ansible.builtin.assert:
+    that:
+      - proxmox_web_base_domain | length > 0
+      - proxmox_web_acme_email is match('^[^@ ]+@[^@ ]+$')
+      - proxmox_web_cloudflare_token | length > 0
+      - proxmox_web_oidc_issuer | length == 0 or proxmox_web_oidc_issuer is match('^https://[^/]+$')
+      - proxmox_web_oidc_issuer | length == 0 or proxmox_web_oidc_client_id | length > 0
+      - proxmox_web_oidc_issuer | length == 0 or proxmox_web_oidc_client_secret | length > 0
+    fail_msg: >-
+      Set the base domain, the ACME email, and the Cloudflare token. With an
+      OIDC issuer, also set the client ID and the client secret.
+  no_log: true
+
+- name: Send port 443 to the web UI
+  ansible.builtin.import_tasks: redirect.yml
+
+- name: Configure ACME and the OIDC realm for the API endpoint
+  ansible.builtin.include_tasks: endpoint.yml
+  when: inventory_hostname == proxmox_web_primary
+
+- name: Get the certificate of the node
+  ansible.builtin.import_tasks: certificate.yml

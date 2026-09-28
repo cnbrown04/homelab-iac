@@ -1,0 +1,36 @@
+---
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+
+- name: Write the redirect rule
+  ansible.builtin.copy:
+    src: pve-https-redirect.nft
+    dest: /etc/pve-https-redirect.nft
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Load the redirect rule
+
+- name: Write the redirect service
+  ansible.builtin.copy:
+    src: pve-https-redirect.service
+    dest: /etc/systemd/system/pve-https-redirect.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Load the redirect rule
+
+- name: Load the systemd units
+  ansible.builtin.meta: flush_handlers
+
+- name: Start and enable the redirect service
+  ansible.builtin.systemd_service:
+    name: pve-https-redirect
+    enabled: true
+    state: started
+  # A check run writes no unit, so the service does not exist yet.
+  when: not ansible_check_mode

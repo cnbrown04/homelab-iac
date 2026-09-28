@@ -1,0 +1,23 @@
+---
+# The name of the node in the certificate, for example gaia.vnet.example.com.
+proxmox_web_domain: "{{ inventory_hostname }}.{{ proxmox_web_base_domain }}"
+proxmox_web_base_domain: ""
+
+# ACME with Let's Encrypt and the DNS-01 challenge of Cloudflare. Keep the
+# token in secrets.sops.yml. It needs Zone Read and DNS Edit on the zone.
+proxmox_web_acme_email: ""
+proxmox_web_acme_directory: https://acme-v02.api.letsencrypt.org/directory
+proxmox_web_cloudflare_token: ""
+
+# The OpenID Connect realm. Leave the issuer empty to add no realm.
+proxmox_web_oidc_realm: pocketid
+proxmox_web_oidc_issuer: ""
+proxmox_web_oidc_client_id: ""
+proxmox_web_oidc_client_secret: ""
+# Members of this OIDC group get the role Administrator. Proxmox names the
+# group <group>-<realm>.
+proxmox_web_oidc_admin_group: proxmox-admins
+
+# The node that runs the tasks for the whole API endpoint: the first node of
+# the cluster, or the node itself when it has no cluster.
+proxmox_web_primary: "{{ (groups['pantheon'] | first) if inventory_hostname in groups['pantheon'] | default([]) else inventory_hostname }}"

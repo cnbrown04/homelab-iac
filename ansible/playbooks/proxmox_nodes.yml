@@ -13,3 +13,5 @@
       tags: [security]
     - role: tailscale
       tags: [tailscale]
+    - role: proxmox_web
+      tags: [proxmox_web]

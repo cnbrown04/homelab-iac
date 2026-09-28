@@ -1,0 +1,42 @@
+---
+- name: Read the ACME settings of the node
+  ansible.builtin.command:
+    cmd: "pvesh get /nodes/{{ inventory_hostname }}/config --output-format json"
+  register: proxmox_web_node_config
+  changed_when: false
+  check_mode: false
+
+- name: Set the domain of the node for ACME
+  ansible.builtin.command:
+    argv:
+      - pvesh
+      - set
+      - "/nodes/{{ inventory_hostname }}/config"
+      - --acme=account=default
+      - "--acmedomain0=domain={{ proxmox_web_domain }},plugin=cloudflare"
+  changed_when: true
+  when: >-
+    (proxmox_web_node_config.stdout | from_json).get('acmedomain0', '')
+    != 'domain=' ~ proxmox_web_domain ~ ',plugin=cloudflare'
+    or (proxmox_web_node_config.stdout | from_json).get('acme', '') != 'account=default'
+
+- name: Read the certificates of the node
+  ansible.builtin.command:
+    cmd: "pvesh get /nodes/{{ inventory_hostname }}/certificates/info --output-format json"
+  register: proxmox_web_certificates
+  changed_when: false
+  check_mode: false
+
+# The certificate is in place when pveproxy-ssl.pem has the domain. After
+# that, pve-daily-update renews it before it expires.
+# pvenode waits for the task. The task restarts pveproxy with the new
+# certificate.
+- name: Order the certificate
+  ansible.builtin.command:
+    cmd: pvenode acme cert order
+  changed_when: true
+  when: >-
+    proxmox_web_certificates.stdout | from_json
+    | selectattr('filename', 'equalto', 'pveproxy-ssl.pem')
+    | map(attribute='san') | flatten
+    | select('equalto', proxmox_web_domain) | list | length == 0
