@@ -137,7 +137,7 @@ password is the same on each host.
 
 | Name | Service | Route |
 | --- | --- | --- |
-| `vpn.buildwithcaleb.com` | Headscale, a system service on `10.200.0.1:8085` | Traefik file route |
+| `vpn.buildwithcaleb.com` | Headscale 0.29.4, a system service on `10.200.0.1:8085` | Traefik file route |
 | `pangolin.buildwithcaleb.com` | Pangolin Enterprise Edition, with Traefik and Gerbil | Traefik file route |
 | `auth.buildwithcaleb.com` | Pocket ID, the SSO provider | Pangolin resource, no Pangolin login |
 | `headplane.buildwithcaleb.com` | Headplane | Pangolin resource, Pangolin login |
@@ -152,7 +152,8 @@ password is the same on each host.
   Pangolin resources. The `pangolin_blueprint` role sends it to the
   integration API of Pangolin.
 - restic backs up the data of `hermes` each day at 03:30, to the R2 bucket
-  `homelab-hermes-backup`.
+  `homelab-hermes-backup`. `/etc/restic/backup.env` holds the settings. Start
+  a backup with `sudo systemctl start backup.service`.
 
 ### Decisions
 
@@ -205,8 +206,29 @@ scripts/vps-harden.sh       # the first bootstrap of a new VPS
 ```
 
 To add a guest, add one entry to `vms.tf` or `containers.tf`. Do not write a
-new resource block. `mise.toml` holds each tool version. Renovate bumps the
-versions. Do not change a version by hand.
+new resource block.
+
+To add a service on `hermes`: put its Compose file in `ansible/stacks/<name>/`,
+add `<name>` to `hermes_compose_stacks`, join the network `pangolin`, publish
+no port, and add a resource to `pangolin_blueprint_resources`.
+
+To add a host: a new VPS runs `scripts/vps-harden.sh`, then the play with
+`-e ansible_user=caleb` one time. A new Proxmox node runs
+`playbooks/proxmox_bootstrap.yml` as root, then `playbooks/proxmox_nodes.yml`.
+Add the node to `hosts.yml` first, and to the group `pantheon` for the
+cluster.
+
+`mise.toml` holds each tool version. Renovate bumps the versions. Do not
+change a version by hand.
+
+### Working with the owner
+
+- The agent has no sudo password. For a run with `-K` or a command as root,
+  give the owner the exact command, and ask for the output.
+- Give numbered steps with complete commands. After a change of plan, give the
+  complete list of steps again.
+- The owner pushes to `main` directly. Each push to `ansible/` or `tofu/`
+  starts a pipeline that waits for the approval of the owner.
 
 ### Commands
 
@@ -235,9 +257,15 @@ tofu -chdir=tofu/targets/atlas plan
 
 ### Secrets
 
-- SOPS files: `secrets/tofu.sops.yaml`,
-  `ansible/inventory/group_vars/all/secrets.sops.yml`, and
-  `ansible/inventory/host_vars/hermes/secrets.sops.yml`.
+- SOPS files:
+
+  | File | Content |
+  | --- | --- |
+  | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens |
+  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The password hash of `iac-admin` |
+  | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
+  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys |
+
 - GitHub secrets: `SOPS_AGE_KEY`, `HEADSCALE_AUTHKEY`, `HERMES_SSH_KEY`, and
   `ANSIBLE_BECOME_PASSWORD`. `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and
   `TOFU_STATE_PASSPHRASE` are not used.
@@ -255,7 +283,8 @@ tofu -chdir=tofu/targets/atlas plan
   `--accept-dns=false`, and public DNS sends `*.vnet.buildwithcaleb.com` to
   `hermes`.
 - In a check run, `command` tasks do not run. Give a read-only task
-  `check_mode: false`.
+  `check_mode: false`. A task or handler for a service that the check run did
+  not install must skip in check mode.
 - A template replaces a file with a new file. A single-file bind mount keeps
   the old file, so a container must restart after the change.
 - `hermes` starts sshd from a socket. Each new connection reads the files at
