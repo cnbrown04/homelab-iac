@@ -1,4 +1,8 @@
 ---
+# The pipeline logs in as iac-admin with this key.
+admin_user_extra_ssh_keys:
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJ20dWgJFxvs+kNgHVrRNqLvmMbekLjQoi5U/yzzJHZ github-actions hermes"
+
 # The stack roles and stacks.yml share these values.
 compose_stack_root: /opt/stacks
 

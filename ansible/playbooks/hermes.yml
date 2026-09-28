@@ -3,6 +3,8 @@
   hosts: hermes
   roles:
     - role: common
+    - role: admin_user
+      tags: [admin_user]
     - role: fail2ban
       tags: [security]
     - role: crowdsec

@@ -1,0 +1,42 @@
+name: Set up Ansible
+description: Install the toolchain and the collections, and set up SSH and the secrets.
+inputs:
+  ssh-key:
+    description: The private SSH key of the pipeline.
+    required: false
+    default: ""
+  become-password:
+    description: The sudo password of the admin user.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Install the toolchain from mise.toml
+      uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+
+    - name: Install the Ansible collections
+      shell: bash
+      working-directory: ansible
+      run: ansible-galaxy collection install -r requirements.yml
+
+    - name: Set up SSH
+      if: inputs.ssh-key != ''
+      shell: bash
+      env:
+        SSH_KEY: ${{ inputs.ssh-key }}
+      run: |
+        install -d -m 700 ~/.ssh
+        install -m 600 /dev/null ~/.ssh/id_ed25519
+        printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+        # The repository holds the host key, so SSH checks it.
+        install -m 644 ansible/known_hosts ~/.ssh/known_hosts
+
+    - name: Write the sudo password to a file
+      if: inputs.become-password != ''
+      shell: bash
+      env:
+        BECOME_PASSWORD: ${{ inputs.become-password }}
+      run: |
+        install -m 600 /dev/null "$RUNNER_TEMP/become.json"
+        jq -n --arg p "$BECOME_PASSWORD" '{ansible_become_password: $p}' > "$RUNNER_TEMP/become.json"
