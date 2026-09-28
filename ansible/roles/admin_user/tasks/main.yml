@@ -25,11 +25,42 @@
     update_password: always
   no_log: true
 
-# The keys at the URL replace all other keys of the user. A key that you delete
-# at the source goes away on the next run.
+# The controller reads the keys at the URL. These keys and the extra keys
+# replace all other keys of the user. A key that you delete at the source goes
+# away on the next run.
+- name: Read the SSH keys at the URL
+  ansible.builtin.set_fact:
+    admin_user_url_keys: "{{ lookup('ansible.builtin.url', admin_user_ssh_keys_url, split_lines=False) }}"
+
+- name: Check that the URL gave at least one key
+  ansible.builtin.assert:
+    that:
+      - admin_user_url_keys is search('^ssh-', multiline=True)
+    fail_msg: "The URL {{ admin_user_ssh_keys_url }} gave no SSH key. Ansible stops, so it does not delete your keys."
+
 - name: Set the SSH keys of the admin user
   ansible.posix.authorized_key:
     user: "{{ admin_user_name }}"
-    key: "{{ admin_user_ssh_keys_url }}"
+    key: "{{ ([admin_user_url_keys | trim] + admin_user_extra_ssh_keys) | join('\n') }}"
     exclusive: true
     state: present
+
+# A host can limit SSH to a list of users with AllowUsers. The hardening
+# script of hermes writes such a line. Add the admin user to each list.
+- name: Find the SSH files with an AllowUsers line
+  ansible.builtin.find:
+    paths: [/etc/ssh, /etc/ssh/sshd_config.d]
+    patterns: ["sshd_config", "*.conf"]
+    contains: '^AllowUsers\s'
+  register: admin_user_allow_files
+
+- name: Add the admin user to AllowUsers
+  ansible.builtin.lineinfile:
+    path: "{{ item.path }}"
+    regexp: '^(AllowUsers(?!.*\s{{ admin_user_name | regex_escape }}(\s|$)).*?)\s*$'
+    line: '\1 {{ admin_user_name }}'
+    backrefs: true
+  loop: "{{ admin_user_allow_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  notify: SSH configuration changed
