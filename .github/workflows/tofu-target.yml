@@ -23,7 +23,7 @@ env:
 
 jobs:
   plan:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     concurrency:
       group: tofu-plan-${{ inputs.target }}-${{ github.ref }}
@@ -95,7 +95,7 @@ jobs:
   apply:
     needs: plan
     if: inputs.apply && needs.plan.outputs.changes == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     # The environment has the owner as the required reviewer. See decision 7
     # in AGENTS.md.
