@@ -16,7 +16,7 @@ ansible-core = "2.21.4"
 
 # Lints the Ansible content on every PR. Check collection compatibility in
 # ansible/requirements.yml before a version bump.
-"pypi:ansible-lint" = "26.8.0"
+"pypi:ansible-lint" = "26.9.0"
 
 # Secret encryption. See AGENTS.md, section 4, decision 6.
 sops = "3.13.3"
