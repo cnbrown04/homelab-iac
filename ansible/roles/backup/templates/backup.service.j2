@@ -1,0 +1,16 @@
+# Ansible writes this file. See the backup role.
+[Unit]
+Description=Back up the data of this host with restic
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/restic/backup.env
+# A service has no home folder. systemd makes /var/cache/restic, so restic
+# keeps its cache and does not read all metadata from R2 on each run.
+CacheDirectory=restic
+Environment=RESTIC_CACHE_DIR=/var/cache/restic
+ExecStart=/usr/local/sbin/run-backup
+Nice=10
+IOSchedulingClass=idle

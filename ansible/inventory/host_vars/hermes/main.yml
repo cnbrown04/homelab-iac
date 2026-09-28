@@ -114,3 +114,16 @@ headscale_oidc_client_secret: "{{ vpn_oidc_client_secret }}"
 # this on 27 September 2026.
 headscale_magic_dns: true
 headscale_base_domain: vnet.buildwithcaleb.com
+
+# The daily backup to R2. secrets.sops.yml holds the endpoint, the R2 keys,
+# and the restic password.
+backup_r2_bucket: homelab-hermes-backup
+backup_paths:
+  - /var/lib/headscale
+  - /etc/headscale
+  - /opt/stacks/pangolin/config
+  - /opt/stacks/headplane
+  - /opt/dockge/data
+  - /opt/stacks/pocket-id/data
+backup_excludes:
+  - /opt/stacks/pangolin/config/traefik/logs

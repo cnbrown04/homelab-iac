@@ -1,0 +1,12 @@
+# Ansible writes this file. See the backup role.
+[Unit]
+Description=Back up the data of this host each day
+
+[Timer]
+OnCalendar={{ backup_schedule }}
+RandomizedDelaySec=30m
+# Run a missed backup after the host starts.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,30 @@
+---
+# The restic repository in R2. Keep the password and the keys in
+# secrets.sops.yml. The password must also exist out of the host: without it,
+# no backup can be read.
+backup_r2_endpoint: ""
+backup_r2_bucket: ""
+backup_r2_access_key_id: ""
+backup_r2_secret_access_key: ""
+backup_restic_password: ""
+backup_repository_path: "{{ inventory_hostname }}"
+
+# The folders to back up, and the patterns to leave out.
+backup_paths: []
+backup_excludes: []
+
+# The time of the daily backup, in the format of systemd OnCalendar.
+backup_schedule: "*-*-* 03:30:00"
+
+# The snapshots that restic keeps.
+backup_keep_daily: 7
+backup_keep_weekly: 4
+backup_keep_monthly: 6
+
+# The environment of a restic command in a task.
+backup_restic_environment:
+  RESTIC_REPOSITORY: "s3:{{ backup_r2_endpoint }}/{{ backup_r2_bucket }}/{{ backup_repository_path }}"
+  RESTIC_PASSWORD: "{{ backup_restic_password }}"
+  AWS_ACCESS_KEY_ID: "{{ backup_r2_access_key_id }}"
+  AWS_SECRET_ACCESS_KEY: "{{ backup_r2_secret_access_key }}"
+  AWS_DEFAULT_REGION: auto

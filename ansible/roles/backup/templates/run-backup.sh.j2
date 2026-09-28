@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Ansible writes this file. See the backup role.
+#
+# Backs up the data of this host to the restic repository in R2. systemd runs
+# it each day. Run it by hand with: systemctl start backup.service
+set -euo pipefail
+
+paths=(
+{% for path in backup_paths %}
+  {{ path | quote }}
+{% endfor %}
+)
+
+# A copy of a SQLite file while the application writes to it can be
+# half-written. sqlite3 .backup makes a consistent copy, so the backup has a
+# good copy of each database.
+dump_dir=/var/backups/sqlite
+rm -rf "$dump_dir"
+install -d -m 700 "$dump_dir"
+existing=()
+for path in "${paths[@]}"; do
+  [[ -e "$path" ]] && existing+=("$path")
+done
+while IFS= read -r -d '' db; do
+  # Copy only real SQLite files.
+  if [[ "$(head -c 15 "$db")" == "SQLite format 3" ]]; then
+    name="$(printf '%s' "$db" | tr '/' '_')"
+    sqlite3 "$db" ".backup '$dump_dir/$name'"
+    echo "Copied the database $db"
+  fi
+done < <(find "${existing[@]}" -type f \( -name '*.db' -o -name '*.sqlite' -o -name '*.sqlite3' \) -print0)
+
+restic backup --tag scheduled \
+{% for pattern in backup_excludes %}
+  --exclude {{ pattern | quote }} \
+{% endfor %}
+  "${existing[@]}" "$dump_dir"
+
+restic forget --tag scheduled --prune \
+  --keep-daily {{ backup_keep_daily }} \
+  --keep-weekly {{ backup_keep_weekly }} \
+  --keep-monthly {{ backup_keep_monthly }}
+
+restic check

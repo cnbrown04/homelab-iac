@@ -26,3 +26,6 @@
       tags: [dockge]
     - role: pocket_id
       tags: [pocket_id]
+    # The backup comes last, after each application that it backs up.
+    - role: backup
+      tags: [backup]

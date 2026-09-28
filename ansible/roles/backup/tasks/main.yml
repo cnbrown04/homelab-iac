@@ -1,0 +1,82 @@
+---
+- name: Check the backup settings
+  ansible.builtin.assert:
+    that:
+      - backup_r2_endpoint is match('^https://')
+      - backup_r2_bucket | length > 0
+      - backup_r2_access_key_id | length > 0
+      - backup_r2_secret_access_key | length > 0
+      - backup_restic_password | length >= 32
+      - backup_paths | length > 0
+    fail_msg: >-
+      Set the R2 endpoint, the bucket, the R2 keys, a restic password of 32
+      characters or more, and the paths.
+  no_log: true
+
+- name: Install restic and sqlite3
+  ansible.builtin.apt:
+    name: [restic, sqlite3]
+    state: present
+
+- name: Create the restic configuration directory
+  ansible.builtin.file:
+    path: /etc/restic
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Write the restic settings
+  ansible.builtin.template:
+    src: backup.env.j2
+    dest: /etc/restic/backup.env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Write the backup script
+  ansible.builtin.template:
+    src: run-backup.sh.j2
+    dest: /usr/local/sbin/run-backup
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Write the backup service and timer
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: [backup.service, backup.timer]
+  notify: Reload systemd
+
+- name: Load the systemd units
+  ansible.builtin.meta: flush_handlers
+
+# restic stops with an error when the repository does not exist yet.
+- name: Read the restic repository
+  ansible.builtin.command:
+    cmd: restic cat config
+  environment: "{{ backup_restic_environment }}"
+  register: backup_repository
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Create the restic repository
+  ansible.builtin.command:
+    cmd: restic init
+  environment: "{{ backup_restic_environment }}"
+  changed_when: true
+  when: backup_repository.rc != 0
+  no_log: true
+
+- name: Start and enable the backup timer
+  ansible.builtin.systemd_service:
+    name: backup.timer
+    enabled: true
+    state: started
