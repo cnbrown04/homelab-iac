@@ -1,8 +1,6 @@
-# Local scratch context. Never committed.
 context/
 ansible/.ansible/
 
-# OpenTofu state is remote and encrypted. See AGENTS.md, section 4, decision 5.
 *.tfstate
 *.tfstate.*
 .terraform/
@@ -10,8 +8,24 @@ ansible/.ansible/
 *.tfplan
 crash.log
 
-# Decrypted secrets. Only the SOPS-encrypted form belongs in git.
 *.dec
 *.dec.*
 *.decrypted.*
 .env
+
+ansible/README.md
+docs/runbooks/backup.md
+docs/runbooks/hermes-bootstrap.md
+docs/runbooks/hermes-edge.md
+docs/runbooks/inventory.md
+docs/runbooks/pipeline-hermes.md
+docs/runbooks/pipeline-tailnet-key.md
+docs/runbooks/pipeline-tofu.md
+docs/runbooks/proxmox-user.md
+docs/runbooks/risks.md
+docs/runbooks/tofu-state.md
+docs/todo.md
+tofu/modules/lxc/README.md
+tofu/modules/vm/README.md
+tofu/targets/atlas/README.md
+tofu/targets/pantheon/README.md

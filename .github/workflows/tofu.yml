@@ -1,4 +1,4 @@
-# Plans and applies the OpenTofu targets.
+# Plans and applies the OpenTofu targets. See AGENTS.md, "The pipelines".
 #
 # - A pull request: format and validate, then a plan for each target.
 # - A push to main: a plan for each target. A target with changes waits for the

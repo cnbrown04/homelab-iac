@@ -1,4 +1,4 @@
-# Deploys hermes with Ansible.
+# Deploys hermes with Ansible. See AGENTS.md, "The pipelines".
 #
 # - A pull request: lint, then a check run that shows the changes.
 # - A push to main: lint, then an apply. The environment "hermes" needs the

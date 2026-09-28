@@ -108,131 +108,185 @@ permission for that action.
 
 ## 4. Project context
 
-This repository deploys changes to a homelab. Every change goes through a pull
-request and a GitHub Actions pipeline. Do not apply a change by hand and do not
-configure a host over ad-hoc SSH after the pipeline exists.
+This repository manages a homelab. OpenTofu manages the Proxmox guests.
+Ansible manages the hosts. The pipelines apply each change after the owner
+approves it. The owner pushes to `main` directly for now.
 
-### The hardware
+### The hosts
 
-- The `pantheon` cluster: `gaia`, `hyperion`, `tartarus`, and `theia`, with one
-  API endpoint.
-- The `atlas` node: one standalone Proxmox VE node with its own API endpoint.
-- The `hermes` host. The panel is vPanel. The owner plans to run external
-  services and Headscale on it. Ansible deploys Dockge and all Compose stacks.
+Always refer to a machine by its hostname, not by its provider.
 
-Always refer to a machine by its hostname. Do not use its provider name as its
-name.
+| Host | Role | LAN | Tailnet |
+| --- | --- | --- | --- |
+| `atlas` | Proxmox VE, standalone. Runs Home Assistant (VMID `100`). | `10.0.1.124` | `100.64.0.3` |
+| `gaia` | Proxmox VE, cluster `pantheon` | `10.0.1.120` | `100.64.0.5` |
+| `hyperion` | Proxmox VE, cluster `pantheon` | `10.0.1.101` | `100.64.0.2` |
+| `tartarus` | Proxmox VE, cluster `pantheon` | `10.0.1.113` | `100.64.0.4` |
+| `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
+| `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
+
+Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster has no guest.
+Ansible logs in to each host as `iac-admin`, with sudo and a password. The
+password is the same on each host.
+
+### The services on `hermes`
+
+`*.buildwithcaleb.com` has a wildcard DNS record to `hermes`.
+
+| Name | Service | Route |
+| --- | --- | --- |
+| `vpn.buildwithcaleb.com` | Headscale, a system service on `10.200.0.1:8085` | Traefik file route |
+| `pangolin.buildwithcaleb.com` | Pangolin Enterprise Edition, with Traefik and Gerbil | Traefik file route |
+| `auth.buildwithcaleb.com` | Pocket ID, the SSO provider | Pangolin resource, no Pangolin login |
+| `headplane.buildwithcaleb.com` | Headplane | Pangolin resource, Pangolin login |
+| `dockge.buildwithcaleb.com` | Dockge | Pangolin resource, Pangolin login |
+
+- The Docker network `pangolin` has the subnet `10.200.0.0/24`. Headscale
+  listens on its gateway. A UFW rule lets the network reach it.
+- MagicDNS gives each node `<host>.vnet.buildwithcaleb.com`. Personal devices
+  log in to Headscale with Pocket ID. Headscale and Headplane share the Pocket
+  ID client `VPN`.
+- `pangolin_blueprint_resources` in `host_vars/hermes/main.yml` defines the
+  Pangolin resources. The `pangolin_blueprint` role sends it to the
+  integration API of Pangolin.
+- restic backs up the data of `hermes` each day at 03:30, to the R2 bucket
+  `homelab-hermes-backup`.
 
 ### Decisions
 
 These decisions are closed. Ask the owner before you re-open one.
 
-1. **Use OpenTofu and not Terraform.** OpenTofu encrypts the state, and the
-   provider ecosystem is the same.
-2. **Each tool does one job.** OpenTofu creates and changes a resource. Ansible
-   configures a host that already runs. Do not create a Proxmox VM with
-   Ansible. Do not manage a VPS with OpenTofu.
-3. **Use a GitHub-hosted runner only.** A self-hosted runner in the homelab
-   needs the homelab, but it exists to repair the homelab. Each job that needs
-   the Proxmox API joins the mesh network as an ephemeral node, for the length
-   of the job only.
-   1. **Headscale is the control server, and not Tailscale.** The owner made
-      this change on 21 September 2026. Headscale is an open-source control
-      server for a Tailscale client. The client software stays the same.
-   2. **Headscale runs on `hermes`.** Warning: the control server must
-      stay out of the homelab. A control server in the homelab has the same
-      defect as a self-hosted runner. The homelab goes down, the runner cannot
-      join the mesh network, and the pipeline cannot repair the homelab.
-   3. **Use Tailscale's public DERP relays.** The owner chose this on
-      27 September 2026. DERP does not use the Headscale DNS name.
-4. **Ansible manages `hermes`.** No OpenTofu provider exists for vPanel. Use
-   plain SSH. Ansible configures host services and deploys Dockge and every
-   Docker Compose stack. Dockge does not deploy stacks by hand. The owner
-   changed from Dockhand to Dockge on 27 September 2026.
-5. **The state is remote and encrypted.** Use an S3-compatible backend and the
-   state encryption of OpenTofu.
-6. **SOPS and age encrypt the secrets.** Keep the pre-auth key for Headscale
-   in a GitHub secret, because it has no other home. Headscale has no OAuth
-   client.
-7. **A human approves an apply.** Put a GitHub environment with a required
-   reviewer in front of the apply job.
+1. **Use OpenTofu, not Terraform.**
+2. **Each tool does one job.** OpenTofu manages Proxmox guests. Ansible
+   configures hosts. Do not create a VM with Ansible. Do not manage a VPS with
+   OpenTofu.
+3. **Use GitHub-hosted runners only.** A job joins the tailnet as an ephemeral
+   node with `tag:github-actions`. Headscale is the control server, on
+   `hermes`, out of the homelab. Use the public DERP relays of Tailscale.
+4. **Headscale must not depend on the Pangolin app.** A Pangolin resource sends
+   each request through the badger middleware, which fails when the Pangolin
+   app is down. So Headscale keeps its Traefik file route.
+5. **Pocket ID is always a Pangolin resource.** Pangolin keeps its local login,
+   so the owner can log in when Pocket ID is down.
+6. **The state is remote and encrypted,** in R2, with OpenTofu state
+   encryption.
+7. **SOPS and age encrypt the secrets.**
+8. **A human approves each apply,** through a GitHub environment.
+9. **The policy of the tailnet:** `tag:github-actions` gets TCP `8006` on
+   `tag:proxmox` only. Personal devices get each node and port.
+10. **The baseline of a Proxmox node:** SSH with keys only (root keeps key
+    login, for the cluster), the kernel settings of `sysctl_hardening`, and
+    automatic Debian security updates only. No Fail2ban, CrowdSec, or UFW.
+11. **Dockge is the Compose manager.** Ansible deploys each stack. Dockge does
+    not.
 
-### Repository layout
-
-Build this layout. Do not make it flat.
+### The repository
 
 ```text
-tofu/
-  modules/
-    vm/              # one Proxmox VM, written one time
-    lxc/             # one Proxmox container, written one time
-  targets/
-    pantheon/        # four nodes, one API endpoint, one state
-    atlas/           # one node, its own API endpoint, its own state
-ansible/
-  inventory/         # one file for each target and `hermes`
-  group_vars/
-  roles/
-  playbooks/
-.github/workflows/
-renovate.json
+tofu/modules/{vm,lxc}/      # one guest each
+tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
+ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
+ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap
+ansible/roles/              # one job each
+ansible/stacks/             # Compose files
+secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens
+scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
+scripts/vps-harden.sh       # the first bootstrap of a new VPS
+.github/workflows/          # ansible-hermes, tofu, tofu-target, tailnet-check
 ```
 
-Each folder in `tofu/targets/` is an OpenTofu root with its own state. A target
-file lists its VMs and containers as data, then calls the `vm` module or the
-`lxc` module. To add a server, add one entry to that list. Do not write a new
-resource block.
+To add a guest, add one entry to `vms.tf` or `containers.tf`. Do not write a
+new resource block. `mise.toml` holds each tool version. Renovate bumps the
+versions. Do not change a version by hand.
 
-### The toolchain
+### Commands
 
-`mise.toml` holds the version of each tool. It is the only correct source for a
-version. Run `mise install` to get the tools. Renovate bumps the versions. Do
-not change a version by hand.
+```sh
+# Ansible, from ansible/
+ansible-playbook playbooks/hermes.yml --check --diff -K
+ansible-playbook playbooks/proxmox_nodes.yml --check --diff -K
 
-### Build order
+# OpenTofu, from the root of the repository
+source scripts/tofu-env.sh atlas
+tofu -chdir=tofu/targets/atlas plan
+```
 
-Do these steps in order. Do not start step 5 before step 4 is complete, because
-the plan job needs the mesh network to reach the Proxmox API.
+### The pipelines
 
-1. Verify each risk in `context/handoff-original.md`.
-2. Scaffold the layout. Pin the tool versions. Add Renovate.
-3. Set up the remote state backend, the state encryption, and SOPS with age.
-4. Scaffold the Ansible inventory and roles for `hermes`. Use Ansible to
-   install Headscale, Docker, and Dockge. Set up Headscale on `hermes`: a
-   public DNS name, TLS, a tag for GitHub Actions, and a policy rule for the
-   Proxmox API port. Use Tailscale's public DERP relays. Join each Proxmox node.
-5. Write the `vm` module and the `lxc` module. Write the `atlas` target. Import
-   each resource that exists into the state. The step is
-   complete when `tofu plan` shows no change.
-6. Do step 5 again for `pantheon`.
-7. Complete the Ansible baseline for the five Proxmox nodes and `hermes`.
-   The step is complete when `ansible-playbook --check` shows no change.
-8. Add the workflows with a matrix over the targets. Turn on the PR checks,
-   then the apply job. The step is complete when a merged change applies with
-   no manual step.
+- `ansible-hermes.yml`: a pull request runs a check with `--diff`. A push to
+  `main` applies after approval in the environment `hermes`, then runs a check
+  that must show no change.
+- `tofu.yml`: a pull request plans each target. A push to `main` saves each
+  plan with changes, waits for approval in the environment `atlas` or
+  `pantheon`, applies the saved plan, then plans again.
+- The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
+  SSH. Run their playbook by hand.
+
+### Secrets
+
+- SOPS files: `secrets/tofu.sops.yaml`,
+  `ansible/inventory/group_vars/all/secrets.sops.yml`, and
+  `ansible/inventory/host_vars/hermes/secrets.sops.yml`.
+- GitHub secrets: `SOPS_AGE_KEY`, `HEADSCALE_AUTHKEY`, `HERMES_SSH_KEY`, and
+  `ANSIBLE_BECOME_PASSWORD`. `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and
+  `TOFU_STATE_PASSPHRASE` are not used.
+- `HEADSCALE_AUTHKEY` is a reusable, ephemeral pre-auth key with
+  `tag:github-actions`. It expires on 24 September 2036.
+- Headplane gets its Headscale API key from Ansible. Ansible makes a new key
+  when less than 365 days remain.
+- Do not print a secret. Change a SOPS value with `sops set`. In a command for
+  the owner, put `!` in single quotes, because bash history expansion breaks
+  it in double quotes.
+
+### Lessons
+
+- Use the tailnet IP of a Proxmox node, not its MagicDNS name. Runners use
+  `--accept-dns=false`, and public DNS sends `*.vnet.buildwithcaleb.com` to
+  `hermes`.
+- In a check run, `command` tasks do not run. Give a read-only task
+  `check_mode: false`.
+- A template replaces a file with a new file. A single-file bind mount keeps
+  the old file, so a container must restart after the change.
+- `hermes` starts sshd from a socket. Each new connection reads the files at
+  once, so validate an SSH file (`sshd -t -f %s`) before it goes in place.
+- The Headscale `base_domain` must not be the host name of `server_url`, or a
+  parent of it.
+- Proxmox VE 9 keeps the host key of each node in
+  `/etc/pve/nodes/<node>/ssh_known_hosts`. A manual SSH test between nodes
+  must use that file.
+- The Proxmox API token cannot change a raw USB or PCI device, make a
+  privileged container, add a bind mount, or set a feature flag other than
+  `nesting`.
+- A VM with no `cpu` line runs `qemu64`. Proxmox makes tags lowercase.
+- A Pangolin blueprint cannot delete a resource. Delete it in the UI.
+- Color codes in Ansible output break `grep` in a workflow. Turn off color.
+- A copy of a live SQLite file can be broken. The backup script uses
+  `sqlite3 .backup` first.
+
+### Open work
+
+- When Headscale 0.30 is released: run a backup first, because its database
+  migration cannot be reversed. Then give the pipeline an OAuth client
+  (`headscale oauth-clients create --scope auth_keys --tag
+  tag:github-actions`). Put
+  `tskey-client-...?baseURL=https://vpn.buildwithcaleb.com` in
+  `HEADSCALE_AUTHKEY`, and add `--advertise-tags=tag:github-actions`. Keep the
+  `authkey` input of the action.
+- Renovate pull requests 5 to 8 are open.
 
 ### Do not
 
-- Do not add a self-hosted runner. The owner rejected it.
-- Do not manage a VPS with OpenTofu.
-- Do not commit a state file.
-- Do not put a secret in plain text in the repository. This includes the
-  commit history.
-- Do not give the tag for GitHub Actions more access than the Proxmox API port.
-- Do not run Headscale in the homelab. See decision 3.
+- Do not add a self-hosted runner.
+- Do not commit a state file or a secret in plain text, also in the history.
+- Do not give `tag:github-actions` more than the Proxmox API port.
+- Do not run Headscale in the homelab.
+- Do not make a Pangolin resource for `vpn.buildwithcaleb.com`.
 
 ## 5. The `context/` folder
 
-`context/` holds the context for one topic, for example the notes for a task in
-progress or a document from a third party. Git ignores the folder.
+`context/` holds scratch notes for one task. Git ignores the folder, and it
+stays on one machine. Read it for background. Do not commit it. If a fact must
+last, put it in this file.
 
-- Read a file in `context/` for background.
-- Do not commit a file in `context/`. Do not remove the folder from
-  `.gitignore`.
-- The folder is local to one machine. It does not go to another machine and it
-  does not go to a new clone.
-- If a fact in `context/` must last, move the fact into this file. A file in
-  `context/` is scratch.
-
-`context/handoff-original.md` is the first handoff document. It holds the risks
-for step 1 of the build order.
+The owner writes the documentation of the homelab by hand. Do not add a
+document to the repository unless the owner asks for it.

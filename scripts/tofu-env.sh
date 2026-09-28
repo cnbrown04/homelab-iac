@@ -5,6 +5,7 @@
 #   source scripts/tofu-env.sh atlas
 #   cd tofu/targets/atlas && tofu plan
 #
+# See AGENTS.md, "Secrets".
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   echo "Source this script: source scripts/tofu-env.sh <target>" >&2
