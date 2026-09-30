@@ -11,7 +11,12 @@
       tags: [security]
     - role: unattended_upgrades
       tags: [security]
+    - role: proxmox_network
+      tags: [proxmox_network]
     - role: tailscale
       tags: [tailscale]
     - role: proxmox_web
       tags: [proxmox_web]
+    - role: zfs_nfs
+      tags: [zfs_nfs]
+      when: zfs_nfs_pool | default('') | length > 0

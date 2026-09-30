@@ -1,0 +1,7 @@
+---
+# A check run installs no package, so exportfs does not exist yet.
+- name: Load the exports
+  ansible.builtin.command:
+    cmd: exportfs -ra
+  changed_when: true
+  when: not ansible_check_mode

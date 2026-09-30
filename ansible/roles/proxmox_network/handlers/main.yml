@@ -1,0 +1,24 @@
+---
+# ifupdown2 gives exit code 1 for a warning too. Proxmox writes bridge-fd 0,
+# and ifupdown2 always warns about it. So only an error line fails the task.
+
+# A syntax error stops the play before ifreload changes the network.
+- name: Check the network syntax
+  ansible.builtin.command:
+    cmd: ifreload -a --syntax-check
+  register: proxmox_network_syntax
+  changed_when: false
+  failed_when: >-
+    proxmox_network_syntax.rc != 0 and
+    proxmox_network_syntax.stderr_lines | reject('match', '^warning:') | list | length > 0
+  listen: Apply the network settings
+
+- name: Reload the network
+  ansible.builtin.command:
+    cmd: ifreload -a
+  register: proxmox_network_reload
+  changed_when: true
+  failed_when: >-
+    proxmox_network_reload.rc != 0 and
+    proxmox_network_reload.stderr_lines | reject('match', '^warning:') | list | length > 0
+  listen: Apply the network settings

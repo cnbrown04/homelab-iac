@@ -1,0 +1,4 @@
+# Ansible writes this file. See the role zfs_nfs.
+{% for item in zfs_nfs_exports %}
+{{ item.path }} {{ item.clients }}({{ item.options }})
+{% endfor %}

@@ -1,0 +1,58 @@
+---
+- name: Check the NFS settings
+  ansible.builtin.assert:
+    that:
+      - zfs_nfs_pool | length > 0
+      - zfs_nfs_datasets | reject('match', '^' ~ zfs_nfs_pool ~ '/') | list | length == 0
+      - zfs_nfs_exports | map(attribute='path') | reject('match', '^/') | list | length == 0
+      - zfs_nfs_exports | map(attribute='clients') | select('match', '^[0-9.]+/[0-9]+$') | list | length == zfs_nfs_exports | length
+    fail_msg: "Set the pool, datasets in the pool, absolute export paths, and clients in CIDR form."
+
+- name: Check that the pool is imported
+  ansible.builtin.command:
+    cmd: zpool list -H -o name {{ zfs_nfs_pool }}
+  changed_when: false
+  check_mode: false
+
+# zfs-import-cache imports each pool in this file at boot.
+- name: Check that the pool imports at boot
+  ansible.builtin.command:
+    cmd: zdb -C -U /etc/zfs/zpool.cache {{ zfs_nfs_pool }}
+  changed_when: false
+  check_mode: false
+
+- name: Create the datasets
+  community.general.zfs:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ zfs_nfs_datasets }}"
+
+- name: Install the NFS server
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: present
+
+- name: Create the directory of the exports
+  ansible.builtin.file:
+    path: /etc/exports.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the exports
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports.d/ansible.exports
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Load the exports
+
+- name: Start and enable the NFS server
+  ansible.builtin.systemd_service:
+    name: nfs-server
+    enabled: true
+    state: started
+  # A check run installs no package, so the service does not exist yet.
+  when: not ansible_check_mode

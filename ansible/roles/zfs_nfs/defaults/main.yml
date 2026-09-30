@@ -1,0 +1,10 @@
+---
+# The pool must exist and be imported. This role does not create a pool.
+zfs_nfs_pool: ""
+
+# The datasets that Ansible creates, for example lethe/k8s. Ansible does not
+# delete a dataset.
+zfs_nfs_datasets: []
+
+# The NFS exports. Each item is { path, clients, options }.
+zfs_nfs_exports: []

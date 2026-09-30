@@ -309,6 +309,10 @@ tofu -chdir=tofu/targets/atlas plan
   the display name.
 - The Proxmox web UI keeps the permissions of a user until the page loads
   again. After a change of groups, reload the page.
+- The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
+  disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
+  512. The host looks at byte 4096 and finds no partition. Do not wipe the
+  disk. Write a new GPT with the same partition in bytes.
 
 ### Open work
 

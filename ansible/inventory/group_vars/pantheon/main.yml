@@ -1,0 +1,5 @@
+---
+# Each node of the cluster passes all tagged VLANs to its guests, so a guest
+# can use any VLAN on any node. The host address stays untagged. atlas is not
+# in this group, so its bridge does not change.
+proxmox_network_vlan_aware: true

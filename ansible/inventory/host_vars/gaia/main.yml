@@ -1,0 +1,20 @@
+---
+# gaia has an address on the VLAN of the typhon cluster, and it serves NFS to it.
+proxmox_network_vlan_interfaces:
+  - vlan: 20
+    address: 10.0.20.5/24
+
+# The pool lethe is the old TrueNAS pool styx. The owner imported it on
+# 29 September 2026. Only the typhon VLAN can mount the exports.
+zfs_nfs_pool: lethe
+zfs_nfs_datasets:
+  - lethe/k8s
+zfs_nfs_exports:
+  # The dynamic volumes of csi-driver-nfs.
+  - path: /lethe/k8s
+    clients: 10.0.20.0/24
+    options: rw,sync,no_subtree_check,no_root_squash
+  # crossmnt shows the child dataset lethe/data/media/transcode.
+  - path: /lethe/data/media
+    clients: 10.0.20.0/24
+    options: rw,sync,no_subtree_check,no_root_squash,crossmnt

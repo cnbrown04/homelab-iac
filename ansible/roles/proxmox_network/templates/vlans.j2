@@ -1,0 +1,7 @@
+# Ansible writes this file. See the role proxmox_network.
+{% for item in proxmox_network_vlan_interfaces %}
+
+auto {{ proxmox_network_bridge }}.{{ item.vlan }}
+iface {{ proxmox_network_bridge }}.{{ item.vlan }} inet static
+	address {{ item.address }}
+{% endfor %}

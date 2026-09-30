@@ -1,0 +1,52 @@
+---
+- name: Check the network settings
+  ansible.builtin.assert:
+    that:
+      - proxmox_network_vlan_aware or proxmox_network_vlan_interfaces | length == 0
+    fail_msg: "A VLAN interface needs proxmox_network_vlan_aware: true."
+
+- name: Check the VLAN interfaces
+  ansible.builtin.assert:
+    that:
+      - item.vlan is integer
+      - item.address is match('^[0-9.]+/[0-9]+$')
+    fail_msg: "A VLAN interface needs an integer vlan and an address in CIDR form."
+    quiet: true
+  loop: "{{ proxmox_network_vlan_interfaces }}"
+  loop_control:
+    label: "{{ item.vlan | default('?') }}"
+
+# The Proxmox UI writes /etc/network/interfaces too. So Ansible changes only
+# the lines of the bridge, and the UI writes the same lines.
+- name: Make the bridge VLAN-aware
+  ansible.builtin.lineinfile:
+    path: /etc/network/interfaces
+    regexp: '^\s+{{ item.key }}\s'
+    line: "\t{{ item.key }} {{ item.value }}"
+    insertafter: '^\s+bridge-ports\s'
+    firstmatch: true
+  loop:
+    - { key: bridge-vlan-aware, value: "yes" }
+    - { key: bridge-vids, value: "{{ proxmox_network_bridge_vids }}" }
+  loop_control:
+    label: "{{ item.key }}"
+  when: proxmox_network_vlan_aware
+  notify: Apply the network settings
+
+# The UI does not read interfaces.d, so it does not change this file.
+- name: Write the VLAN interfaces of the host
+  ansible.builtin.template:
+    src: vlans.j2
+    dest: /etc/network/interfaces.d/ansible-vlans
+    owner: root
+    group: root
+    mode: "0644"
+  when: proxmox_network_vlan_interfaces | length > 0
+  notify: Apply the network settings
+
+- name: Delete the VLAN interfaces of the host
+  ansible.builtin.file:
+    path: /etc/network/interfaces.d/ansible-vlans
+    state: absent
+  when: proxmox_network_vlan_interfaces | length == 0
+  notify: Apply the network settings

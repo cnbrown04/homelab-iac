@@ -1,0 +1,12 @@
+---
+# The bridge of the guests. The host keeps its own address on the bridge,
+# untagged.
+proxmox_network_bridge: vmbr0
+
+# Let the guests use tagged VLANs on the bridge, like "VLAN aware" in the UI.
+proxmox_network_vlan_aware: false
+proxmox_network_bridge_vids: 2-4094
+
+# Addresses of the host on tagged VLANs, with no gateway. Each item is
+# { vlan: 20, address: 10.0.20.5/24 }. The interface is <bridge>.<vlan>.
+proxmox_network_vlan_interfaces: []
