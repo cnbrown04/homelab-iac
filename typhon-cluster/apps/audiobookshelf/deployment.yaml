@@ -1,0 +1,91 @@
+# Audiobookshelf. It has its own login, and its mobile apps cannot pass the
+# Pangolin login, so Pangolin does not put SSO in front of it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audiobookshelf
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: audiobookshelf
+  template:
+    metadata:
+      labels:
+        app: audiobookshelf
+    spec:
+      # User 1000 owns most of the library. The old app wrote its covers and
+      # metadata.json as nobody (65534) with mode 664, so the group 65534
+      # gives write access to them. No fsGroup: the kubelet would change the
+      # owner of each file in the library.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        supplementalGroups: [65534]
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # A new config volume gets the database from metadata/migrate/ one
+        # time. To restore a backup, put the database there, and delete the
+        # claim config.
+        - name: seed-database
+          image: docker.io/library/busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -e /config/absdatabase.sqlite ] && [ -e /metadata/migrate/absdatabase.sqlite ]; then
+                cp /metadata/migrate/absdatabase.sqlite /config/absdatabase.sqlite
+                echo "Copied the database from /metadata/migrate."
+              fi
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: metadata
+              mountPath: /metadata
+      containers:
+        - name: audiobookshelf
+          image: ghcr.io/advplyr/audiobookshelf:2.36.1
+          env:
+            # A user that is not root cannot open port 80.
+            - name: PORT
+              value: "13378"
+          ports:
+            - name: http
+              containerPort: 13378
+          securityContext: *container-security
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: metadata
+              mountPath: /metadata
+            - name: library
+              mountPath: /audiobooks
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: metadata
+          persistentVolumeClaim:
+            claimName: metadata
+        - name: library
+          persistentVolumeClaim:
+            claimName: library

@@ -43,6 +43,19 @@ pangolin_typhon_target: 100.89.128.4
 # request through the Pangolin app, and Headscale must not depend on it.
 pangolin_blueprint_resources:
   public-resources:
+    # Audiobookshelf has its own login. Its mobile apps cannot pass the
+    # Pangolin login, so SSO is off.
+    audiobookshelf:
+      name: Audiobookshelf
+      mode: http
+      full-domain: audiobooks.buildwithcaleb.com
+      auth:
+        sso-enabled: false
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     glance:
       name: Glance
       mode: http

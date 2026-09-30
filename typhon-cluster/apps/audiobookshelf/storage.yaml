@@ -1,0 +1,84 @@
+# The volumes of Audiobookshelf:
+# - library: the books, in /lethe/data/media/audiobooks on gaia. The old
+#   database has the library at /audiobooks, so the pod mounts it there.
+# - metadata: covers, authors, cache, and backups, in
+#   /lethe/k8s/audiobookshelf-metadata on gaia. No SQLite.
+# - config: the SQLite database, on the disk of a worker. SQLite must not go
+#   on NFS.
+# The two static volumes keep their data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audiobookshelf-library
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: audiobookshelf
+    name: library
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: audiobookshelf-library
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/data/media/audiobooks
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: audiobookshelf-metadata
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: audiobookshelf
+    name: metadata
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: audiobookshelf-metadata
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/audiobookshelf-metadata
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: library
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: audiobookshelf-library
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metadata
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: audiobookshelf-metadata
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
