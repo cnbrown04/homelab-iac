@@ -10,6 +10,6 @@ proxmox_gpu_passthrough_devices:
 proxmox_gpu_passthrough_blacklist:
   - i915
   - xe
-# The token of OpenTofu for pantheon attaches the mapping to the VM.
-proxmox_gpu_passthrough_tokens:
-  - tofu@pve!homelab-iac
+# The user of the OpenTofu token for pantheon attaches the mapping to the VM.
+proxmox_gpu_passthrough_users:
+  - tofu@pve

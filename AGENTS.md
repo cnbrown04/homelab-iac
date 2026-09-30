@@ -311,6 +311,11 @@ tofu -chdir=tofu/targets/atlas plan
   the display name.
 - The Proxmox web UI keeps the permissions of a user until the page loads
   again. After a change of groups, reload the page.
+- The OpenTofu token `tofu@pve!homelab-iac` has no privilege separation. It
+  uses the permissions of the user `tofu@pve` only, so give each access rule
+  to the user. The user has the custom role `IaCProvisioner` on `/`.
+- A download from a URL to Proxmox storage needs `Sys.AccessNetwork`. It is
+  in `IaCProvisioner`. Do not give `Sys.Modify` for this.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
   512. The host looks at byte 4096 and finds no partition. Do not wipe the

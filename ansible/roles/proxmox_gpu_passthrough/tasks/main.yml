@@ -64,17 +64,17 @@
   changed_when: false
   check_mode: false
 
-- name: Let the tokens use the mappings
+- name: Let the users use the mappings
   ansible.builtin.command:
     argv:
       - pveum
       - acl
       - modify
       - "/mapping/pci/{{ item.0.mapping }}"
-      - "--tokens={{ item.1 }}"
+      - "--users={{ item.1 }}"
       - "--roles={{ proxmox_gpu_passthrough_role }}"
   changed_when: true
-  loop: "{{ proxmox_gpu_passthrough_devices | product(proxmox_gpu_passthrough_tokens) | list }}"
+  loop: "{{ proxmox_gpu_passthrough_devices | product(proxmox_gpu_passthrough_users) | list }}"
   loop_control:
     label: "{{ item.0.mapping }} {{ item.1 }}"
   when: >-

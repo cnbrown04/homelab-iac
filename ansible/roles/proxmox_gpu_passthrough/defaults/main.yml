@@ -8,7 +8,8 @@ proxmox_gpu_passthrough_devices: []
 # The host drivers that must not take the devices.
 proxmox_gpu_passthrough_blacklist: []
 
-# The API tokens that can attach the mapped devices to a VM, for example
-# tofu@pve!homelab-iac. Without a mapping, only root@pam can attach a device.
-proxmox_gpu_passthrough_tokens: []
+# The users that can attach the mapped devices to a VM, for example tofu@pve.
+# Without a mapping, only root@pam can attach a device. Give the rule to the
+# user: a token with no privilege separation ignores a rule for the token.
+proxmox_gpu_passthrough_users: []
 proxmox_gpu_passthrough_role: PVEMappingUser
