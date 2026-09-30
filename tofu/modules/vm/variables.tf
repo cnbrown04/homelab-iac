@@ -86,6 +86,12 @@ variable "agent_enabled" {
   default     = true
 }
 
+variable "agent_wait_for_ip" {
+  description = "Wait for the agent to report an IP address when OpenTofu creates the VM."
+  type        = bool
+  default     = true
+}
+
 variable "tablet_device" {
   description = "Add a USB tablet for the pointer in the console."
   type        = bool
@@ -108,6 +114,9 @@ variable "disks" {
     discard      = optional(string, "on")
     ssd          = optional(bool, true)
     iothread     = optional(bool, false)
+    # The file ID of a disk image with the content type import, for example
+    # local:import/talos.qcow2. OpenTofu reads it only when it creates the VM.
+    import_from = optional(string)
   }))
 }
 
@@ -143,4 +152,25 @@ variable "serial_devices" {
   description = "Serial devices, for example socket."
   type        = list(string)
   default     = []
+}
+
+variable "initialization" {
+  description = "The cloud-init drive, with a static IPv4 address. Null adds no drive."
+  type = object({
+    datastore_id = string
+    ipv4_address = string
+    ipv4_gateway = string
+    dns_servers  = optional(list(string), [])
+  })
+  default = null
+}
+
+variable "pci_mappings" {
+  description = "PCI devices, by the name of their cluster resource mapping."
+  type = list(object({
+    mapping = string
+    pcie    = optional(bool, true)
+    rombar  = optional(bool, true)
+  }))
+  default = []
 }

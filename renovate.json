@@ -21,6 +21,16 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[A-Za-z0-9_]+: \"?(?<currentValue>[^\"\\s]+)\"?"
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update a version that has a renovate comment in OpenTofu locals",
+      "managerFilePatterns": [
+        "/^tofu/.+\\.tf$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n\\s*[A-Za-z0-9_]+\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ]
     }
   ],
   "dependencyDashboard": true,

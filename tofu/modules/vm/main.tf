@@ -20,6 +20,15 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   agent {
     enabled = var.agent_enabled
+
+    # A new Talos VM has no agent until it gets its config. So the create
+    # must not wait for the IP that the agent reports.
+    dynamic "wait_for_ip" {
+      for_each = var.agent_wait_for_ip ? [] : [true]
+      content {
+        disabled = true
+      }
+    }
   }
 
   cpu {
@@ -51,6 +60,27 @@ resource "proxmox_virtual_environment_vm" "this" {
       discard      = disk.value.discard
       ssd          = disk.value.ssd
       iothread     = disk.value.iothread
+      import_from  = disk.value.import_from
+    }
+  }
+
+  # The cloud-init drive. Talos nocloud reads its network from it.
+  dynamic "initialization" {
+    for_each = var.initialization == null ? [] : [var.initialization]
+    content {
+      datastore_id = initialization.value.datastore_id
+      type         = "nocloud"
+
+      ip_config {
+        ipv4 {
+          address = initialization.value.ipv4_address
+          gateway = initialization.value.ipv4_gateway
+        }
+      }
+
+      dns {
+        servers = initialization.value.dns_servers
+      }
     }
   }
 
@@ -62,6 +92,18 @@ resource "proxmox_virtual_environment_vm" "this" {
       vlan_id     = network_device.value.vlan_id
       model       = network_device.value.model
       firewall    = network_device.value.firewall
+    }
+  }
+
+  # A PCI device through a cluster resource mapping. With a mapping, an API
+  # token with Mapping.Use can attach the device. See AGENTS.md, "Lessons".
+  dynamic "hostpci" {
+    for_each = var.pci_mappings
+    content {
+      device  = "hostpci${hostpci.key}"
+      mapping = hostpci.value.mapping
+      pcie    = hostpci.value.pcie
+      rombar  = hostpci.value.rombar
     }
   }
 
