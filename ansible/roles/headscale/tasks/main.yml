@@ -121,6 +121,8 @@
     owner: root
     group: headscale
     mode: "0640"
+    # A broken policy stops the play before it replaces the live policy.
+    validate: headscale policy check --file %s
   notify: Reload Headscale
 
 - name: Validate the Headscale configuration

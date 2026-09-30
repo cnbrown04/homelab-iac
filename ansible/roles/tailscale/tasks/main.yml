@@ -91,3 +91,41 @@
   changed_when: true
   no_log: true
   when: tailscale_needs_join | bool
+
+# A subnet router forwards packets between the tailnet and the subnet.
+- name: Turn on IPv4 forwarding for the routes
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-tailscale.conf
+    reload: true
+  when: tailscale_advertise_routes | length > 0
+
+- name: Delete the forwarding setting
+  ansible.builtin.file:
+    path: /etc/sysctl.d/99-tailscale.conf
+    state: absent
+  when: tailscale_advertise_routes | length == 0
+
+- name: Read the Tailscale preferences
+  ansible.builtin.command:
+    cmd: tailscale debug prefs
+  register: tailscale_prefs
+  changed_when: false
+  # The task only reads, so it also runs in check mode.
+  check_mode: false
+  when: not tailscale_needs_join | bool
+
+# tailscale up runs only at the first join. tailscale set changes the routes
+# of a node that is already on the tailnet.
+- name: Advertise the routes
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - set
+      - --advertise-routes={{ tailscale_advertise_routes | sort | join(',') }}
+  changed_when: true
+  when: >-
+    tailscale_needs_join | bool
+    or ((tailscale_prefs.stdout | from_json).AdvertiseRoutes | default([], true) | sort)
+       != (tailscale_advertise_routes | sort)

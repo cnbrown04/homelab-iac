@@ -227,17 +227,19 @@ change a version by hand.
   give the owner the exact command, and ask for the output.
 - Give numbered steps with complete commands. After a change of plan, give the
   complete list of steps again.
+- Write each command for the owner to run from the root of the repository.
+  Do not use `cd`.
 - The owner pushes to `main` directly. Each push to `ansible/` or `tofu/`
   starts a pipeline that waits for the approval of the owner.
 
 ### Commands
 
 ```sh
-# Ansible, from ansible/
-ansible-playbook playbooks/hermes.yml --check --diff -K
-ansible-playbook playbooks/proxmox_nodes.yml --check --diff -K
+# Ansible. mise sets ANSIBLE_CONFIG to ansible/ansible.cfg.
+ansible-playbook ansible/playbooks/hermes.yml --check --diff -K
+ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff -K
 
-# OpenTofu, from the root of the repository
+# OpenTofu
 source scripts/tofu-env.sh atlas
 tofu -chdir=tofu/targets/atlas plan
 ```

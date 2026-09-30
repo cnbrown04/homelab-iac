@@ -8,6 +8,15 @@
     "tag:proxmox": [],
   },
 
+  // Headscale approves these routes when a node with the tag advertises them.
+  // The typhon VLAN goes through gaia. The grant to autogroup:member covers
+  // it. The grant to tag:github-actions does not.
+  "autoApprovers": {
+    "routes": {
+      "10.0.20.0/24": ["tag:proxmox"],
+    },
+  },
+
   "grants": [
     // The devices of the owner get to every node on every port.
     {

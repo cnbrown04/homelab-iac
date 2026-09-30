@@ -18,3 +18,8 @@ zfs_nfs_exports:
   - path: /lethe/data/media
     clients: 10.0.20.0/24
     options: rw,sync,no_subtree_check,no_root_squash,crossmnt
+
+# gaia routes the typhon VLAN for the devices on the tailnet. The Headscale
+# policy approves the route. tag:github-actions gets no access to it.
+tailscale_advertise_routes:
+  - 10.0.20.0/24

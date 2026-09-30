@@ -5,3 +5,8 @@ tailscale_tags: []
 tailscale_headscale_host: hermes
 tailscale_extra_up_args:
   - --accept-dns=false
+
+# The subnets that the node routes for the tailnet, for example 10.0.20.0/24.
+# With a subnet, the role turns on IPv4 forwarding. The policy of Headscale
+# must approve each route.
+tailscale_advertise_routes: []
