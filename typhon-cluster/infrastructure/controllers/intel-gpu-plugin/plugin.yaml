@@ -1,0 +1,26 @@
+# The GPU plugin of Intel, without its operator. The operator needs
+# cert-manager. The plugin gives gpu.intel.com/i915 on the nodes with the
+# label homelab/gpu=intel, today typhon-w-3.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: intel-gpu-plugin
+  namespace: flux-system
+spec:
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: intel-device-plugins
+  path: ./deployments/gpu_plugin/base
+  targetNamespace: intel-gpu-plugin
+  prune: true
+  wait: true
+  patches:
+    - target:
+        kind: DaemonSet
+        name: intel-gpu-plugin
+      patch: |
+        - op: add
+          path: /spec/template/spec/nodeSelector
+          value:
+            homelab/gpu: intel

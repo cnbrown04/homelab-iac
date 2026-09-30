@@ -1,0 +1,24 @@
+# The addresses of the LoadBalancer services. They are on VLAN 20, out of the
+# DHCP range of UniFi (10.0.20.100 to 10.0.20.199).
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: vlan20
+spec:
+  blocks:
+    - start: 10.0.20.200
+      stop: 10.0.20.249
+---
+# The workers answer ARP for the LoadBalancer addresses. The control plane
+# does not, because it runs no workload.
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: vlan20
+spec:
+  loadBalancerIPs: true
+  externalIPs: false
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist

@@ -1,0 +1,19 @@
+# The apps of the homelab. Each app gets one folder in typhon-cluster/apps/.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  interval: 10m
+  dependsOn:
+    - name: infrastructure-configs
+  sourceRef:
+    kind: GitRepository
+    name: homelab-iac
+  path: ./typhon-cluster/apps
+  prune: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

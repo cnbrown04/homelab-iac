@@ -1,0 +1,9 @@
+# The entry point of Flux for the typhon cluster. The owner applies sync.yaml
+# one time by hand. Then Flux reads this folder, and keeps itself in sync.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - sync.yaml
+  - crds.yaml
+  - infrastructure.yaml
+  - apps.yaml

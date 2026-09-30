@@ -1,0 +1,32 @@
+# Flux reads the repository with a read-only deploy key, the secret
+# homelab-iac-deploy-key. The owner creates it by hand. See AGENTS.md.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: homelab-iac
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: ssh://git@github.com/cnbrown04/homelab-iac
+  ref:
+    branch: main
+  secretRef:
+    name: homelab-iac-deploy-key
+  # Flux needs only the files of this cluster.
+  ignore: |
+    /*
+    !/typhon-cluster/
+    /typhon-cluster/talos/
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: homelab-iac
+  path: ./typhon-cluster/flux
+  prune: true

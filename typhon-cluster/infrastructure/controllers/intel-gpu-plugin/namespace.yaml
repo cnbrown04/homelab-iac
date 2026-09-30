@@ -1,0 +1,8 @@
+# The plugin reads /dev/dri and /sys/class/drm of the host, so the namespace
+# needs the privileged Pod Security level.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: intel-gpu-plugin
+  labels:
+    pod-security.kubernetes.io/enforce: privileged

@@ -1,0 +1,43 @@
+# The base services, in two steps. The controllers install the CRDs and the
+# drivers. The configs use them: the LoadBalancer pool, the Gateway, and the
+# StorageClass.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure-controllers
+  namespace: flux-system
+spec:
+  interval: 10m
+  dependsOn:
+    - name: gateway-api-crds
+  sourceRef:
+    kind: GitRepository
+    name: homelab-iac
+  path: ./typhon-cluster/infrastructure/controllers
+  prune: true
+  wait: true
+  timeout: 10m
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure-configs
+  namespace: flux-system
+spec:
+  interval: 10m
+  dependsOn:
+    - name: infrastructure-controllers
+  sourceRef:
+    kind: GitRepository
+    name: homelab-iac
+  path: ./typhon-cluster/infrastructure/configs
+  prune: true
+  wait: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

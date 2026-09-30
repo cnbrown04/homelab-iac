@@ -20,7 +20,7 @@ additionalMachineCertSans:
 allowSchedulingOnControlPlanes: false
 
 # Cilium is the CNI and replaces kube-proxy. See
-# typhon-cluster/infrastructure/cilium/values.yaml.
+# typhon-cluster/infrastructure/controllers/cilium/values.yaml.
 cniConfig:
   name: none
 

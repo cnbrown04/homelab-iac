@@ -5,7 +5,13 @@ creation_rules:
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
   - path_regex: ^ansible/inventory/group_vars/(all|proxmox_nodes)/.*\.sops\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
-  # The secrets of each Kubernetes cluster, in <name>-cluster/. Phase 7 adds
-  # the key of the cluster for Flux.
-  - path_regex: ^[a-z]+-cluster/.*\.sops\.(yaml|yml|json)$
+  # The Talos secrets of each Kubernetes cluster. Only the owner decrypts
+  # them. The first rule that matches a file wins, so this rule comes first.
+  - path_regex: ^[a-z]+-cluster/talos/.*\.sops\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+  # The secrets that Flux deploys to typhon. The second key is the key of the
+  # cluster. Its private key is in secrets/typhon-age-key.sops.yaml.
+  - path_regex: ^typhon-cluster/.*\.sops\.(yaml|yml|json)$
+    age: >-
+      age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d,
+      age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk

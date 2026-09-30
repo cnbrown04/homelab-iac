@@ -136,7 +136,9 @@ password is the same on each host.
 
 Talos v1.14 and Kubernetes 1.36, on VLAN 20 (`10.0.20.0/24`). The API is at
 the VIP `https://10.0.20.10:6443`. OpenTofu makes the VMs. talhelper makes the
-Talos config. Flux deploys the rest.
+Talos config. Flux deploys the rest from `main`, with a read-only deploy key.
+A SOPS file in `typhon-cluster/` has two keys: the owner key and the key of
+the cluster.
 
 | VM | VMID | Node | IP |
 | --- | --- | --- | --- |
@@ -229,7 +231,9 @@ scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
 scripts/vps-harden.sh       # the first bootstrap of a new VPS
 .github/workflows/          # ansible-hermes, tofu, tofu-target, tailnet-check
 typhon-cluster/talos/       # talconfig.yaml, talsecret.sops.yaml; clusterconfig/ is ignored
-typhon-cluster/infrastructure/  # the base services of the cluster, for Flux
+typhon-cluster/flux/        # the entry point of Flux; the order of the Kustomizations
+typhon-cluster/infrastructure/{controllers,configs}/  # the base services, for Flux
+typhon-cluster/apps/        # one folder for each app
 ```
 
 To add a guest, add one entry to `vms.tf` or `containers.tf`. Do not write a
@@ -300,6 +304,8 @@ tofu -chdir=tofu/targets/atlas plan
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The password hash of `iac-admin` |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys |
+  | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
+  | `typhon-cluster/talos/talsecret.sops.yaml` | The secrets of Talos. The owner key only. |
 
 - GitHub secrets: `SOPS_AGE_KEY`, `HEADSCALE_AUTHKEY`, `HERMES_SSH_KEY`, and
   `ANSIBLE_BECOME_PASSWORD`. `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and

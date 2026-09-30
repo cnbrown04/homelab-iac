@@ -1,6 +1,6 @@
 # The values of the Cilium chart for the typhon cluster. The owner installs
 # Cilium one time with helm, before Flux runs. Then Flux uses this file.
-# The chart is cilium 1.20.2 from https://helm.cilium.io. Cilium must support
+# The chart version is in helmrelease.yaml. Cilium must support
 # the Kubernetes version in typhon-cluster/talos/talconfig.yaml.
 ipam:
   mode: kubernetes

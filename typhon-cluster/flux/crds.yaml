@@ -1,0 +1,30 @@
+# The CRDs of Gateway API. Cilium needs them before it starts its Gateway
+# controller. Keep the version that Cilium supports.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gateway-api
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://github.com/kubernetes-sigs/gateway-api
+  ref:
+    tag: v1.6.1
+  ignore: |
+    /*
+    !/config/crd/standard/
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gateway-api-crds
+  namespace: flux-system
+spec:
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: gateway-api
+  path: ./config/crd/standard
+  # A deleted CRD deletes each of its resources. Flux never deletes a CRD.
+  prune: false
+  wait: true

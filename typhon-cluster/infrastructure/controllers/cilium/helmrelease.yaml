@@ -1,0 +1,26 @@
+# The name and the namespace are the same as in the install by hand, so Flux
+# upgrades that release. It does not install a second Cilium.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cilium
+spec:
+  interval: 30m
+  releaseName: cilium
+  chart:
+    spec:
+      chart: cilium
+      # Cilium must support the Kubernetes version in talos/talconfig.yaml.
+      version: 1.20.2
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+  valuesFrom:
+    - kind: ConfigMap
+      name: cilium-values
+      valuesKey: values.yaml
+  # A failed upgrade of the CNI must not take the network away.
+  upgrade:
+    remediation:
+      retries: 3
+      strategy: rollback

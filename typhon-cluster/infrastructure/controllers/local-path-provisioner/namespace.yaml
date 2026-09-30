@@ -1,0 +1,8 @@
+# The helper pod of the provisioner makes the folder of each volume on the
+# host, so the namespace needs the privileged Pod Security level.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-path-storage
+  labels:
+    pod-security.kubernetes.io/enforce: privileged

@@ -1,0 +1,22 @@
+# The default StorageClass. Each volume is a folder in /lethe/k8s on gaia.
+# gaia exports it to VLAN 20 only. See ansible/inventory/host_vars/gaia.
+# When a claim goes away, the driver renames its folder to archived-<name>,
+# and does not delete the data.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-lethe
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 10.0.20.5
+  share: /lethe/k8s
+  onDelete: archive
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.2
+  - hard
+  - noatime
