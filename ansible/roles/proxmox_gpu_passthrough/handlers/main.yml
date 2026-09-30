@@ -1,0 +1,7 @@
+---
+# The new driver settings take effect after the next boot. The owner reboots
+# the host by hand.
+- name: Update the initramfs
+  ansible.builtin.command:
+    cmd: update-initramfs -u -k all
+  changed_when: true

@@ -20,3 +20,6 @@
     - role: zfs_nfs
       tags: [zfs_nfs]
       when: zfs_nfs_pool | default('') | length > 0
+    - role: proxmox_gpu_passthrough
+      tags: [proxmox_gpu_passthrough]
+      when: proxmox_gpu_passthrough_devices | default([]) | length > 0

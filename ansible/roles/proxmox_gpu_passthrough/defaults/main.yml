@@ -1,0 +1,14 @@
+---
+# The PCI devices that the host gives to one VM each. Each item is
+# { mapping, path, id, iommugroup }, for example
+# { mapping: hyperion-igpu, path: "0000:00:02.0", id: "8086:4680", iommugroup: 0 }.
+# The role binds each device to vfio-pci and creates a cluster PCI mapping.
+proxmox_gpu_passthrough_devices: []
+
+# The host drivers that must not take the devices.
+proxmox_gpu_passthrough_blacklist: []
+
+# The API tokens that can attach the mapped devices to a VM, for example
+# tofu@pve!homelab-iac. Without a mapping, only root@pam can attach a device.
+proxmox_gpu_passthrough_tokens: []
+proxmox_gpu_passthrough_role: PVEMappingUser

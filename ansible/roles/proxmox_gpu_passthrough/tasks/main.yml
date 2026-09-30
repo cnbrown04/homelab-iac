@@ -1,0 +1,85 @@
+---
+- name: Check the passthrough settings
+  ansible.builtin.assert:
+    that:
+      - item.mapping is match('^[a-z0-9-]+$')
+      - item.path is match('^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]$')
+      - item.id is match('^[0-9a-f]{4}:[0-9a-f]{4}$')
+      - item.iommugroup is integer
+    fail_msg: "A device needs a mapping name, a PCI path, a vendor:device ID, and an IOMMU group."
+    quiet: true
+  loop: "{{ proxmox_gpu_passthrough_devices }}"
+  loop_control:
+    label: "{{ item.mapping | default('?') }}"
+
+- name: Load the VFIO modules at boot
+  ansible.builtin.copy:
+    content: |
+      # Ansible writes this file. See the role proxmox_gpu_passthrough.
+      vfio
+      vfio_pci
+      vfio_iommu_type1
+    dest: /etc/modules-load.d/vfio.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update the initramfs
+
+- name: Bind the devices to vfio-pci
+  ansible.builtin.template:
+    src: vfio.conf.j2
+    dest: /etc/modprobe.d/vfio.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update the initramfs
+
+# The mappings are data of the cluster, in /etc/pve. Each node can write them.
+- name: Read the PCI mappings
+  ansible.builtin.command:
+    cmd: pvesh get /cluster/mapping/pci --output-format json
+  register: proxmox_gpu_passthrough_mappings
+  changed_when: false
+  check_mode: false
+
+- name: Create the PCI mappings
+  ansible.builtin.command:
+    argv:
+      - pvesh
+      - create
+      - /cluster/mapping/pci
+      - "--id={{ item.mapping }}"
+      - "--map=node={{ inventory_hostname }},path={{ item.path }},id={{ item.id }},iommugroup={{ item.iommugroup }}"
+      - "--description=Ansible, the role proxmox_gpu_passthrough"
+  changed_when: true
+  loop: "{{ proxmox_gpu_passthrough_devices }}"
+  loop_control:
+    label: "{{ item.mapping }}"
+  when: item.mapping not in (proxmox_gpu_passthrough_mappings.stdout | from_json | map(attribute='id') | list)
+
+- name: Read the access rules
+  ansible.builtin.command:
+    cmd: pveum acl list --output-format json
+  register: proxmox_gpu_passthrough_acl
+  changed_when: false
+  check_mode: false
+
+- name: Let the tokens use the mappings
+  ansible.builtin.command:
+    argv:
+      - pveum
+      - acl
+      - modify
+      - "/mapping/pci/{{ item.0.mapping }}"
+      - "--tokens={{ item.1 }}"
+      - "--roles={{ proxmox_gpu_passthrough_role }}"
+  changed_when: true
+  loop: "{{ proxmox_gpu_passthrough_devices | product(proxmox_gpu_passthrough_tokens) | list }}"
+  loop_control:
+    label: "{{ item.0.mapping }} {{ item.1 }}"
+  when: >-
+    proxmox_gpu_passthrough_acl.stdout | from_json
+    | selectattr('path', 'equalto', '/mapping/pci/' ~ item.0.mapping)
+    | selectattr('ugid', 'equalto', item.1)
+    | selectattr('roleid', 'equalto', proxmox_gpu_passthrough_role)
+    | list | length == 0

@@ -1,0 +1,15 @@
+---
+# The iGPU of hyperion (UHD 770) goes to the typhon worker typhon-w-3, for the
+# transcodes of Jellyfin. The host has no display driver after the reboot.
+proxmox_gpu_passthrough_devices:
+  - mapping: hyperion-igpu
+    path: "0000:00:02.0"
+    id: "8086:4680"
+    iommugroup: 0
+# i915 drives the iGPU now. xe can also take it on a new kernel.
+proxmox_gpu_passthrough_blacklist:
+  - i915
+  - xe
+# The token of OpenTofu for pantheon attaches the mapping to the VM.
+proxmox_gpu_passthrough_tokens:
+  - tofu@pve!homelab-iac
