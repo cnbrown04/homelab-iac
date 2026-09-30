@@ -33,7 +33,7 @@ spec:
         # time. To restore a backup, put the database there, and delete the
         # claim config.
         - name: seed-database
-          image: docker.io/library/busybox:1.37
+          image: docker.io/library/busybox:1.38
           command:
             - sh
             - -c
