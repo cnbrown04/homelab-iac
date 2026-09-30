@@ -12,8 +12,11 @@ inputs:
 runs:
   using: composite
   steps:
+    # Install only the tools of Ansible, not the tools of the clusters.
     - name: Install the toolchain from mise.toml
       uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+      with:
+        install_args: python ansible-core pypi:ansible-lint uv sops age
 
     - name: Install the Ansible collections
       shell: bash
