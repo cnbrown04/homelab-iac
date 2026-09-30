@@ -97,7 +97,7 @@ jobs:
     if: inputs.apply && needs.plan.outputs.changes == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    # The environment has the owner as the required reviewer. See decision 7
+    # The environment has the owner as the required reviewer. See decision 8
     # in AGENTS.md.
     environment: ${{ inputs.target }}
     concurrency:

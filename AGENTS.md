@@ -273,12 +273,16 @@ tofu -chdir=tofu/targets/atlas plan
 
 ### The pipelines
 
-- `ansible-hermes.yml`: a pull request runs a check with `--diff`. A push to
-  `main` applies after approval in the environment `hermes`, then runs a check
-  that must show no change.
-- `tofu.yml`: a pull request plans each target. A push to `main` saves each
-  plan with changes, waits for approval in the environment `atlas` or
-  `pantheon`, applies the saved plan, then plans again.
+- `ansible-hermes.yml`: lint, then a check with `--diff`. On a push to
+  `main`, an apply follows only when the check shows a change. It waits for
+  approval in the environment `hermes`. Then a second check must show no
+  change. A run by hand with `force` applies also with no change, because a
+  check does not run `command` tasks.
+- `tofu.yml`: lint, then a plan of each target. On a push to `main`, a plan
+  with changes waits for approval in the environment `atlas` or `pantheon`.
+  Then the job applies the saved plan, and a new plan must show no change. A
+  plan with no change needs no approval.
+- After a failed apply, start a new run. The saved plan is stale.
 - The `typhon` cluster is not in a pipeline, for the same reason. Run
   talhelper and talosctl by hand. Flux in the cluster pulls from GitHub.
 - The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
