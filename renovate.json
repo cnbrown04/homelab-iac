@@ -9,6 +9,7 @@
     "docker-compose",
     "flux",
     "github-actions",
+    "kubernetes",
     "mise",
     "terraform"
   ],
@@ -58,6 +59,11 @@
     }
   ],
   "flux": {
+    "managerFilePatterns": [
+      "/^[a-z]+-cluster/.+\\.ya?ml$/"
+    ]
+  },
+  "kubernetes": {
     "managerFilePatterns": [
       "/^[a-z]+-cluster/.+\\.ya?ml$/"
     ]

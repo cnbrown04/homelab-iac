@@ -43,6 +43,17 @@ pangolin_typhon_target: 100.89.128.4
 # request through the Pangolin app, and Headscale must not depend on it.
 pangolin_blueprint_resources:
   public-resources:
+    glance:
+      name: Glance
+      mode: http
+      full-domain: home.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     headplane:
       name: Headplane
       mode: http

@@ -1,0 +1,73 @@
+# The config of Glance. See https://github.com/glanceapp/glance/blob/main/docs/configuration.md.
+server:
+  port: 8080
+  # Pangolin and the Gateway are in front of Glance.
+  proxied: true
+
+pages:
+  - name: Home
+    columns:
+      - size: small
+        widgets:
+          - type: calendar
+            first-day-of-week: sunday
+
+      - size: full
+        widgets:
+          - type: search
+            search-engine: duckduckgo
+
+          # url opens the public name. check-url tests the service on the
+          # network of the homelab, where the cluster can reach it.
+          - type: monitor
+            title: Proxmox
+            cache: 1m
+            sites:
+              - title: gaia
+                url: https://gaia.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.120:8006
+                allow-insecure: true
+              - title: hyperion
+                url: https://hyperion.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.101:8006
+                allow-insecure: true
+              - title: tartarus
+                url: https://tartarus.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.113:8006
+                allow-insecure: true
+              - title: theia
+                url: https://theia.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.131:8006
+                allow-insecure: true
+              - title: atlas
+                url: https://atlas.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.124:8006
+                allow-insecure: true
+
+          - type: monitor
+            title: hermes
+            cache: 1m
+            sites:
+              - title: Headscale
+                url: https://vpn.buildwithcaleb.com/health
+              - title: Pocket ID
+                url: https://auth.buildwithcaleb.com
+              - title: Pangolin
+                url: https://pangolin.buildwithcaleb.com
+
+      - size: small
+        widgets:
+          - type: bookmarks
+            groups:
+              - title: Admin
+                links:
+                  - title: Pangolin
+                    url: https://pangolin.buildwithcaleb.com
+                  - title: Headplane
+                    url: https://headplane.buildwithcaleb.com
+                  - title: Dockge
+                    url: https://dockge.buildwithcaleb.com
+                  - title: Pocket ID
+                    url: https://auth.buildwithcaleb.com
+                  - title: GitHub
+                    url: https://github.com/cnbrown04/homelab-iac
