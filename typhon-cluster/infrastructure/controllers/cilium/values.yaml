@@ -42,3 +42,7 @@ k8sClientRateLimit:
 # off.
 gatewayAPI:
   enabled: true
+  # Traefik on hermes terminates TLS and sets X-Forwarded-Proto to https.
+  # With no trusted hop, Envoy replaces the header with http, and an app
+  # like Audiobookshelf rejects its own https callback URL for OIDC.
+  xffNumTrustedHops: 1

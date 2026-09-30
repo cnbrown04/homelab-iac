@@ -163,6 +163,18 @@ the cluster.
   `pangolin-wireguard` both use kernel WireGuard. The pod has the tunnel
   address `100.89.128.4`, and it sends TCP port 80 to the Gateway
   `10.0.20.200`. Gerbil does not answer a ping through the tunnel.
+- Audiobookshelf is at `audiobooks.buildwithcaleb.com`, with no Pangolin
+  login. It logs in with its own users and with OIDC through Pocket ID. The
+  owner made its Pocket ID client by hand.
+  - The books are in `/lethe/data/media/audiobooks`, mounted at `/audiobooks`.
+    The metadata and the daily backups (01:30) are in
+    `/lethe/k8s/audiobookshelf-metadata`. The SQLite database is on
+    `local-path`.
+  - The pod runs as user 1000 with the extra group 65534, so it can write
+    the old covers and `metadata.json` files of `nobody`.
+  - To restore the database: put a database at
+    `/lethe/k8s/audiobookshelf-metadata/migrate/absdatabase.sqlite`, then
+    delete the pod and the claim `config`. The init container copies it.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site
