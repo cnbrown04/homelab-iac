@@ -5,3 +5,7 @@ creation_rules:
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
   - path_regex: ^ansible/inventory/group_vars/(all|proxmox_nodes)/.*\.sops\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+  # The secrets of each Kubernetes cluster, in <name>-cluster/. Phase 7 adds
+  # the key of the cluster for Flux.
+  - path_regex: ^[a-z]+-cluster/.*\.sops\.(yaml|yml|json)$
+    age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d

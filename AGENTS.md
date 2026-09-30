@@ -125,11 +125,36 @@ Always refer to a machine by its hostname, not by its provider.
 | `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
 
-Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster has no guest.
+Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
+Kubernetes cluster `typhon`.
 The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
 Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
 Ansible logs in to each host as `iac-admin`, with sudo and a password. The
 password is the same on each host.
+
+### The `typhon` cluster
+
+Talos v1.14 and Kubernetes 1.36, on VLAN 20 (`10.0.20.0/24`). The API is at
+the VIP `https://10.0.20.10:6443`. OpenTofu makes the VMs. talhelper makes the
+Talos config. Flux deploys the rest.
+
+| VM | VMID | Node | IP |
+| --- | --- | --- | --- |
+| `typhon-cp-1` | `501` | `gaia` | `10.0.20.11` |
+| `typhon-w-1` | `511` | `gaia` | `10.0.20.21` |
+| `typhon-w-2` | `512` | `gaia` | `10.0.20.22` |
+| `typhon-w-3` | `513` | `hyperion` | `10.0.20.23`, with the iGPU of `hyperion` |
+| `typhon-w-4` | `514` | `hyperion` | `10.0.20.24` |
+
+- The cluster has one control plane. `gaia` holds the NFS storage, so `gaia`
+  is a single point of failure already.
+- `gaia` has `10.0.20.5` on VLAN 20. It exports `/lethe/k8s` and
+  `/lethe/data/media` to VLAN 20 only. It routes VLAN 20 for the tailnet.
+- The Cilium LoadBalancer pool is `10.0.20.200` to `10.0.20.249`. The UniFi
+  DHCP range is `10.0.20.100` to `10.0.20.199`.
+- A Talos worker has 8 GiB of RAM or less. The data of an app goes to NFS,
+  and SQLite goes to `local-path`.
+- The files of a cluster go in `<name>-cluster/`.
 
 ### The services on `hermes`
 
@@ -203,6 +228,8 @@ secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens
 scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
 scripts/vps-harden.sh       # the first bootstrap of a new VPS
 .github/workflows/          # ansible-hermes, tofu, tofu-target, tailnet-check
+typhon-cluster/talos/       # talconfig.yaml, talsecret.sops.yaml; clusterconfig/ is ignored
+typhon-cluster/infrastructure/  # the base services of the cluster, for Flux
 ```
 
 To add a guest, add one entry to `vms.tf` or `containers.tf`. Do not write a
@@ -252,6 +279,8 @@ tofu -chdir=tofu/targets/atlas plan
 - `tofu.yml`: a pull request plans each target. A push to `main` saves each
   plan with changes, waits for approval in the environment `atlas` or
   `pantheon`, applies the saved plan, then plans again.
+- The `typhon` cluster is not in a pipeline, for the same reason. Run
+  talhelper and talosctl by hand. Flux in the cluster pulls from GitHub.
 - The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
   SSH. Run their playbook by hand. The owner chose this on 28 September 2026.
   Do not open SSH to `tag:proxmox` for a pipeline. OpenTofu still deploys the

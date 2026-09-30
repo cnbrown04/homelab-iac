@@ -1,0 +1,166 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
+# The Talos config of the typhon cluster. talhelper makes the config of each
+# node in clusterconfig/, which git ignores. OpenTofu makes the VMs, in
+# tofu/targets/pantheon/vms.tf. Keep the schematics the same as there.
+clusterName: typhon
+# renovate: datasource=github-releases depName=siderolabs/talos
+talosVersion: v1.14.2
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
+kubernetesVersion: v1.36.5
+# Cilium 1.20 supports Kubernetes 1.33 to 1.36. Check the Cilium support
+# before a bump.
+
+# The VIP moves between the control planes. With one control plane, it keeps
+# the endpoint stable for a second control plane later.
+endpoint: https://10.0.20.10:6443
+additionalApiServerCertSans:
+  - 10.0.20.10
+additionalMachineCertSans:
+  - 10.0.20.10
+allowSchedulingOnControlPlanes: false
+
+# Cilium is the CNI and replaces kube-proxy. See
+# typhon-cluster/infrastructure/cilium/values.yaml.
+cniConfig:
+  name: none
+
+controlPlane:
+  # Talos accepts this document on a control plane only.
+  patches:
+    - |-
+      apiVersion: v1alpha1
+      kind: KubeProxyConfig
+      enabled: false
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/qemu-guest-agent
+
+worker:
+  patches:
+    # The rest of the system disk, about 9 GiB, goes to local-path-provisioner
+    # at /var/mnt/local-path. SQLite must not go on NFS. The image leaves a
+    # gap of 1.9 GiB before META, so a volume of 10 GiB does not fit.
+    - |-
+      apiVersion: v1alpha1
+      kind: VolumeConfig
+      name: EPHEMERAL
+      provisioning:
+        maxSize: 19GiB
+    - |-
+      apiVersion: v1alpha1
+      kind: UserVolumeConfig
+      name: local-path
+      provisioning:
+        diskSelector:
+          match: system_disk
+        minSize: 8GiB
+        grow: true
+
+nodes:
+  - hostname: typhon-cp-1
+    ipAddress: 10.0.20.11
+    controlPlane: true
+    installDisk: /dev/sda
+    machineSpec:
+      mode: nocloud
+    nameservers: [10.0.20.1]
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses: [10.0.20.11/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.20.1
+        vip:
+          ip: 10.0.20.10
+
+  - hostname: typhon-w-1
+    ipAddress: 10.0.20.21
+    controlPlane: false
+    installDisk: /dev/sda
+    machineSpec:
+      mode: nocloud
+    nodeLabels:
+      homelab/host: gaia
+    schematic: &base
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/qemu-guest-agent
+    nameservers: [10.0.20.1]
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses: [10.0.20.21/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.20.1
+
+  - hostname: typhon-w-2
+    ipAddress: 10.0.20.22
+    controlPlane: false
+    installDisk: /dev/sda
+    machineSpec:
+      mode: nocloud
+    nodeLabels:
+      homelab/host: gaia
+    schematic: *base
+    nameservers: [10.0.20.1]
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses: [10.0.20.22/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.20.1
+
+  # The iGPU of hyperion, for the transcodes of Jellyfin.
+  - hostname: typhon-w-3
+    ipAddress: 10.0.20.23
+    controlPlane: false
+    installDisk: /dev/sda
+    machineSpec:
+      mode: nocloud
+    nodeLabels:
+      homelab/host: hyperion
+      homelab/gpu: intel
+    schematic: &intel_gpu
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/i915
+            - siderolabs/intel-ucode
+            - siderolabs/qemu-guest-agent
+    nameservers: [10.0.20.1]
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses: [10.0.20.23/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.20.1
+
+  - hostname: typhon-w-4
+    ipAddress: 10.0.20.24
+    controlPlane: false
+    installDisk: /dev/sda
+    machineSpec:
+      mode: nocloud
+    nodeLabels:
+      homelab/host: hyperion
+    schematic: *intel_gpu
+    nameservers: [10.0.20.1]
+    networkInterfaces:
+      - deviceSelector:
+          physical: true
+        dhcp: false
+        addresses: [10.0.20.24/24]
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.0.20.1

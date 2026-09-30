@@ -1,0 +1,44 @@
+# The values of the Cilium chart for the typhon cluster. The owner installs
+# Cilium one time with helm, before Flux runs. Then Flux uses this file.
+# The chart is cilium 1.20.2 from https://helm.cilium.io. Cilium must support
+# the Kubernetes version in typhon-cluster/talos/talconfig.yaml.
+ipam:
+  mode: kubernetes
+
+# Cilium replaces kube-proxy. KubePrism of Talos serves the API of Kubernetes
+# on each node, at localhost:7445.
+kubeProxyReplacement: true
+k8sServiceHost: localhost
+k8sServicePort: 7445
+
+# Talos mounts the cgroup file system, and it does not let Cilium load kernel
+# modules. These are the settings of the Talos documents.
+securityContext:
+  capabilities:
+    ciliumAgent: [CHOWN, KILL, NET_ADMIN, NET_RAW, IPC_LOCK, SYS_ADMIN, SYS_RESOURCE, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    cleanCiliumState: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+# Talos sends the DNS of the cluster to the resolver of the host. That path
+# needs the routing of the host.
+bpf:
+  hostLegacyRouting: true
+
+# The LoadBalancer IPs, 10.0.20.200 to .249, answer ARP on VLAN 20. The pool
+# and the policy are Flux resources.
+l2announcements:
+  enabled: true
+externalIPs:
+  enabled: true
+# The leases of L2 announcements use the API. The default limit is too low.
+k8sClientRateLimit:
+  qps: 20
+  burst: 40
+
+# Install the CRDs of Gateway API v1.6.1 before Cilium, or Cilium turns this
+# off.
+gatewayAPI:
+  enabled: true

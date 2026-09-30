@@ -12,3 +12,7 @@ crash.log
 *.dec.*
 *.decrypted.*
 .env
+
+# talhelper writes the configs of the nodes and talosconfig here. They hold
+# the secrets of the cluster in plain text.
+*-cluster/talos/clusterconfig/

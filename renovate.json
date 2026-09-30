@@ -14,9 +14,10 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update a version that has a renovate comment in Ansible variables",
+      "description": "Update a version that has a renovate comment in Ansible variables or a cluster config",
       "managerFilePatterns": [
-        "/^ansible/.+\\.ya?ml$/"
+        "/^ansible/.+\\.ya?ml$/",
+        "/^[a-z]+-cluster/.+\\.ya?ml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[A-Za-z0-9_]+: \"?(?<currentValue>[^\"\\s]+)\"?"
@@ -45,6 +46,14 @@
         "fosrl/pangolin"
       ],
       "versioning": "regex:^ee-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+    },
+    {
+      "description": "Keep talosctl at the Talos version of the nodes",
+      "matchDepNames": [
+        "siderolabs/talos",
+        "talosctl"
+      ],
+      "groupName": "talos"
     }
   ]
 }
