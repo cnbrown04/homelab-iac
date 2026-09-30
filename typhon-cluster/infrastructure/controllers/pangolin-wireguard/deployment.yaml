@@ -1,0 +1,65 @@
+# One peer only. Two pods with the same key take the tunnel from each other,
+# so a new pod starts after the old pod stops.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pangolin-wireguard
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pangolin-wireguard
+  template:
+    metadata:
+      labels:
+        app: pangolin-wireguard
+    spec:
+      containers:
+        - name: wireguard
+          # The image gives wg, ip, and iptables. start.sh replaces its init.
+          image: lscr.io/linuxserver/wireguard:1.0.20260223-r0-ls123
+          command: ["/bin/bash", "/scripts/start.sh"]
+          env:
+            # The MTU of Gerbil on hermes.
+            - name: MTU
+              value: "1280"
+            # The Gateway main. See infrastructure/configs/cilium/gateway.yaml.
+            - name: GATEWAY_IP
+              value: 10.0.20.200
+            - name: GATEWAY_PORT
+              value: "80"
+          securityContext:
+            privileged: true
+          # Gerbil answers the keepalive every 5 seconds. With no handshake in
+          # 3 minutes, the tunnel is down, and the pod restarts.
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - 'test $(( $(date +%s) - $(wg show wg0 latest-handshakes | awk "{print \$2}") )) -lt 180'
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/wireguard
+              readOnly: true
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: config
+          secret:
+            secretName: pangolin-wireguard
+            defaultMode: 0400
+        - name: script
+          configMap:
+            name: pangolin-wireguard-script

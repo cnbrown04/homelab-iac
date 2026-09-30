@@ -6,3 +6,4 @@ resources:
   - local-path-provisioner
   - intel-gpu-plugin
   - metrics-server
+  - pangolin-wireguard

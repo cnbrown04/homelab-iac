@@ -1,0 +1,8 @@
+# The peer makes a WireGuard interface and NAT rules in its own network
+# namespace, so the pod is privileged.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pangolin-wireguard
+  labels:
+    pod-security.kubernetes.io/enforce: privileged

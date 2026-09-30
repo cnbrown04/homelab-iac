@@ -10,8 +10,10 @@ creation_rules:
   - path_regex: ^[a-z]+-cluster/talos/.*\.sops\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
   # The secrets that Flux deploys to typhon. The second key is the key of the
-  # cluster. Its private key is in secrets/typhon-age-key.sops.yaml.
+  # cluster. Its private key is in secrets/typhon-age-key.sops.yaml. SOPS
+  # encrypts only the values of a Secret, so Flux can read its kind and name.
   - path_regex: ^typhon-cluster/.*\.sops\.(yaml|yml|json)$
+    encrypted_regex: ^(data|stringData)$
     age: >-
       age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d,
       age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
