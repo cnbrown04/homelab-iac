@@ -24,6 +24,7 @@
   ansible.builtin.get_url:
     url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
     dest: /etc/apt/keyrings/docker.asc
+    checksum: "{{ docker_apt_key_checksum }}"
     owner: root
     group: root
     mode: "0644"
