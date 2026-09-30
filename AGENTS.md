@@ -157,6 +157,17 @@ the cluster.
 - A Talos worker has 8 GiB of RAM or less. The data of an app goes to NFS,
   and SQLite goes to `local-path`.
 - The files of a cluster go in `<name>-cluster/`.
+- The Pangolin site `typhon` (identifier `typhon-cluster`) is a basic
+  WireGuard site, not Newt. Newt runs
+  WireGuard in userspace, and it gave about 40 Mbit/s. Gerbil and the pod
+  `pangolin-wireguard` both use kernel WireGuard. The pod has the tunnel
+  address `100.89.128.4`, and it sends TCP port 80 to the Gateway
+  `10.0.20.200`. Gerbil does not answer a ping through the tunnel.
+- To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
+  HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
+  `pangolin_blueprint_resources`. Its target uses the site
+  `{{ pangolin_typhon_site }}`, the hostname `{{ pangolin_typhon_target }}`,
+  and the port `80`.
 
 ### The services on `hermes`
 

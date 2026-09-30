@@ -34,6 +34,10 @@ pangolin_network_gateway: 10.200.0.1
 # Pangolin dashboard. secrets.sops.yml holds pangolin_blueprint_api_key.
 pangolin_blueprint_org_id: pantheon-homelab
 pangolin_local_site: hermes-local
+# The basic WireGuard site of the typhon cluster. Its peer sends port 80 of
+# the tunnel address to the Gateway of the cluster. See AGENTS.md.
+pangolin_typhon_site: typhon-cluster
+pangolin_typhon_target: 100.89.128.4
 
 # Pangolin resources. Headscale is not here: a Pangolin resource sends each
 # request through the Pangolin app, and Headscale must not depend on it.
