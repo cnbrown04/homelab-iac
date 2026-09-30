@@ -28,6 +28,11 @@ uv = "latest"
 # Lints scripts/*.sh on every PR.
 "aqua:koalaman/shellcheck" = "0.11.0"
 
+[env]
+# Ansible reads ansible/ansible.cfg from each folder of the repository, so each
+# command runs from the root. The pipelines use the same file.
+ANSIBLE_CONFIG = "{{config_root}}/ansible/ansible.cfg"
+
 [settings]
 # Keep tool resolution to this file: ignore stray .python-version /
 # .terraform-version files that other tooling may drop in the repo.
