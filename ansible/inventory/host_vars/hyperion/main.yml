@@ -6,6 +6,7 @@ proxmox_gpu_passthrough_devices:
     path: "0000:00:02.0"
     id: "8086:4680"
     iommugroup: 0
+    subsystem_id: "103c:8ac6"
 # i915 drives the iGPU now. xe can also take it on a new kernel.
 proxmox_gpu_passthrough_blacklist:
   - i915

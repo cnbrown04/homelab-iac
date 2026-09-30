@@ -6,7 +6,8 @@
       - item.path is match('^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]$')
       - item.id is match('^[0-9a-f]{4}:[0-9a-f]{4}$')
       - item.iommugroup is integer
-    fail_msg: "A device needs a mapping name, a PCI path, a vendor:device ID, and an IOMMU group."
+      - item.subsystem_id is match('^[0-9a-f]{4}:[0-9a-f]{4}$')
+    fail_msg: "A device needs a mapping name, a PCI path, a vendor:device ID, an IOMMU group, and a subsystem ID."
     quiet: true
   loop: "{{ proxmox_gpu_passthrough_devices }}"
   loop_control:
@@ -42,6 +43,8 @@
   changed_when: false
   check_mode: false
 
+# Proxmox checks each property of the map when a VM starts. Without the
+# subsystem ID, the VM does not start.
 - name: Create the PCI mappings
   ansible.builtin.command:
     argv:
@@ -49,13 +52,35 @@
       - create
       - /cluster/mapping/pci
       - "--id={{ item.mapping }}"
-      - "--map=node={{ inventory_hostname }},path={{ item.path }},id={{ item.id }},iommugroup={{ item.iommugroup }}"
+      - "--map={{ proxmox_gpu_passthrough_map }}"
       - "--description=Ansible, the role proxmox_gpu_passthrough"
   changed_when: true
   loop: "{{ proxmox_gpu_passthrough_devices }}"
   loop_control:
     label: "{{ item.mapping }}"
+  vars:
+    proxmox_gpu_passthrough_map: "{{ lookup('ansible.builtin.template', 'map.j2') | trim }}"
   when: item.mapping not in (proxmox_gpu_passthrough_mappings.stdout | from_json | map(attribute='id') | list)
+
+- name: Update the PCI mappings that differ
+  ansible.builtin.command:
+    argv:
+      - pvesh
+      - set
+      - "/cluster/mapping/pci/{{ item.mapping }}"
+      - "--map={{ proxmox_gpu_passthrough_map }}"
+  changed_when: true
+  loop: "{{ proxmox_gpu_passthrough_devices }}"
+  loop_control:
+    label: "{{ item.mapping }}"
+  vars:
+    proxmox_gpu_passthrough_map: "{{ lookup('ansible.builtin.template', 'map.j2') | trim }}"
+    proxmox_gpu_passthrough_current: >-
+      {{ proxmox_gpu_passthrough_mappings.stdout | from_json
+         | selectattr('id', 'equalto', item.mapping) | list }}
+  when: >-
+    proxmox_gpu_passthrough_current | length > 0
+    and proxmox_gpu_passthrough_current[0].map != [proxmox_gpu_passthrough_map]
 
 - name: Read the access rules
   ansible.builtin.command:

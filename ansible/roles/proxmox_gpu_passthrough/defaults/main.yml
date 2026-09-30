@@ -1,7 +1,8 @@
 ---
 # The PCI devices that the host gives to one VM each. Each item is
-# { mapping, path, id, iommugroup }, for example
-# { mapping: hyperion-igpu, path: "0000:00:02.0", id: "8086:4680", iommugroup: 0 }.
+# { mapping, path, id, iommugroup, subsystem_id }. lspci -nn -v -s <path>
+# shows the IDs. For example { mapping: hyperion-igpu, path: "0000:00:02.0",
+# id: "8086:4680", iommugroup: 0, subsystem_id: "103c:8ac6" }.
 # The role binds each device to vfio-pci and creates a cluster PCI mapping.
 proxmox_gpu_passthrough_devices: []
 
