@@ -319,7 +319,13 @@ tofu -chdir=tofu/targets/atlas plan
 - `lint.yml` runs shellcheck, and checks that each SOPS file is encrypted. It
   runs for each change.
 - mise does not compile Python. Renovate waits 7 days for a new Python, so a
-  precompiled build exists.
+  precompiled build exists. It waits 3 days for each other bump of code that
+  the pipelines run with the secrets.
+- Each Monday at 12:00 UTC, `ansible-hermes.yml` and `tofu.yml` look for
+  drift. The run fails when the check or the plan shows a change. It does not
+  apply.
+- In `ansible-hermes.yml`, the lint runs before `ansible-access` writes the SSH
+  key and the sudo password. Only the steps that use `SOPS_AGE_KEY` get it.
 - The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
   SSH. Run their playbook by hand. The owner chose this on 28 September 2026.
   Do not open SSH to `tag:proxmox` for a pipeline. OpenTofu still deploys the
@@ -372,6 +378,9 @@ tofu -chdir=tofu/targets/atlas plan
 - A VM with no `cpu` line runs `qemu64`. Proxmox makes tags lowercase.
 - A Pangolin blueprint cannot delete a resource. Delete it in the UI.
 - Color codes in Ansible output break `grep` in a workflow. Turn off color.
+- The repository is public, so each pipeline log is public. GitHub does not
+  mask a value that SOPS decrypts. If a task writes a SOPS value to a file,
+  give the task `no_log: true`.
 - A copy of a live SQLite file can be broken. The backup script uses
   `sqlite3 .backup` first.
 - ACME for a `.vnet` name must use DNS-01. The public wildcard record sends

@@ -7,6 +7,8 @@
 #   push with no change needs no approval.
 # - A change to mise.toml starts the jobs only when it changes a tool of
 #   Ansible.
+# - Each Monday, a check run looks for drift. It fails when the check shows a
+#   change, and it does not apply.
 name: ansible
 
 on:
@@ -16,6 +18,7 @@ on:
       - "mise.toml"
       - ".github/workflows/ansible-hermes.yml"
       - ".github/actions/ansible-setup/**"
+      - ".github/actions/ansible-access/**"
       - ".github/actions/changes/**"
   push:
     branches: [main]
@@ -24,6 +27,7 @@ on:
       - "mise.toml"
       - ".github/workflows/ansible-hermes.yml"
       - ".github/actions/ansible-setup/**"
+      - ".github/actions/ansible-access/**"
       - ".github/actions/changes/**"
   workflow_dispatch:
     inputs:
@@ -33,6 +37,9 @@ on:
           run does not run command tasks, so it cannot see each change.
         type: boolean
         default: false
+  # Monday at 12:00 UTC.
+  schedule:
+    - cron: "0 12 * * 1"
 
 permissions:
   contents: read
@@ -62,6 +69,7 @@ jobs:
             ansible/**
             .github/workflows/ansible-hermes.yml
             .github/actions/ansible-setup/**
+            .github/actions/ansible-access/**
             .github/actions/changes/**
           tools: python ansible-core pypi:ansible-lint uv sops age
 
@@ -74,29 +82,33 @@ jobs:
     outputs:
       changes: ${{ steps.check.outputs.changes }}
     env:
-      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+      # A pull request from a fork gets no secrets, so the check runs only for
+      # a branch of this repository.
+      TRUSTED: >-
+        ${{ github.event_name != 'pull_request'
+        || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/ansible-setup
-        with:
-          ssh-key: ${{ secrets.HERMES_SSH_KEY }}
-          become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
+      # The lint tools run before a step writes a secret to the runner.
       - name: Lint
         working-directory: ansible
         run: ansible-lint
       - name: Check the syntax
         working-directory: ansible
         run: ansible-playbook --syntax-check playbooks/site.yml
+      - uses: ./.github/actions/ansible-access
+        if: env.TRUSTED == 'true'
+        with:
+          ssh-key: ${{ secrets.HERMES_SSH_KEY }}
+          become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
       - name: Show the changes for hermes
         id: check
-        # A pull request from a fork gets no secrets, so the check runs only
-        # for a branch of this repository.
-        if: >-
-          github.event_name != 'pull_request'
-          || github.event.pull_request.head.repo.full_name == github.repository
+        if: env.TRUSTED == 'true'
         working-directory: ansible
         # No color codes, so the recap line starts with the host name.
         env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
           ANSIBLE_FORCE_COLOR: "0"
           ANSIBLE_NOCOLOR: "1"
         run: |
@@ -124,10 +136,17 @@ jobs:
             echo "changes=false" >> "$GITHUB_OUTPUT"
             echo "### ansible: no changes." >> "$GITHUB_STEP_SUMMARY"
           fi
+      - name: Fail on drift
+        if: github.event_name == 'schedule' && steps.check.outputs.changes == 'true'
+        run: |
+          echo "::error::hermes is not the same as main. Read the job summary for the changed tasks."
+          exit 1
 
   apply:
+    # The weekly drift check does not apply.
     if: >-
       github.event_name != 'pull_request'
+      && github.event_name != 'schedule'
       && (needs.check.outputs.changes == 'true' || inputs.force)
     needs: check
     runs-on: ubuntu-24.04
@@ -138,6 +157,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/ansible-setup
+      - uses: ./.github/actions/ansible-access
         with:
           ssh-key: ${{ secrets.HERMES_SSH_KEY }}
           become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}

@@ -50,6 +50,16 @@
       "versioning": "regex:^ee-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     },
     {
+      "description": "Wait 3 days before a bump of code that runs in the pipelines with the secrets. Most bad releases are found and pulled in that time.",
+      "matchManagers": [
+        "ansible-galaxy",
+        "github-actions",
+        "mise",
+        "terraform"
+      ],
+      "minimumReleaseAge": "3 days"
+    },
+    {
       "description": "Wait for the precompiled build of a new Python. mise does not compile Python.",
       "matchDepNames": [
         "python"

@@ -13,6 +13,10 @@ on:
         description: Apply the plan after the approval of the owner.
         type: boolean
         default: false
+      fail-on-changes:
+        description: Fail when the plan has changes. The weekly drift check uses this.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -26,7 +30,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
-      group: tofu-plan-${{ inputs.target }}-${{ github.ref }}
+      # The drift check has its own group, so it does not cancel a plan of a push.
+      group: tofu-plan-${{ inputs.target }}-${{ inputs.fail-on-changes && 'drift' || github.ref }}
       cancel-in-progress: true
     outputs:
       changes: ${{ steps.plan.outputs.changes }}
@@ -81,6 +86,14 @@ jobs:
             echo '```'
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail on drift
+        if: inputs.fail-on-changes && steps.plan.outputs.changes == 'true'
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          echo "::error::$TARGET is not the same as main. Read the plan in the job summary."
+          exit 1
 
       # OpenTofu encrypts the saved plan with the state passphrase.
       - name: Keep the plan for the apply job

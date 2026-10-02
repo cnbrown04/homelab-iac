@@ -5,6 +5,8 @@
 #   approval of the owner, then the saved plan is applied.
 # - A change to mise.toml starts the jobs only when it changes a tool of
 #   OpenTofu.
+# - Each Monday, a plan of each target looks for drift. It fails when the plan
+#   has changes, and it does not apply.
 name: infrastructure
 
 on:
@@ -30,6 +32,9 @@ on:
       - ".github/actions/tofu-setup/**"
       - ".github/actions/changes/**"
   workflow_dispatch:
+  # Monday at 12:00 UTC.
+  schedule:
+    - cron: "0 12 * * 1"
 
 permissions:
   contents: read
@@ -89,5 +94,6 @@ jobs:
     uses: ./.github/workflows/tofu-target.yml
     with:
       target: ${{ matrix.target }}
-      apply: ${{ github.event_name != 'pull_request' }}
+      apply: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
+      fail-on-changes: ${{ github.event_name == 'schedule' }}
     secrets: inherit
