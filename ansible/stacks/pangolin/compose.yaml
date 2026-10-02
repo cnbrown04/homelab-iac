@@ -12,6 +12,8 @@ services:
           memory: 512m
     volumes:
       - ./config:/app/config
+      # The login page shows this logo for each OIDC provider.
+      - ./config/branding/pocketid.png:/app/public/idp/openid.png:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
       interval: "10s"
