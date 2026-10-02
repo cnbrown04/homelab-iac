@@ -1,0 +1,102 @@
+# Jellyfin. It has its own login, and its apps cannot pass the Pangolin login,
+# so Pangolin does not put SSO in front of it. It transcodes on the iGPU of
+# hyperion, so it runs on typhon-w-3 only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+spec:
+  replicas: 1
+  # SQLite, a local-path volume, and one GPU allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      # User 1000 owns the media. /dev/dri/renderD128 on Talos has mode 666,
+      # so the pod needs no render group. No fsGroup: the kubelet would change
+      # the owner of each file in the media.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # A new config volume gets the old config, data, plugins, and root
+        # folders from data/migrate/ one time. To restore a backup, put the
+        # folders there, and delete the claim config.
+        - name: seed-config
+          image: docker.io/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -e /config/data/jellyfin.db ] && [ -e /seed/migrate/data/jellyfin.db ]; then
+                cp -R /seed/migrate/. /config/
+                echo "Copied the config from /seed/migrate."
+              fi
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /seed
+      containers:
+        - name: jellyfin
+          image: docker.io/jellyfin/jellyfin:12.1.20260915-010956
+          env:
+            - name: JELLYFIN_PublishedServerUrl
+              value: https://jellyfin.buildwithcaleb.com
+          ports:
+            - name: http
+              containerPort: 8096
+          securityContext: *container-security
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+              gpu.intel.com/i915: 1
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /config/metadata
+              subPath: metadata
+            - name: cache
+              mountPath: /cache
+            - name: transcode
+              mountPath: /cache/transcodes
+            - name: media
+              mountPath: /media
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        # Resized images. Jellyfin makes them again after a restart.
+        - name: cache
+          emptyDir:
+            sizeLimit: 5Gi
+        - name: transcode
+          persistentVolumeClaim:
+            claimName: transcode
+        - name: media
+          persistentVolumeClaim:
+            claimName: media

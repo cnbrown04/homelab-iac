@@ -175,6 +175,15 @@ the cluster.
   - To restore the database: put a database at
     `/lethe/k8s/audiobookshelf-metadata/migrate/absdatabase.sqlite`, then
     delete the pod and the claim `config`. The init container copies it.
+- Jellyfin is at `jellyfin.buildwithcaleb.com`, with no Pangolin login. It
+  runs on `typhon-w-3` only, for the iGPU of `hyperion`.
+  - The libraries are in `/lethe/data/media`, mounted at `/media`. The
+    transcodes go to the dataset `lethe/data/media/transcode`, which user
+    1000 owns. The metadata is in `/lethe/k8s/jellyfin/metadata`. The SQLite
+    database and the settings are on `local-path`.
+  - To restore the config: put the folders `config`, `data`, `plugins`, and
+    `root` in `/lethe/k8s/jellyfin/migrate/`, then delete the pod and the
+    claim `config`. The init container copies them.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site

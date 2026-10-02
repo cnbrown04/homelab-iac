@@ -50,6 +50,16 @@
       "versioning": "regex:^ee-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     },
     {
+      "description": "Jellyfin tags have the form <major>.<minor>.<date>-<time>",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "docker.io/jellyfin/jellyfin"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d{8})-(?<build>\\d{6})$"
+    },
+    {
       "description": "Wait 3 days before a bump of code that runs in the pipelines with the secrets. Most bad releases are found and pulled in that time.",
       "matchManagers": [
         "ansible-galaxy",
