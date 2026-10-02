@@ -3,6 +3,8 @@
 # - A pull request: format and validate, then a plan for each target.
 # - A push to main: a plan for each target. A target with changes waits for the
 #   approval of the owner, then the saved plan is applied.
+# - A change to mise.toml starts the jobs only when it changes a tool of
+#   OpenTofu.
 name: OpenTofu
 
 on:
@@ -15,6 +17,7 @@ on:
       - ".github/workflows/tofu.yml"
       - ".github/workflows/tofu-target.yml"
       - ".github/actions/tofu-setup/**"
+      - ".github/actions/changes/**"
   push:
     branches: [main]
     paths:
@@ -25,13 +28,36 @@ on:
       - ".github/workflows/tofu.yml"
       - ".github/workflows/tofu-target.yml"
       - ".github/actions/tofu-setup/**"
+      - ".github/actions/changes/**"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.changes.outputs.run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/changes
+        id: changes
+        with:
+          paths: >-
+            tofu/**
+            secrets/tofu.sops.yaml
+            scripts/tofu-env.sh
+            .github/workflows/tofu.yml
+            .github/workflows/tofu-target.yml
+            .github/actions/tofu-setup/**
+            .github/actions/changes/**
+          tools: opentofu sops age
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

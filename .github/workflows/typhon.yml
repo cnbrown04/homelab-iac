@@ -1,0 +1,96 @@
+# Checks the manifests of the typhon cluster. Flux deploys main directly, so
+# this workflow is the only check before a manifest gets to the cluster.
+#
+# - Build each path of a Flux Kustomization with kustomize.
+# - Validate each resource against the schema of Kubernetes, or of its CRD.
+#
+# The job needs no secrets and no tailnet.
+name: typhon
+
+on:
+  pull_request:
+    paths:
+      - "typhon-cluster/**"
+      - "mise.toml"
+      - ".github/workflows/typhon.yml"
+      - ".github/actions/changes/**"
+  push:
+    branches: [main]
+    paths:
+      - "typhon-cluster/**"
+      - "mise.toml"
+      - ".github/workflows/typhon.yml"
+      - ".github/actions/changes/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: typhon-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep this at the minor version of Kubernetes in
+  # typhon-cluster/talos/talconfig.yaml. The schemas use the patch version 0.
+  KUBERNETES_VERSION: "1.36.0"
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.changes.outputs.run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/changes
+        id: changes
+        with:
+          paths: >-
+            typhon-cluster/**
+            .github/workflows/typhon.yml
+            .github/actions/changes/**
+          tools: kubectl kubeconform
+
+  validate:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: kubectl kubeconform
+
+      # The Flux Kustomizations in typhon-cluster/flux/ give the list of
+      # paths, so a new path needs no change here.
+      - name: Build and validate each Flux path
+        run: |
+          set -o pipefail
+          mapfile -t paths < <(
+            grep -hoE 'path: \./typhon-cluster/[^[:space:]]+' typhon-cluster/flux/*.yaml \
+              | sed 's/^path: \.\///' | sort -u
+          )
+          if [ "${#paths[@]}" -eq 0 ]; then
+            echo "::error::No Flux path found in typhon-cluster/flux/."
+            exit 1
+          fi
+          failed=0
+          for path in "${paths[@]}"; do
+            echo "::group::$path"
+            # A SOPS Secret has the extra key "sops", so the strict schema
+            # rejects it. The workflow lint.yml checks the encryption.
+            if ! kubectl kustomize "$path" | kubeconform \
+                -strict -summary -output text \
+                -kubernetes-version "$KUBERNETES_VERSION" \
+                -skip Secret \
+                -schema-location default \
+                -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+                -; then
+              echo "::error::$path is not valid."
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "$failed"

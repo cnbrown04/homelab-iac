@@ -1,0 +1,48 @@
+# Checks for each change to the repository. The job is fast and needs no
+# secrets.
+#
+# - shellcheck checks each shell script.
+# - Each SOPS file must be encrypted. See "Do not" in AGENTS.md.
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: aqua:koalaman/shellcheck
+
+      - name: Check the shell scripts
+        run: git ls-files -z '*.sh' | xargs -0 --no-run-if-empty shellcheck
+
+      # An encrypted file has the key "sops" and at least one ENC value. A
+      # file in plain text has neither. The root .sops.yaml is the config of
+      # SOPS, not a secret.
+      - name: Check that each SOPS file is encrypted
+        run: |
+          failed=0
+          while IFS= read -r -d '' file; do
+            if grep -qE '^sops:' "$file" && grep -q 'ENC\[AES256_GCM,' "$file"; then
+              echo "$file is encrypted."
+            else
+              echo "::error file=$file::$file is not encrypted."
+              failed=1
+            fi
+          done < <(git ls-files -z '*.sops.yaml' '*.sops.yml' ':(exclude).sops.yaml')
+          exit "$failed"

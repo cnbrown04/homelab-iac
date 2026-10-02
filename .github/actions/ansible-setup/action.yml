@@ -18,7 +18,17 @@ runs:
       with:
         install_args: python ansible-core pypi:ansible-lint uv sops age
 
+    # Galaxy is slow and sometimes down. The cache holds the exact versions
+    # of requirements.yml, so a hit needs no install.
+    - name: Restore the Ansible collections
+      id: collections
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ansible/.ansible/collections
+        key: ansible-collections-${{ hashFiles('ansible/requirements.yml') }}
+
     - name: Install the Ansible collections
+      if: steps.collections.outputs.cache-hit != 'true'
       shell: bash
       working-directory: ansible
       run: ansible-galaxy collection install -r requirements.yml

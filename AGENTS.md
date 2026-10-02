@@ -252,7 +252,7 @@ ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens
 scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
 scripts/vps-harden.sh       # the first bootstrap of a new VPS
-.github/workflows/          # ansible-hermes, tofu, tofu-target, tailnet-check
+.github/workflows/          # ansible-hermes, tofu, tofu-target, typhon, lint, tailnet-check
 typhon-cluster/talos/       # talconfig.yaml, talsecret.sops.yaml; clusterconfig/ is ignored
 typhon-cluster/flux/        # the entry point of Flux; the order of the Kustomizations
 typhon-cluster/infrastructure/{controllers,configs}/  # the base services, for Flux
@@ -310,8 +310,16 @@ tofu -chdir=tofu/targets/atlas plan
   Then the job applies the saved plan, and a new plan must show no change. A
   plan with no change needs no approval.
 - After a failed apply, start a new run. The saved plan is stale.
-- The `typhon` cluster is not in a pipeline, for the same reason. Run
-  talhelper and talosctl by hand. Flux in the cluster pulls from GitHub.
+- A change to `mise.toml` starts `ansible-hermes.yml`, `tofu.yml`, or
+  `typhon.yml` only when it changes a tool of that workflow. The action
+  `.github/actions/changes` makes this decision.
+- `typhon.yml` builds each Flux path and validates it with kubeconform. It
+  does not deploy. Run talhelper and talosctl by hand. Flux in the cluster
+  pulls from GitHub.
+- `lint.yml` runs shellcheck, and checks that each SOPS file is encrypted. It
+  runs for each change.
+- mise does not compile Python. Renovate waits 7 days for a new Python, so a
+  precompiled build exists.
 - The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
   SSH. Run their playbook by hand. The owner chose this on 28 September 2026.
   Do not open SSH to `tag:proxmox` for a pipeline. OpenTofu still deploys the

@@ -5,6 +5,8 @@
 #   apply follows, then a second run that must show no change. The environment
 #   "hermes" needs the approval of the owner. See decision 8 in AGENTS.md. A
 #   push with no change needs no approval.
+# - A change to mise.toml starts the jobs only when it changes a tool of
+#   Ansible.
 name: Ansible hermes
 
 on:
@@ -14,6 +16,7 @@ on:
       - "mise.toml"
       - ".github/workflows/ansible-hermes.yml"
       - ".github/actions/ansible-setup/**"
+      - ".github/actions/changes/**"
   push:
     branches: [main]
     paths:
@@ -21,6 +24,7 @@ on:
       - "mise.toml"
       - ".github/workflows/ansible-hermes.yml"
       - ".github/actions/ansible-setup/**"
+      - ".github/actions/changes/**"
   workflow_dispatch:
     inputs:
       force:
@@ -33,35 +37,38 @@ on:
 permissions:
   contents: read
 
-# One run at a time for hermes. A new run waits, and does not cancel an apply.
+# One deploy at a time for hermes. A new deploy waits, and does not cancel an
+# apply. Each pull request has its own group, so it does not wait for a deploy,
+# and a new commit cancels the old check.
 concurrency:
-  group: ansible-hermes
-  cancel-in-progress: false
+  group: ansible-hermes-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   ANSIBLE_FORCE_COLOR: "1"
 
 jobs:
-  lint:
+  changes:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.changes.outputs.run }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/ansible-setup
-      - name: Lint
-        working-directory: ansible
-        run: ansible-lint
-      - name: Check the syntax
-        working-directory: ansible
-        run: ansible-playbook --syntax-check playbooks/site.yml
+      - uses: ./.github/actions/changes
+        id: changes
+        with:
+          paths: >-
+            ansible/**
+            .github/workflows/ansible-hermes.yml
+            .github/actions/ansible-setup/**
+            .github/actions/changes/**
+          tools: python ansible-core pypi:ansible-lint uv sops age
 
+  # Lint and check in one job, so the setup runs one time.
   check:
-    # A pull request from a fork gets no secrets, so the job runs only for a
-    # branch of this repository.
-    if: >-
-      github.event_name != 'pull_request'
-      || github.event.pull_request.head.repo.full_name == github.repository
-    needs: lint
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -74,8 +81,19 @@ jobs:
         with:
           ssh-key: ${{ secrets.HERMES_SSH_KEY }}
           become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
+      - name: Lint
+        working-directory: ansible
+        run: ansible-lint
+      - name: Check the syntax
+        working-directory: ansible
+        run: ansible-playbook --syntax-check playbooks/site.yml
       - name: Show the changes for hermes
         id: check
+        # A pull request from a fork gets no secrets, so the check runs only
+        # for a branch of this repository.
+        if: >-
+          github.event_name != 'pull_request'
+          || github.event.pull_request.head.repo.full_name == github.repository
         working-directory: ansible
         # No color codes, so the recap line starts with the host name.
         env:
@@ -87,7 +105,21 @@ jobs:
             -e @"$RUNNER_TEMP/become.json" | tee "$RUNNER_TEMP/check.txt"
           if grep -qE '^hermes .*changed=[1-9]' "$RUNNER_TEMP/check.txt"; then
             echo "changes=true" >> "$GITHUB_OUTPUT"
-            echo "### Ansible hermes: the check shows changes." >> "$GITHUB_STEP_SUMMARY"
+            # The names of the changed tasks only. The diff stays in the log.
+            {
+              echo "### Ansible hermes: the check shows changes."
+              echo
+              echo "These tasks change. Read the log of this step for the diff."
+              echo
+              awk '
+                /^(TASK|RUNNING HANDLER) \[/ {
+                  task = $0
+                  sub(/^(TASK|RUNNING HANDLER) \[/, "", task)
+                  sub(/\] \**$/, "", task)
+                }
+                /^changed: \[/ { print "- " task }
+              ' "$RUNNER_TEMP/check.txt" | uniq
+            } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "changes=false" >> "$GITHUB_OUTPUT"
             echo "### Ansible hermes: no changes." >> "$GITHUB_STEP_SUMMARY"

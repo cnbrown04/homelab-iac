@@ -50,6 +50,16 @@
       "versioning": "regex:^ee-(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
     },
     {
+      "description": "Wait for the precompiled build of a new Python. mise does not compile Python.",
+      "matchDepNames": [
+        "python"
+      ],
+      "matchManagers": [
+        "mise"
+      ],
+      "minimumReleaseAge": "7 days"
+    },
+    {
       "description": "Keep talosctl at the Talos version of the nodes",
       "matchDepNames": [
         "siderolabs/talos",
