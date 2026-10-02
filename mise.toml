@@ -44,6 +44,9 @@ kubeconform = "0.8.0"
 # Ansible reads ansible/ansible.cfg from each folder of the repository, so each
 # command runs from the root. The pipelines use the same file.
 ANSIBLE_CONFIG = "{{config_root}}/ansible/ansible.cfg"
+# macOS kills a forked Ansible worker that makes an HTTP request, as the url
+# lookup of admin_user does. Other systems ignore this variable.
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY = "YES"
 # talosctl and kubectl use the files of the typhon cluster. talhelper and
 # talosctl write them to clusterconfig/, which git ignores.
 TALOSCONFIG = "{{config_root}}/typhon-cluster/talos/clusterconfig/talosconfig"
