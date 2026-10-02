@@ -1,7 +1,7 @@
 name: pocket-id
 services:
   pocket-id:
-    image: ghcr.io/pocket-id/pocket-id:v2.16.0
+    image: ghcr.io/pocket-id/pocket-id:v2.17.0
     container_name: pocket-id
     restart: unless-stopped
     # Ansible writes .env. It holds APP_URL, TRUST_PROXY, and ENCRYPTION_KEY.
