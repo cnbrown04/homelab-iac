@@ -134,7 +134,7 @@ password is the same on each host.
 
 ### The `typhon` cluster
 
-Talos v1.14 and Kubernetes 1.36, on VLAN 20 (`10.0.20.0/24`). The API is at
+Talos v1.14 and Kubernetes 1.37, on VLAN 20 (`10.0.20.0/24`). The API is at
 the VIP `https://10.0.20.10:6443`. OpenTofu makes the VMs. talhelper makes the
 Talos config. Flux deploys the rest from `main`, with a read-only deploy key.
 A SOPS file in `typhon-cluster/` has two keys: the owner key and the key of

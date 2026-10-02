@@ -33,7 +33,7 @@ concurrency:
 env:
   # Keep this at the minor version of Kubernetes in
   # typhon-cluster/talos/talconfig.yaml. The schemas use the patch version 0.
-  KUBERNETES_VERSION: "1.36.0"
+  KUBERNETES_VERSION: "1.37.0"
 
 jobs:
   changes:
