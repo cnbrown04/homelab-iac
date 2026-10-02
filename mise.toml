@@ -7,11 +7,11 @@
 
 [tools]
 # Creates and changes Proxmox resources. See AGENTS.md, section 4, decision 1.
-opentofu = "1.12.6"
+opentofu = "1.13.1"
 
 # Configures hosts that are already running. Collections live in
 # ansible/requirements.yml, not here.
-python = "3.14.7"
+python = "3.14.8"
 ansible-core = "2.21.4"
 
 # Lints the Ansible content on every PR. Check collection compatibility in
@@ -32,8 +32,8 @@ uv = "latest"
 # of the nodes, in typhon-cluster/talos/talconfig.yaml.
 talosctl = "1.14.2"
 talhelper = "3.1.17"
-kubectl = "1.36.5"
-flux2 = "2.9.5"
+kubectl = "1.37.1"
+flux2 = "2.9.6"
 helm = "4.3.0"
 cilium-cli = "0.20.1"
 # Checks the manifests of the typhon cluster in the pipeline. See
