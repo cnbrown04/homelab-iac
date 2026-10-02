@@ -11,7 +11,7 @@ opentofu = "1.13.1"
 
 # Configures hosts that are already running. Collections live in
 # ansible/requirements.yml, not here.
-python = "3.14.7"
+python = "3.14.8"
 ansible-core = "2.21.4"
 
 # Lints the Ansible content on every PR. Check collection compatibility in
