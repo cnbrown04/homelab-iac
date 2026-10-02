@@ -7,7 +7,7 @@
 
 [tools]
 # Creates and changes Proxmox resources. See AGENTS.md, section 4, decision 1.
-opentofu = "1.12.6"
+opentofu = "1.13.1"
 
 # Configures hosts that are already running. Collections live in
 # ansible/requirements.yml, not here.
