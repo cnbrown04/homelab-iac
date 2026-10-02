@@ -1,6 +1,6 @@
 # Plans one OpenTofu target, and applies the saved plan after approval. The
 # workflow tofu.yml calls this workflow once for each target.
-name: OpenTofu target
+name: infrastructure target
 
 on:
   workflow_call:
@@ -68,7 +68,7 @@ jobs:
         run: |
           tofu show -no-color tfplan > plan.txt
           {
-            echo "### OpenTofu plan: $TARGET"
+            echo "### infrastructure plan: $TARGET"
             if [ "$CHANGES" = "true" ]; then
               echo "The plan has changes."
             else

@@ -7,7 +7,7 @@
 #   push with no change needs no approval.
 # - A change to mise.toml starts the jobs only when it changes a tool of
 #   Ansible.
-name: Ansible hermes
+name: ansible
 
 on:
   pull_request:
@@ -107,7 +107,7 @@ jobs:
             echo "changes=true" >> "$GITHUB_OUTPUT"
             # The names of the changed tasks only. The diff stays in the log.
             {
-              echo "### Ansible hermes: the check shows changes."
+              echo "### ansible: the check shows changes."
               echo
               echo "These tasks change. Read the log of this step for the diff."
               echo
@@ -122,7 +122,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "changes=false" >> "$GITHUB_OUTPUT"
-            echo "### Ansible hermes: no changes." >> "$GITHUB_STEP_SUMMARY"
+            echo "### ansible: no changes." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   apply:

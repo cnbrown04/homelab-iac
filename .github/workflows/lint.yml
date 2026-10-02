@@ -3,7 +3,7 @@
 #
 # - shellcheck checks each shell script.
 # - Each SOPS file must be encrypted. See "Do not" in AGENTS.md.
-name: Lint
+name: lint
 
 on:
   pull_request:

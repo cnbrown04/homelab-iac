@@ -5,7 +5,7 @@
 #   approval of the owner, then the saved plan is applied.
 # - A change to mise.toml starts the jobs only when it changes a tool of
 #   OpenTofu.
-name: OpenTofu
+name: infrastructure
 
 on:
   pull_request:

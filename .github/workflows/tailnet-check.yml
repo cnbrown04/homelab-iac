@@ -1,7 +1,7 @@
 # Task C7. A runner joins the tailnet as an ephemeral node with the tag
 # tag:github-actions. The job checks that the runner gets to the Proxmox API
 # port on each node, and that the policy blocks each other port.
-name: Tailnet check
+name: tailnet
 
 on:
   workflow_dispatch:
