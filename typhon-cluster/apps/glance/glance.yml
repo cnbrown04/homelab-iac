@@ -4,21 +4,159 @@ server:
   # Pangolin and the Gateway are in front of Glance.
   proxied: true
 
-pages:
-  - name: Home
-    columns:
-      - size: small
-        widgets:
-          - type: calendar
-            first-day-of-week: sunday
+# Catppuccin Macchiato (dark) and Latte (light), from docs/themes.md of
+# Glance. They replace the two default themes of the theme picker.
+theme:
+  background-color: 232 23 18
+  contrast-multiplier: 1.2
+  primary-color: 220 83 75
+  positive-color: 105 48 72
+  negative-color: 351 74 73
+  presets:
+    default-dark:
+      background-color: 232 23 18
+      contrast-multiplier: 1.2
+      primary-color: 220 83 75
+      positive-color: 105 48 72
+      negative-color: 351 74 73
+    default-light:
+      light: true
+      background-color: 220 23 95
+      contrast-multiplier: 1.0
+      primary-color: 220 91 54
+      positive-color: 109 58 40
+      negative-color: 347 87 44
 
+# Glance keeps the theme in a cookie and has no setting to follow the system.
+# This script picks the preset that matches the color scheme of the system,
+# and changes it when the system changes. It uses the API of the theme picker,
+# so the picker must stay on. Glance reads ${...} as an environment variable,
+# so the script must not use template strings.
+document:
+  head: |
+    <script>
+    (function () {
+      var query = window.matchMedia("(prefers-color-scheme: light)");
+      function follow() {
+        var key = query.matches ? "default-light" : "default-dark";
+        if (document.documentElement.getAttribute("data-theme") === key) return;
+        fetch("/api/set-theme/" + key, { method: "POST" }).then(function (response) {
+          if (!response.ok) return;
+          return response.text().then(function (css) {
+            function apply() {
+              var style = document.getElementById("theme-style");
+              if (style) style.textContent = css;
+              document.documentElement.setAttribute("data-theme", key);
+              document.documentElement.setAttribute("data-scheme", response.headers.get("X-Scheme"));
+              if (window.pageData) window.pageData.theme = key;
+            }
+            if (document.readyState === "loading") {
+              document.addEventListener("DOMContentLoaded", apply);
+            } else {
+              apply();
+            }
+          });
+        });
+      }
+      follow();
+      query.addEventListener("change", follow);
+    })();
+    </script>
+
+pages:
+  # The start page: search, the apps, and the date.
+  - name: Home
+    slug: home
+    width: slim
+    center-vertically: true
+    columns:
       - size: full
         widgets:
           - type: search
             search-engine: duckduckgo
+            autofocus: true
 
-          # url opens the public name. check-url tests the service on the
-          # network of the homelab, where the cluster can reach it.
+          # url opens the public name. check-url tests the service from inside
+          # the cluster.
+          - type: monitor
+            title: Apps
+            cache: 1m
+            sites:
+              - title: Jellyfin
+                url: https://jellyfin.buildwithcaleb.com
+                check-url: http://jellyfin.jellyfin.svc.cluster.local/health
+                icon: di:jellyfin
+              - title: Seerr
+                url: https://seerr.buildwithcaleb.com
+                check-url: http://seerr.seerr.svc.cluster.local/api/v1/status
+                icon: di:jellyseerr
+              - title: Audiobookshelf
+                url: https://audiobooks.buildwithcaleb.com
+                check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
+                icon: di:audiobookshelf
+
+      - size: small
+        widgets:
+          - type: clock
+            hour-format: 12h
+          - type: calendar
+            first-day-of-week: sunday
+
+  # The detailed page: each service, each node, and the releases.
+  - name: Homelab
+    slug: homelab
+    width: wide
+    columns:
+      - size: full
+        widgets:
+          - type: monitor
+            title: Media
+            cache: 1m
+            sites:
+              - title: Jellyfin
+                url: https://jellyfin.buildwithcaleb.com
+                check-url: http://jellyfin.jellyfin.svc.cluster.local/health
+                icon: di:jellyfin
+              - title: Seerr
+                url: https://seerr.buildwithcaleb.com
+                check-url: http://seerr.seerr.svc.cluster.local/api/v1/status
+                icon: di:jellyseerr
+              - title: Audiobookshelf
+                url: https://audiobooks.buildwithcaleb.com
+                check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
+                icon: di:audiobookshelf
+
+          - type: monitor
+            title: Downloads
+            cache: 1m
+            sites:
+              - title: Sonarr
+                url: https://sonarr.buildwithcaleb.com
+                check-url: http://sonarr.sonarr.svc.cluster.local:8989/ping
+                icon: di:sonarr
+              - title: Radarr
+                url: https://radarr.buildwithcaleb.com
+                check-url: http://radarr.radarr.svc.cluster.local:7878/ping
+                icon: di:radarr
+              - title: Chaptarr
+                url: https://chaptarr.buildwithcaleb.com
+                check-url: http://chaptarr.chaptarr.svc.cluster.local:8789/
+                icon: di:readarr
+              - title: Prowlarr
+                url: https://prowlarr.buildwithcaleb.com
+                check-url: http://prowlarr.prowlarr.svc.cluster.local:9696/ping
+                icon: di:prowlarr
+              - title: Jackett
+                url: https://jackett.buildwithcaleb.com
+                check-url: http://jackett.jackett.svc.cluster.local:9117/UI/Login
+                icon: di:jackett
+              - title: qBittorrent
+                url: https://qbittorrent.buildwithcaleb.com
+                check-url: http://qbittorrent.qbittorrent.svc.cluster.local:8080/
+                icon: di:qbittorrent
+
+          # check-url tests the service on the network of the homelab, where
+          # the cluster can reach it.
           - type: monitor
             title: Proxmox
             cache: 1m
@@ -27,22 +165,27 @@ pages:
                 url: https://gaia.vnet.buildwithcaleb.com
                 check-url: https://10.0.1.120:8006
                 allow-insecure: true
+                icon: di:proxmox
               - title: hyperion
                 url: https://hyperion.vnet.buildwithcaleb.com
                 check-url: https://10.0.1.101:8006
                 allow-insecure: true
+                icon: di:proxmox
               - title: tartarus
                 url: https://tartarus.vnet.buildwithcaleb.com
                 check-url: https://10.0.1.113:8006
                 allow-insecure: true
+                icon: di:proxmox
               - title: theia
                 url: https://theia.vnet.buildwithcaleb.com
                 check-url: https://10.0.1.131:8006
                 allow-insecure: true
+                icon: di:proxmox
               - title: atlas
                 url: https://atlas.vnet.buildwithcaleb.com
                 check-url: https://10.0.1.124:8006
                 allow-insecure: true
+                icon: di:proxmox
 
           - type: monitor
             title: hermes
@@ -50,10 +193,19 @@ pages:
             sites:
               - title: Headscale
                 url: https://vpn.buildwithcaleb.com/health
+                icon: di:headscale
               - title: Pocket ID
                 url: https://auth.buildwithcaleb.com
+                icon: di:pocket-id
               - title: Pangolin
                 url: https://pangolin.buildwithcaleb.com
+                icon: di:pangolin
+              - title: Headplane
+                url: https://headplane.buildwithcaleb.com
+                icon: di:headplane
+              - title: Dockge
+                url: https://dockge.buildwithcaleb.com
+                icon: di:dockge
 
       - size: small
         widgets:
@@ -71,3 +223,24 @@ pages:
                     url: https://auth.buildwithcaleb.com
                   - title: GitHub
                     url: https://github.com/cnbrown04/homelab-iac
+
+          # GitHub allows 60 requests an hour with no token. The cache keeps
+          # this widget far below that.
+          - type: releases
+            cache: 6h
+            show-source-icon: true
+            limit: 10
+            collapse-after: 5
+            repositories:
+              - jellyfin/jellyfin
+              - seerr-team/seerr
+              - advplyr/audiobookshelf
+              - Sonarr/Sonarr
+              - Radarr/Radarr
+              - Prowlarr/Prowlarr
+              - qbittorrent/qBittorrent
+              - qdm12/gluetun
+              - siderolabs/talos
+              - fosrl/pangolin
+              - juanfont/headscale
+              - pocket-id/pocket-id
