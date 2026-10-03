@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: glance
 resources:
   - namespace.yaml
+  - rbac.yaml
+  - secrets.sops.yaml
   - deployment.yaml
   - service.yaml
   - httproute.yaml

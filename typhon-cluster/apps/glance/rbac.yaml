@@ -1,0 +1,51 @@
+# Glance reads the state of the cluster from the Kubernetes API. The role can
+# only read, and it has no access to Secrets.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: glance
+automountServiceAccountToken: false
+---
+# Kubernetes writes a token for the service account into this Secret. The
+# token does not expire, because Glance reads it one time at the start.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: glance-kube-token
+  annotations:
+    kubernetes.io/service-account.name: glance
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: glance-reader
+rules:
+  - apiGroups: [""]
+    resources: [nodes, pods]
+    verbs: [list]
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets, daemonsets]
+    verbs: [list]
+  - apiGroups: [kustomize.toolkit.fluxcd.io]
+    resources: [kustomizations]
+    verbs: [list]
+  - apiGroups: [helm.toolkit.fluxcd.io]
+    resources: [helmreleases]
+    verbs: [list]
+  - apiGroups: [source.toolkit.fluxcd.io]
+    resources: [gitrepositories]
+    verbs: [list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: glance-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: glance-reader
+subjects:
+  - kind: ServiceAccount
+    name: glance
+    namespace: glance

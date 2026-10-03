@@ -14,6 +14,8 @@ spec:
       labels:
         app: glance
     spec:
+      serviceAccountName: glance
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -23,6 +25,11 @@ spec:
       containers:
         - name: glance
           image: docker.io/glanceapp/glance:v0.8.6
+          # Go loads each certificate in this folder, also the CA of the
+          # cluster. Then Glance trusts the Kubernetes API.
+          env:
+            - name: SSL_CERT_DIR
+              value: /run/secrets
           ports:
             - name: http
               containerPort: 8080
@@ -45,7 +52,23 @@ spec:
             - name: config
               mountPath: /app/config
               readOnly: true
+            # Glance reads ${secret:<name>} from /run/secrets/<name>.
+            - name: secrets
+              mountPath: /run/secrets
+              readOnly: true
       volumes:
         - name: config
           configMap:
             name: glance-config
+        - name: secrets
+          projected:
+            sources:
+              - secret:
+                  name: glance-kube-token
+                  items:
+                    - key: token
+                      path: kube-token
+                    - key: ca.crt
+                      path: kube-ca.crt
+              - secret:
+                  name: glance-secrets

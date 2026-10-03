@@ -69,6 +69,99 @@ document:
     })();
     </script>
 
+# Shared templates for the page "Lab". Glance does not read this key. The
+# widgets use the templates through YAML anchors.
+lab-templates:
+  # The nodes of a Proxmox cluster, from /cluster/resources?type=node.
+  proxmox-nodes: &proxmox-nodes |
+    {{ if ne .Response.StatusCode 200 }}
+    <p class="color-negative">Proxmox answered {{ .Response.Status }}. Check the API token.</p>
+    {{ else }}
+    <ul class="list list-gap-14">
+    {{ range sortByString "node" "asc" (.JSON.Array "data") }}
+      <li>
+        <div class="flex justify-between items-center">
+          <a class="size-h4 color-highlight" href="https://{{ .String "node" }}.vnet.buildwithcaleb.com" target="_blank" rel="noreferrer">{{ .String "node" }}</a>
+          {{ if eq (.String "status") "online" }}
+          <span class="size-h6 color-positive">up {{ div (.Int "uptime") 86400 }}d</span>
+          {{ else }}
+          <span class="size-h6 color-negative">{{ .String "status" }}</span>
+          {{ end }}
+        </div>
+        {{ if eq (.String "status") "online" }}
+        {{ $cpu := mul (.Float "cpu") 100.0 }}
+        {{ $mem := mul (div (.Float "mem") (.Float "maxmem")) 100.0 }}
+        {{ $disk := mul (div (.Float "disk") (.Float "maxdisk")) 100.0 }}
+        <div class="flex gap-15 margin-top-5">
+          <div class="flex-1 min-width-0">
+            <div class="flex justify-between size-h6"><span>CPU · {{ .Int "maxcpu" }}</span><span class="color-highlight">{{ printf "%.0f" $cpu }}%</span></div>
+            <div class="progress-bar"><div class="progress-value{{ if ge $cpu 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ printf "%.0f" $cpu }}"></div></div>
+          </div>
+          <div class="flex-1 min-width-0">
+            <div class="flex justify-between size-h6"><span>RAM · {{ printf "%.0f" (div (.Float "maxmem") 1073741824.0) }} GiB</span><span class="color-highlight">{{ printf "%.0f" $mem }}%</span></div>
+            <div class="progress-bar"><div class="progress-value{{ if ge $mem 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ printf "%.0f" $mem }}"></div></div>
+          </div>
+          <div class="flex-1 min-width-0">
+            <div class="flex justify-between size-h6"><span>Root disk</span><span class="color-highlight">{{ printf "%.0f" $disk }}%</span></div>
+            <div class="progress-bar"><div class="progress-value{{ if ge $disk 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ printf "%.0f" $disk }}"></div></div>
+          </div>
+        </div>
+        {{ end }}
+      </li>
+    {{ end }}
+    </ul>
+    {{ end }}
+
+  # The VMs and containers of a Proxmox cluster, from
+  # /cluster/resources?type=vm. Templates are not in the list.
+  proxmox-guests: &proxmox-guests |
+    {{ if ne .Response.StatusCode 200 }}
+    <p class="color-negative">Proxmox answered {{ .Response.Status }}. Check the API token.</p>
+    {{ else }}
+    <ul class="list list-gap-10 collapsible-container" data-collapse-after="6">
+    {{ range sortByInt "vmid" "asc" (.JSON.Array "data") }}
+    {{ if ne (.Int "template") 1 }}
+      <li class="flex items-center gap-10">
+        <span class="{{ if eq (.String "status") "running" }}color-positive{{ else }}color-subdue{{ end }}">●</span>
+        <div class="grow min-width-0">
+          <div class="color-highlight text-truncate">{{ .String "name" }}</div>
+          <div class="size-h6 color-subdue">{{ .Int "vmid" }} · {{ .String "node" }} · {{ if eq (.String "type") "lxc" }}LXC{{ else }}VM{{ end }}</div>
+        </div>
+        {{ if eq (.String "status") "running" }}
+        <div class="size-h6 text-right shrink-0">
+          <div>{{ printf "%.0f" (mul (.Float "cpu") 100.0) }}% of {{ .Int "maxcpu" }} CPU</div>
+          <div>{{ printf "%.1f" (div (.Float "mem") 1073741824.0) }} / {{ printf "%.0f" (div (.Float "maxmem") 1073741824.0) }} GiB</div>
+        </div>
+        {{ else }}
+        <div class="size-h6 color-subdue shrink-0">{{ .String "status" }}</div>
+        {{ end }}
+      </li>
+    {{ end }}
+    {{ end }}
+    </ul>
+    {{ end }}
+
+  # The storage of a Proxmox cluster, from /cluster/resources?type=storage.
+  proxmox-storage: &proxmox-storage |
+    {{ if ne .Response.StatusCode 200 }}
+    <p class="color-negative">Proxmox answered {{ .Response.Status }}. Check the API token.</p>
+    {{ else }}
+    <ul class="list list-gap-10 collapsible-container" data-collapse-after="5">
+    {{ range sortByString "storage" "asc" (.JSON.Array "data") }}
+    {{ if eq (.String "status") "available" }}
+    {{ $used := mul (div (.Float "disk") (.Float "maxdisk")) 100.0 }}
+      <li>
+        <div class="flex justify-between size-h6">
+          <span><span class="color-highlight">{{ .String "storage" }}</span> · {{ .String "node" }}</span>
+          <span>{{ printf "%.0f" (div (.Float "disk") 1073741824.0) }} / {{ printf "%.0f" (div (.Float "maxdisk") 1073741824.0) }} GiB</span>
+        </div>
+        <div class="progress-bar"><div class="progress-value{{ if ge $used 85.0 }} progress-value-notice{{ end }}" style="--percent: {{ printf "%.0f" $used }}"></div></div>
+      </li>
+    {{ end }}
+    {{ end }}
+    </ul>
+    {{ end }}
+
 pages:
   # The start page: search, the apps, and the date.
   - name: Home
@@ -267,3 +360,322 @@ pages:
               - juanfont/headscale
               - pocket-id/pocket-id
               - home-assistant/core
+
+  # A pool of widgets. Keep the widgets that you like, then move them to the
+  # other pages.
+  - name: Lab
+    slug: lab
+    width: wide
+    columns:
+      - size: small
+        widgets:
+          - type: clock
+            hour-format: 12h
+            timezones:
+              - timezone: Etc/UTC
+                label: UTC
+
+          - type: weather
+            location: Auburn, Alabama, United States
+            units: imperial
+            hour-format: 12h
+
+          - type: to-do
+            id: lab
+
+          - type: hacker-news
+            limit: 10
+            collapse-after: 5
+
+          - type: lobsters
+            tags: [devops, linux, networking]
+            limit: 10
+            collapse-after: 5
+
+      - size: full
+        widgets:
+          # Each Proxmox widget uses the read-only token of glance@pve. The
+          # API uses the IP, because the cluster resolves .vnet to hermes.
+          - type: group
+            widgets:
+              - type: custom-api
+                title: pantheon
+                cache: 1m
+                url: https://10.0.1.120:8006/api2/json/cluster/resources
+                parameters:
+                  type: node
+                allow-insecure: true
+                headers:
+                  Authorization: "PVEAPIToken=glance@pve!glance=${secret:proxmox-pantheon-token}"
+                template: *proxmox-nodes
+              - type: custom-api
+                title: atlas
+                cache: 1m
+                url: https://10.0.1.124:8006/api2/json/cluster/resources
+                parameters:
+                  type: node
+                allow-insecure: true
+                headers:
+                  Authorization: "PVEAPIToken=glance@pve!glance=${secret:proxmox-atlas-token}"
+                template: *proxmox-nodes
+
+          - type: group
+            widgets:
+              - type: custom-api
+                title: pantheon guests
+                cache: 1m
+                url: https://10.0.1.120:8006/api2/json/cluster/resources
+                parameters:
+                  type: vm
+                allow-insecure: true
+                headers:
+                  Authorization: "PVEAPIToken=glance@pve!glance=${secret:proxmox-pantheon-token}"
+                template: *proxmox-guests
+              - type: custom-api
+                title: atlas guests
+                cache: 1m
+                url: https://10.0.1.124:8006/api2/json/cluster/resources
+                parameters:
+                  type: vm
+                allow-insecure: true
+                headers:
+                  Authorization: "PVEAPIToken=glance@pve!glance=${secret:proxmox-atlas-token}"
+                template: *proxmox-guests
+
+          # Glance reads the cluster with the read-only service account
+          # glance. See rbac.yaml.
+          - type: custom-api
+            title: typhon nodes
+            cache: 1m
+            url: https://kubernetes.default.svc/api/v1/nodes
+            headers:
+              Authorization: "Bearer ${secret:kube-token}"
+            template: |
+              {{ if ne .Response.StatusCode 200 }}
+              <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
+              {{ else }}
+              <ul class="list list-gap-10">
+              {{ range sortByString "metadata.name" "asc" (.JSON.Array "items") }}
+              {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
+                <li class="flex items-center gap-10">
+                  <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
+                  <div class="grow min-width-0">
+                    <div class="color-highlight">{{ .String "metadata.name" }}</div>
+                    <div class="size-h6 color-subdue">{{ if .Exists `metadata.labels.node-role\.kubernetes\.io/control-plane` }}control plane{{ else }}worker{{ end }} · {{ .String `status.addresses.#(type=="InternalIP").address` }}</div>
+                  </div>
+                  <div class="size-h6 text-right shrink-0">
+                    <div>Kubernetes {{ .String "status.nodeInfo.kubeletVersion" }}</div>
+                    <div class="color-subdue">{{ .String "status.nodeInfo.osImage" }}</div>
+                  </div>
+                </li>
+              {{ end }}
+              </ul>
+              {{ end }}
+
+          - type: custom-api
+            title: typhon workloads
+            cache: 1m
+            url: https://kubernetes.default.svc/api/v1/pods
+            headers:
+              Authorization: "Bearer ${secret:kube-token}"
+            subrequests:
+              deployments:
+                url: https://kubernetes.default.svc/apis/apps/v1/deployments
+                headers:
+                  Authorization: "Bearer ${secret:kube-token}"
+            template: |
+              {{ $deployments := .Subrequest "deployments" }}
+              {{ if or (ne .Response.StatusCode 200) (ne $deployments.Response.StatusCode 200) }}
+              <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
+              {{ else }}
+              {{ $pods := .JSON.Array "items" }}
+              {{ $running := .JSON.Array `items.#(status.phase=="Running")#` }}
+              {{ $notReady := .JSON.Array `items.#(status.containerStatuses.#(ready==false))#` }}
+              {{ $restarted := .JSON.Array `items.#(status.containerStatuses.#(restartCount>0))#` }}
+              {{ $allDeployments := $deployments.JSON.Array "items" }}
+              {{ $badDeployments := 0 }}
+              {{ range $allDeployments }}{{ if ne (.Int "status.readyReplicas") (.Int "spec.replicas") }}{{ $badDeployments = add $badDeployments 1 }}{{ end }}{{ end }}
+              <div class="flex justify-between">
+                <div><div class="size-h3 color-highlight">{{ len $running }} / {{ len $pods }}</div><div class="size-h6">pods running</div></div>
+                <div><div class="size-h3 {{ if gt (len $notReady) 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ len $notReady }}</div><div class="size-h6">pods not ready</div></div>
+                <div><div class="size-h3 {{ if gt $badDeployments 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ sub (len $allDeployments) $badDeployments }} / {{ len $allDeployments }}</div><div class="size-h6">deployments ready</div></div>
+              </div>
+              {{ if gt (len $notReady) 0 }}
+              <div class="size-h6 margin-top-15">Not ready</div>
+              <ul class="list list-gap-4 margin-top-5">
+              {{ range $notReady }}
+                <li class="color-negative text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }} · {{ .String "status.phase" }}</li>
+              {{ end }}
+              </ul>
+              {{ end }}
+              {{ if gt (len $restarted) 0 }}
+              <div class="size-h6 margin-top-15">Restarts</div>
+              <ul class="list list-gap-4 margin-top-5 collapsible-container" data-collapse-after="5">
+              {{ range $restarted }}
+              {{ $count := 0 }}
+              {{ range .Array "status.containerStatuses" }}{{ $count = add $count (.Int "restartCount") }}{{ end }}
+                <li class="flex justify-between gap-10">
+                  <span class="text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }}</span>
+                  <span class="color-highlight shrink-0">{{ $count }}</span>
+                </li>
+              {{ end }}
+              </ul>
+              {{ end }}
+              {{ end }}
+
+          - type: custom-api
+            title: Flux
+            cache: 1m
+            url: https://kubernetes.default.svc/apis/kustomize.toolkit.fluxcd.io/v1/kustomizations
+            headers:
+              Authorization: "Bearer ${secret:kube-token}"
+            subrequests:
+              helmreleases:
+                url: https://kubernetes.default.svc/apis/helm.toolkit.fluxcd.io/v2/helmreleases
+                headers:
+                  Authorization: "Bearer ${secret:kube-token}"
+              sources:
+                url: https://kubernetes.default.svc/apis/source.toolkit.fluxcd.io/v1/gitrepositories
+                headers:
+                  Authorization: "Bearer ${secret:kube-token}"
+            template: |
+              {{ $helm := .Subrequest "helmreleases" }}
+              {{ $sources := .Subrequest "sources" }}
+              {{ if or (ne .Response.StatusCode 200) (ne $helm.Response.StatusCode 200) (ne $sources.Response.StatusCode 200) }}
+              <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
+              {{ else }}
+              {{ $revision := $sources.JSON.String `items.#(metadata.name=="homelab-iac").status.artifact.revision` }}
+              {{ $commit := findSubmatch "sha1:([0-9a-f]{7})" $revision }}
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="size-h6">main is at</div>
+                  <a class="size-h3 color-highlight" href="https://github.com/cnbrown04/homelab-iac/commit/{{ $commit }}" target="_blank" rel="noreferrer">{{ $commit }}</a>
+                </div>
+                <div class="size-h6 text-right">fetched <span {{ parseRelativeTime "rfc3339" ($sources.JSON.String `items.#(metadata.name=="homelab-iac").status.artifact.lastUpdateTime`) }}></span> ago</div>
+              </div>
+              <div class="size-h6 margin-top-15">Kustomizations</div>
+              <ul class="list list-gap-4 margin-top-5">
+              {{ range .JSON.Array "items" }}
+              {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
+                <li class="flex items-center gap-10">
+                  <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
+                  <span class="grow text-truncate">{{ .String "metadata.name" }}</span>
+                  <span class="size-h6 color-subdue shrink-0">{{ findSubmatch "^([^@]+)@" (.String "status.lastAppliedRevision") }}@{{ findSubmatch "sha1:([0-9a-f]{7})" (.String "status.lastAppliedRevision") }}</span>
+                </li>
+              {{ end }}
+              </ul>
+              <div class="size-h6 margin-top-15">Helm releases</div>
+              <ul class="list list-gap-4 margin-top-5">
+              {{ range $helm.JSON.Array "items" }}
+              {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
+                <li class="flex items-center gap-10">
+                  <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
+                  <span class="grow text-truncate">{{ .String "metadata.name" }}</span>
+                  <span class="size-h6 color-subdue shrink-0">{{ .String "status.history.0.chartVersion" }}</span>
+                </li>
+              {{ end }}
+              </ul>
+              {{ end }}
+
+          # The repository is public. GitHub allows 60 requests an hour with
+          # no token, so the cache is 10 minutes.
+          - type: custom-api
+            title: Pipelines
+            title-url: https://github.com/cnbrown04/homelab-iac/actions
+            cache: 10m
+            url: https://api.github.com/repos/cnbrown04/homelab-iac/actions/runs
+            parameters:
+              per_page: 8
+            headers:
+              Accept: application/vnd.github+json
+            template: |
+              {{ if ne .Response.StatusCode 200 }}
+              <p class="color-negative">GitHub answered {{ .Response.Status }}.</p>
+              {{ else }}
+              <ul class="list list-gap-10">
+              {{ range .JSON.Array "workflow_runs" }}
+              {{ $status := .String "status" }}
+              {{ $result := .String "conclusion" }}
+                <li class="flex items-center gap-10">
+                  <span class="{{ if eq $result "success" }}color-positive{{ else if or (eq $result "failure") (eq $result "timed_out") (eq $result "startup_failure") }}color-negative{{ else if eq $status "completed" }}color-subdue{{ else }}color-primary{{ end }}">●</span>
+                  <div class="grow min-width-0">
+                    <div class="text-truncate"><a class="color-highlight" href="{{ .String "html_url" }}" target="_blank" rel="noreferrer">{{ .String "display_title" }}</a></div>
+                    <div class="size-h6 color-subdue">{{ .String "name" }} · {{ .String "event" }} · <span {{ parseRelativeTime "rfc3339" (.String "created_at") }}></span> ago</div>
+                  </div>
+                  <span class="size-h6 shrink-0{{ if eq $status "waiting" }} color-primary{{ end }}">{{ if eq $status "completed" }}{{ $result }}{{ else if eq $status "waiting" }}needs approval{{ else }}{{ $status }}{{ end }}</span>
+                </li>
+              {{ end }}
+              </ul>
+              {{ end }}
+
+          - type: repository
+            repository: cnbrown04/homelab-iac
+            cache: 1h
+            pull-requests-limit: 5
+            issues-limit: 3
+            commits-limit: 5
+
+          - type: videos
+            style: grid-cards
+            collapse-after-rows: 1
+            channels:
+              - UCR-DXc1voovS8nhAvccRZhg # Jeff Geerling
+              - UCOk-gHyjcWZNj3Br4oxwh0A # Techno Tim
+              - UCHkYOD-3fZbuGhwsADBd9ZQ # Lawrence Systems
+              - UCZNhwA1B5YqiY1nLzmM0ZRg # Christian Lempa
+              - UCsnGwSIHyoYN0kiINAGUKxg # Wolfgang's Channel
+
+      - size: small
+        widgets:
+          - type: custom-api
+            title: pantheon storage
+            cache: 5m
+            url: https://10.0.1.120:8006/api2/json/cluster/resources
+            parameters:
+              type: storage
+            allow-insecure: true
+            headers:
+              Authorization: "PVEAPIToken=glance@pve!glance=${secret:proxmox-pantheon-token}"
+            template: *proxmox-storage
+
+          - type: releases
+            cache: 6h
+            show-source-icon: true
+            limit: 10
+            collapse-after: 5
+            repositories:
+              - siderolabs/talos
+              - kubernetes/kubernetes
+              - fluxcd/flux2
+              - cilium/cilium
+              - opentofu/opentofu
+              - ansible/ansible
+              - home-assistant/core
+              - fosrl/newt
+              - tale/headplane
+              - louislam/dockge
+
+          - type: rss
+            title: News
+            style: detailed-list
+            limit: 10
+            collapse-after: 5
+            cache: 1h
+            feeds:
+              - url: https://forum.proxmox.com/forums/announcements.7/index.rss
+                title: Proxmox
+              - url: https://kubernetes.io/feed.xml
+                title: Kubernetes
+              - url: https://selfh.st/rss/
+                title: selfh.st
+
+          - type: group
+            widgets:
+              - type: reddit
+                subreddit: homelab
+                show-thumbnails: true
+                collapse-after: 5
+              - type: reddit
+                subreddit: selfhosted
+                show-thumbnails: true
+                collapse-after: 5
