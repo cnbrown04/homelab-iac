@@ -1,0 +1,10 @@
+# The extra CSP rules of OpenCloud. The proxy merges them with its default
+# rules. The web client talks to Pocket ID from the browser, and renews its
+# token in a hidden frame.
+directives:
+  connect-src:
+    - 'https://auth.buildwithcaleb.com/'
+  frame-src:
+    - 'https://auth.buildwithcaleb.com/'
+  script-src:
+    - 'https://auth.buildwithcaleb.com/'

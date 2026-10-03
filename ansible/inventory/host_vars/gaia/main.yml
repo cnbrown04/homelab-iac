@@ -8,10 +8,37 @@ proxmox_network_vlan_interfaces:
 # 29 September 2026. Only the typhon VLAN can mount the exports.
 zfs_nfs_pool: lethe
 zfs_nfs_datasets:
-  - lethe/k8s
+  - name: lethe/k8s
+  # The files, config, and calendars of OpenCloud in typhon. OpenCloud keeps
+  # its metadata in xattrs, and xattr=sa keeps them in the inode.
+  - name: lethe/opencloud
+    properties:
+      xattr: sa
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+# The subPaths of the volume of OpenCloud. The pod runs as user 1000.
+zfs_nfs_directories:
+  - path: /lethe/opencloud/config
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+  - path: /lethe/opencloud/users
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+  - path: /lethe/opencloud/radicale
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
 zfs_nfs_exports:
   # The dynamic volumes of csi-driver-nfs.
   - path: /lethe/k8s
+    clients: 10.0.20.0/24
+    options: rw,sync,no_subtree_check,no_root_squash
+  # OpenCloud needs NFS 4.2 for the xattrs. The volume mounts it with
+  # nfsvers=4.2.
+  - path: /lethe/opencloud
     clients: 10.0.20.0/24
     options: rw,sync,no_subtree_check,no_root_squash
   # crossmnt shows the child dataset lethe/data/media/transcode.

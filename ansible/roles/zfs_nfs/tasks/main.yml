@@ -3,10 +3,11 @@
   ansible.builtin.assert:
     that:
       - zfs_nfs_pool | length > 0
-      - zfs_nfs_datasets | reject('match', '^' ~ zfs_nfs_pool ~ '/') | list | length == 0
+      - zfs_nfs_datasets | map(attribute='name') | reject('match', '^' ~ zfs_nfs_pool ~ '/') | list | length == 0
+      - zfs_nfs_directories | map(attribute='path') | reject('match', '^/' ~ zfs_nfs_pool ~ '/') | list | length == 0
       - zfs_nfs_exports | map(attribute='path') | reject('match', '^/') | list | length == 0
       - zfs_nfs_exports | map(attribute='clients') | select('match', '^[0-9.]+/[0-9]+$') | list | length == zfs_nfs_exports | length
-    fail_msg: "Set the pool, datasets in the pool, absolute export paths, and clients in CIDR form."
+    fail_msg: "Set the pool, datasets and folders in the pool, absolute export paths, and clients in CIDR form."
 
 - name: Check that the pool is imported
   ansible.builtin.command:
@@ -23,9 +24,35 @@
 
 - name: Create the datasets
   community.general.zfs:
-    name: "{{ item }}"
+    name: "{{ item.name }}"
     state: present
+    extra_zfs_properties: "{{ item.properties | default({}) }}"
   loop: "{{ zfs_nfs_datasets }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# Each dataset of the pool uses the default mountpoint /<name>.
+- name: Set the owner of the datasets
+  ansible.builtin.file:
+    path: "/{{ item.name }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group | default(omit) }}"
+    mode: "{{ item.mode | default(omit) }}"
+  loop: "{{ zfs_nfs_datasets | selectattr('owner', 'defined') }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create the folders
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop: "{{ zfs_nfs_directories }}"
+  loop_control:
+    label: "{{ item.path }}"
 
 - name: Install the NFS server
   ansible.builtin.apt:
