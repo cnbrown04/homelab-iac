@@ -132,6 +132,9 @@ Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
 Ansible logs in to each host as `iac-admin`, with sudo and a password. The
 password is the same on each host.
 
+The service map in `SERVICES.md` gives the host, the guest or the cluster, and
+the file of each service.
+
 ### The `typhon` cluster
 
 Talos v1.14 and Kubernetes 1.37, on VLAN 20 (`10.0.20.0/24`). The API is at
@@ -283,6 +286,7 @@ These decisions are closed. Ask the owner before you re-open one.
 ### The repository
 
 ```text
+SERVICES.md                 # the service map
 tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
