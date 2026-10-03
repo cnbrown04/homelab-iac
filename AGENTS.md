@@ -102,6 +102,10 @@ Do not run `git commit`, `git push`, or `gh pr create` unless the owner gives
 permission for that action.
 
 - Make the change to the file, then stop. Tell the owner what is ready.
+- Do not ask for permission to commit. The owner commits, or tells you to
+  commit.
+- At the end of a change that is complete, give a commit message in the
+  Conventional Commits format. The owner uses it to commit.
 - Permission for one commit is not permission for the next commit.
 - This rule covers a new branch on the remote, a push, and a pull request.
 - `git add`, `git status`, and `git diff` need no permission.
