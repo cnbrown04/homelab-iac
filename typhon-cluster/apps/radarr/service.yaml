@@ -1,0 +1,13 @@
+# The old database of Prowlarr and the old settings of Seerr use
+# http://radarr.radarr.svc.cluster.local:7878, so the service keeps that port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr
+spec:
+  selector:
+    app: radarr
+  ports:
+    - name: http
+      port: 7878
+      targetPort: http

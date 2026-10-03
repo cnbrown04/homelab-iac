@@ -1,0 +1,89 @@
+# Sonarr. It has its own login, and Pangolin puts its SSO login in front of it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      # User 1000 owns the media. No fsGroup: the kubelet would change the
+      # owner of each file in the media.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # A new config volume gets the old config folder from data/migrate/
+        # one time. To restore a backup, put the folder there, and delete the
+        # claim config.
+        - name: seed-config
+          image: docker.io/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -e /config/sonarr.db ] && [ -e /seed/migrate/sonarr.db ]; then
+                cp -R /seed/migrate/. /config/
+                rm -f /config/sonarr.pid
+                echo "Copied the config from /seed/migrate."
+              fi
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /seed
+      containers:
+        - name: sonarr
+          image: ghcr.io/home-operations/sonarr:4.0.20.3012
+          ports:
+            - name: http
+              containerPort: 8989
+          securityContext: *container-security
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /config/Backups
+              subPath: Backups
+            - name: media
+              mountPath: /media
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,85 @@
+# The volumes of Sonarr:
+# - media: /lethe/data/media on gaia, at /media. The old database has its
+#   root folders at /media/tv and /media/anime, and qBittorrent saves to
+#   /media/downloads. One volume lets Sonarr make hard links, not copies.
+# - data: /lethe/k8s/sonarr on gaia. Backups/ holds the backups of Sonarr.
+#   migrate/ holds the old config folder for the first start. No SQLite.
+# - config: the SQLite databases and the settings, on the disk of a worker.
+#   SQLite must not go on NFS.
+# The static volumes keep their data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-media
+spec:
+  capacity:
+    storage: 4Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: sonarr
+    name: media
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: sonarr-media
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/data/media
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: sonarr
+    name: data
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: sonarr-data
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/sonarr
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: sonarr-media
+  resources:
+    requests:
+      storage: 4Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: sonarr-data
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

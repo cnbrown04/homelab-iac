@@ -1,0 +1,13 @@
+# The old database of Prowlarr and the old settings of Seerr use
+# http://sonarr.sonarr.svc.cluster.local:8989, so the service keeps that port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+spec:
+  selector:
+    app: sonarr
+  ports:
+    - name: http
+      port: 8989
+      targetPort: http
