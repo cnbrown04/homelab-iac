@@ -1,0 +1,76 @@
+# Seerr, the requests for Jellyfin. Its users log in with their Jellyfin
+# accounts, so Pangolin does not put SSO in front of it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seerr
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: seerr
+  template:
+    metadata:
+      labels:
+        app: seerr
+    spec:
+      # The image runs as node (1000). No fsGroup.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # A new config volume gets the old config folder from data/migrate/
+        # one time. To restore a backup, put the folder there, and delete the
+        # claim config.
+        - name: seed-config
+          image: docker.io/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -e /config/settings.json ] && [ -e /seed/migrate/settings.json ]; then
+                cp -R /seed/migrate/. /config/
+                echo "Copied the config from /seed/migrate."
+              fi
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /seed
+      containers:
+        - name: seerr
+          image: ghcr.io/seerr-team/seerr:v3.5.0
+          ports:
+            - name: http
+              containerPort: 5055
+          securityContext: *container-security
+          readinessProbe:
+            httpGet:
+              path: /api/v1/status
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data

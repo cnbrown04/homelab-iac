@@ -210,6 +210,11 @@ the cluster.
 - Jackett is at `jackett.buildwithcaleb.com`, with the Pangolin login.
   Chaptarr uses it. Its config is JSON, not SQLite, so it is on NFS in
   `/lethe/k8s/jackett/Jackett`.
+- Seerr is at `seerr.buildwithcaleb.com`, with no Pangolin login. Its users
+  log in with their Jellyfin accounts. It reaches Jellyfin, Sonarr, and Radarr
+  by their service names. Its SQLite database and `settings.json` are on
+  `local-path`. To restore: put the old config folder in
+  `/lethe/k8s/seerr/migrate/`, then delete the pod and the claim `config`.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site

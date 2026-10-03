@@ -150,6 +150,18 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Seerr users log in with their Jellyfin accounts, so SSO is off.
+    seerr:
+      name: Seerr
+      mode: http
+      full-domain: seerr.buildwithcaleb.com
+      auth:
+        sso-enabled: false
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     headplane:
       name: Headplane
       mode: http
