@@ -5,7 +5,9 @@ server:
   proxied: true
 
 # Catppuccin Macchiato (dark) and Latte (light), from docs/themes.md of
-# Glance. They replace the two default themes of the theme picker.
+# Glance. They replace the two default themes of the theme picker. The picker
+# also shows the base theme as "default", and the style in document.head
+# hides it.
 theme:
   background-color: 232 23 18
   contrast-multiplier: 1.2
@@ -34,6 +36,10 @@ theme:
 # so the script must not use template strings.
 document:
   head: |
+    <style>
+    .theme-preset[data-key="default"] { display: none; }
+    html .theme-choices:has(> :nth-child(3)) { --presets-per-row: 2; }
+    </style>
     <script>
     (function () {
       var query = window.matchMedia("(prefers-color-scheme: light)");
