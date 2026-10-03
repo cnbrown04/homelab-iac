@@ -94,6 +94,10 @@ pages:
                 url: https://audiobooks.buildwithcaleb.com
                 check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
                 icon: di:audiobookshelf
+              - title: Home Assistant
+                url: https://homeassistant.buildwithcaleb.com
+                check-url: http://10.0.1.69/manifest.json
+                icon: di:home-assistant
 
       - size: small
         widgets:
@@ -187,6 +191,16 @@ pages:
                 allow-insecure: true
                 icon: di:proxmox
 
+          # Home Assistant OS runs on atlas, outside the cluster.
+          - type: monitor
+            title: Home
+            cache: 1m
+            sites:
+              - title: Home Assistant
+                url: https://homeassistant.buildwithcaleb.com
+                check-url: http://10.0.1.69/manifest.json
+                icon: di:home-assistant
+
           - type: monitor
             title: hermes
             cache: 1m
@@ -244,3 +258,4 @@ pages:
               - fosrl/pangolin
               - juanfont/headscale
               - pocket-id/pocket-id
+              - home-assistant/core
