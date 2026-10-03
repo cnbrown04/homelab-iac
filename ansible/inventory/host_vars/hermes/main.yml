@@ -179,23 +179,35 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_home_assistant_target }}"
           port: 80
+    # The health route is public, so Glance can test it. It shows only "OK"
+    # or "ERROR", and it fails also when Headscale is down.
     headplane:
       name: Headplane
       mode: http
       full-domain: headplane.buildwithcaleb.com
       auth:
         sso-enabled: true
+      rules:
+        - action: allow
+          match: path
+          value: /admin/healthz
       targets:
         - site: "{{ pangolin_local_site }}"
           method: http
           hostname: headplane
           port: 3000
+    # Dockge has no health route. The Dockge server makes robots.txt itself,
+    # so a public robots.txt shows that Dockge runs. Glance tests it.
     dockge:
       name: Dockge
       mode: http
       full-domain: dockge.buildwithcaleb.com
       auth:
         sso-enabled: true
+      rules:
+        - action: allow
+          match: path
+          value: /robots.txt
       targets:
         - site: "{{ pangolin_local_site }}"
           method: http

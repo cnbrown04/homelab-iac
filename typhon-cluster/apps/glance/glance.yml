@@ -152,7 +152,7 @@ pages:
                 icon: di:prowlarr
               - title: Jackett
                 url: https://jackett.buildwithcaleb.com
-                check-url: http://jackett.jackett.svc.cluster.local:9117/UI/Login
+                check-url: http://jackett.jackett.svc.cluster.local:9117/health
                 icon: di:jackett
               - title: qBittorrent
                 url: https://qbittorrent.buildwithcaleb.com
@@ -216,9 +216,11 @@ pages:
                 icon: di:pangolin
               - title: Headplane
                 url: https://headplane.buildwithcaleb.com
+                check-url: https://headplane.buildwithcaleb.com/admin/healthz
                 icon: di:headplane
               - title: Dockge
                 url: https://dockge.buildwithcaleb.com
+                check-url: https://dockge.buildwithcaleb.com/robots.txt
                 icon: di:dockge
 
       - size: small
