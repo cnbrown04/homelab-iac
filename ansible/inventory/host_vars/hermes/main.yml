@@ -39,7 +39,7 @@ pangolin_local_site: hermes-local
 pangolin_typhon_site: typhon-cluster
 pangolin_typhon_target: 100.89.128.4
 # The Newt site in Home Assistant OS on atlas. Newt runs as an add-on. The
-# address of the hassio network gateway reaches Home Assistant on port 8123.
+# address of the hassio network gateway reaches Home Assistant on port 80.
 pangolin_home_assistant_site: home-assistant
 pangolin_home_assistant_target: 172.30.32.1
 
@@ -178,7 +178,7 @@ pangolin_blueprint_resources:
         - site: "{{ pangolin_home_assistant_site }}"
           method: http
           hostname: "{{ pangolin_home_assistant_target }}"
-          port: 8123
+          port: 80
     headplane:
       name: Headplane
       mode: http
