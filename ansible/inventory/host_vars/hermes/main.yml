@@ -38,6 +38,10 @@ pangolin_local_site: hermes-local
 # the tunnel address to the Gateway of the cluster. See AGENTS.md.
 pangolin_typhon_site: typhon-cluster
 pangolin_typhon_target: 100.89.128.4
+# The Newt site in Home Assistant OS on atlas. Newt runs as an add-on. The
+# address of the hassio network gateway reaches Home Assistant on port 8123.
+pangolin_home_assistant_site: home-assistant
+pangolin_home_assistant_target: 172.30.32.1
 
 # Pangolin resources. Headscale is not here: a Pangolin resource sends each
 # request through the Pangolin app, and Headscale must not depend on it.
@@ -162,6 +166,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
+    # login, so SSO is off.
+    home-assistant:
+      name: Home Assistant
+      mode: http
+      full-domain: homeassistant.buildwithcaleb.com
+      auth:
+        sso-enabled: false
+      targets:
+        - site: "{{ pangolin_home_assistant_site }}"
+          method: http
+          hostname: "{{ pangolin_home_assistant_target }}"
+          port: 8123
     headplane:
       name: Headplane
       mode: http
