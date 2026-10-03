@@ -203,6 +203,9 @@ the cluster.
   and qBittorrent binds to `tun0` only while the forwarded port is up. The pod
   uses the DNS of gluetun. Do not add `FIREWALL_OUTBOUND_SUBNETS`.
   `typhon-cluster/apps/qbittorrent/gluetun.sops.yaml` holds the WireGuard key.
+- Jackett is at `jackett.buildwithcaleb.com`, with the Pangolin login.
+  Chaptarr uses it. Its config is JSON, not SQLite, so it is on NFS in
+  `/lethe/k8s/jackett/Jackett`.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site

@@ -1,0 +1,35 @@
+# The config of Jackett, in /lethe/k8s/jackett on gaia. Jackett keeps its
+# settings and indexers in /config/Jackett as JSON files, with no SQLite, so
+# the config can go on NFS. The volume keeps its data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jackett-config
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: jackett
+    name: config
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: jackett-config
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/jackett
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: jackett-config
+  resources:
+    requests:
+      storage: 1Gi

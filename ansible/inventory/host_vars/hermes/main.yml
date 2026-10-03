@@ -135,6 +135,17 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    jackett:
+      name: Jackett
+      mode: http
+      full-domain: jackett.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     headplane:
       name: Headplane
       mode: http

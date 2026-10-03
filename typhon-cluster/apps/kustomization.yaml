@@ -5,6 +5,7 @@ resources:
   - audiobookshelf
   - chaptarr
   - glance
+  - jackett
   - jellyfin
   - prowlarr
   - qbittorrent

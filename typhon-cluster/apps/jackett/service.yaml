@@ -1,0 +1,13 @@
+# Chaptarr uses http://jackett.jackett.svc.cluster.local:9117, so the service
+# keeps that port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: jackett
+spec:
+  selector:
+    app: jackett
+  ports:
+    - name: http
+      port: 9117
+      targetPort: http
