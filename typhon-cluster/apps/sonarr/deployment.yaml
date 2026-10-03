@@ -1,4 +1,4 @@
-# Sonarr. It has its own login, and Pangolin puts its SSO login in front of it.
+# Sonarr. Pangolin puts its SSO login in front of it.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,6 +51,12 @@ spec:
       containers:
         - name: sonarr
           image: ghcr.io/home-operations/sonarr:4.0.20.3012
+          env:
+            # No login page. The Pangolin login (Pocket ID) is the only login,
+            # so the Pangolin resource must keep SSO on. The API still needs
+            # the API key.
+            - name: SONARR__AUTH__METHOD
+              value: External
           ports:
             - name: http
               containerPort: 8989

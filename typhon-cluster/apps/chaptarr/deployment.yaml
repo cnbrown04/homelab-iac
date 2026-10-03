@@ -1,5 +1,5 @@
-# Chaptarr, the audiobooks and ebooks of the library. It has its own login, and
-# Pangolin puts its SSO login in front of it.
+# Chaptarr, the audiobooks and ebooks of the library. Pangolin puts its SSO
+# login in front of it.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,6 +52,12 @@ spec:
       containers:
         - name: chaptarr
           image: docker.io/chaptarr/chaptarr:0.9.965
+          env:
+            # No login page. The Pangolin login (Pocket ID) is the only login,
+            # so the Pangolin resource must keep SSO on. The API still needs
+            # the API key.
+            - name: CHAPTARR__AUTH__METHOD
+              value: External
           ports:
             - name: http
               containerPort: 8789

@@ -1,4 +1,4 @@
-# Prowlarr. It has its own login, and Pangolin puts its SSO login in front of it.
+# Prowlarr. Pangolin puts its SSO login in front of it.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,6 +50,12 @@ spec:
       containers:
         - name: prowlarr
           image: ghcr.io/home-operations/prowlarr:2.6.5.5623
+          env:
+            # No login page. The Pangolin login (Pocket ID) is the only login,
+            # so the Pangolin resource must keep SSO on. The API still needs
+            # the API key.
+            - name: PROWLARR__AUTH__METHOD
+              value: External
           ports:
             - name: http
               containerPort: 9696

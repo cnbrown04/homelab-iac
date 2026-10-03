@@ -80,6 +80,7 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Sonarr has no login of its own. Keep SSO on.
     sonarr:
       name: Sonarr
       mode: http
@@ -91,6 +92,7 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Radarr has no login of its own. Keep SSO on.
     radarr:
       name: Radarr
       mode: http
@@ -102,6 +104,7 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Prowlarr has no login of its own. Keep SSO on.
     prowlarr:
       name: Prowlarr
       mode: http
@@ -113,6 +116,7 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Chaptarr has no login of its own. Keep SSO on.
     chaptarr:
       name: Chaptarr
       mode: http

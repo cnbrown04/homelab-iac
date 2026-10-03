@@ -185,8 +185,12 @@ the cluster.
     `root` in `/lethe/k8s/jellyfin/migrate/`, then delete the pod and the
     claim `config`. The init container copies them.
 - Sonarr, Radarr, Prowlarr, Chaptarr, and qBittorrent are at
-  `<app>.buildwithcaleb.com`, with the Pangolin login and their own login.
-  Chaptarr manages the audiobooks in `/media/audiobooks`.
+  `<app>.buildwithcaleb.com`, with the Pangolin login. Chaptarr manages the
+  audiobooks in `/media/audiobooks`.
+  - Sonarr, Radarr, Prowlarr, and Chaptarr have no login of their own
+    (`<APP>__AUTH__METHOD=External`). The Pangolin login is the only login, so
+    their Pangolin resources must keep SSO on. The API still needs the API
+    key. qBittorrent and Jackett keep their own login.
   - Each mounts `/lethe/data/media` at `/media` (Prowlarr does not), so an
     import is a hard link.
     The root folders are `/media/tv`, `/media/anime`, and `/media/movies`.
