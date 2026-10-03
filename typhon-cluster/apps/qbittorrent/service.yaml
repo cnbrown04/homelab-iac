@@ -1,0 +1,14 @@
+# Sonarr, Radarr, and Chaptarr use
+# http://qbittorrent.qbittorrent.svc.cluster.local:8080, so the service keeps
+# that port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

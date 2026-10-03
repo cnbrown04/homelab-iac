@@ -102,6 +102,39 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    prowlarr:
+      name: Prowlarr
+      mode: http
+      full-domain: prowlarr.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
+    chaptarr:
+      name: Chaptarr
+      mode: http
+      full-domain: chaptarr.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
+    qbittorrent:
+      name: qBittorrent
+      mode: http
+      full-domain: qbittorrent.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     headplane:
       name: Headplane
       mode: http

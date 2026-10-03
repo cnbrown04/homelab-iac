@@ -1,0 +1,9 @@
+# gluetun needs NET_ADMIN to make the tunnel and the firewall in the network
+# namespace of the pod, so the namespace allows privileged pods. qBittorrent
+# itself runs as user 1000 with no capabilities.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qbittorrent
+  labels:
+    pod-security.kubernetes.io/enforce: privileged

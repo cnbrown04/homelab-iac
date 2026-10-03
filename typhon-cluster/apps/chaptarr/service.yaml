@@ -1,0 +1,12 @@
+# Prowlarr and Seerr use http://chaptarr.chaptarr.svc.cluster.local:8789, so the service keeps that port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: chaptarr
+spec:
+  selector:
+    app: chaptarr
+  ports:
+    - name: http
+      port: 8789
+      targetPort: http

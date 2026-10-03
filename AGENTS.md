@@ -184,17 +184,25 @@ the cluster.
   - To restore the config: put the folders `config`, `data`, `plugins`, and
     `root` in `/lethe/k8s/jellyfin/migrate/`, then delete the pod and the
     claim `config`. The init container copies them.
-- Sonarr and Radarr are at `sonarr.buildwithcaleb.com` and
-  `radarr.buildwithcaleb.com`, with the Pangolin login and their own login.
-  - Each mounts `/lethe/data/media` at `/media`, so an import is a hard link.
+- Sonarr, Radarr, Prowlarr, Chaptarr, and qBittorrent are at
+  `<app>.buildwithcaleb.com`, with the Pangolin login and their own login.
+  Chaptarr manages the audiobooks in `/media/audiobooks`.
+  - Each mounts `/lethe/data/media` at `/media` (Prowlarr does not), so an
+    import is a hard link.
     The root folders are `/media/tv`, `/media/anime`, and `/media/movies`.
     qBittorrent saves to `/media/downloads`.
-  - Each service keeps the port of the app (`8989`, `7878`), because the old
-    settings of Prowlarr and Seerr use `http://<app>.<app>.svc.cluster.local:<port>`.
+  - Each service keeps the port of the app (`8989`, `7878`, `9696`, `8789`,
+    `8080`), because the old settings of the apps use
+    `http://<app>.<app>.svc.cluster.local:<port>`.
   - The SQLite databases are on `local-path`. The backups of the app are in
     `/lethe/k8s/<app>/Backups`. To restore the config: put the old config
     folder in `/lethe/k8s/<app>/migrate/`, then delete the pod and the claim
     `config`.
+- qBittorrent sends each torrent through ProtonVPN, with gluetun as a sidecar
+  in its pod. The firewall of gluetun drops each packet outside the tunnel,
+  and qBittorrent binds to `tun0` only while the forwarded port is up. The pod
+  uses the DNS of gluetun. Do not add `FIREWALL_OUTBOUND_SUBNETS`.
+  `typhon-cluster/apps/qbittorrent/gluetun.sops.yaml` holds the WireGuard key.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site

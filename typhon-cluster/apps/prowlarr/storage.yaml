@@ -1,0 +1,49 @@
+# The volumes of Prowlarr:
+# - data: /lethe/k8s/prowlarr on gaia. Backups/ holds the backups of Prowlarr.
+#   migrate/ holds the old config folder for the first start. No SQLite.
+# - config: the SQLite databases and the settings, on the disk of a worker.
+#   SQLite must not go on NFS.
+# The static volumes keep their data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prowlarr-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: prowlarr
+    name: data
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: prowlarr-data
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/prowlarr
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: prowlarr-data
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

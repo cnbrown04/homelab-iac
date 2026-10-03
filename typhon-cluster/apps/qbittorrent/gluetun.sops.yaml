@@ -1,0 +1,34 @@
+# The WireGuard key of ProtonVPN. Make a WireGuard config at
+# https://account.proton.me/u/0/vpn/WireGuard with NAT-PMP (Port Forwarding)
+# on, and copy its PrivateKey. One key works for each ProtonVPN server.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: gluetun
+type: Opaque
+stringData:
+    WIREGUARD_PRIVATE_KEY: ENC[AES256_GCM,data:t8WvksHfbuhg9HyX+e242MJAFM3sOHBXlY1/hoELcezYwpg7SXcmbh0txwc=,iv:z5nIsq0Vz5uONQ9/BWsmnx6P8L9r0hji9VADU9odJNE=,tag:/y+vrtW9ErrmalUEFGb5+Q==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBMamdPei9DdjZYS2xmTmVD
+            VU9SVjFRMnBHc0czWnlWUTV3UXhFRG1WdjFBCmFhcVhBNlFvWDV0aHZOR1JFMWJK
+            akwvL0cxclJHYmlvQ0szOTFHY3ExTVUKLS0tIHRCTE5XYVlGYUhIdnpRWWNmVWRS
+            TmpqeHZ1Um03SnN5VENjNm0xa1BFQ1kKvMfKK/nxeBxugSSxiw0NohVe9e6ZVhtt
+            Joyv5FK1eXiPpf2PRizephY5biCBLH6tl9+sSpHPPU+t8gZaH6YRtQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBkM2Z5M3lNYWxidzZGc004
+            U1BqcmcxaHVhRDc0ejl6OXRGcnJYMW1vTkZBCkQyaG90eVFTRkdmODRZUVpaVnhi
+            V1c1ZUZqRHlNY09nbkpyT3o4QkpBVkEKLS0tIE9KbHFnRmgzL0FCeksyZnJQaG5B
+            VDdTckdjc05MNTgwQTRlUDU5bmM1YWcKkehOcslCQ0qofCemv6645wdCdP5fQjQJ
+            2x1jCQU92D824MR4GmB3C4ePxXS0Yl7shEJ2uRFxZoNTjdx2V5/6UA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-03T01:24:05Z"
+    mac: ENC[AES256_GCM,data:78Bt+WdWXiq/Iwxiek393I5w3g28wkxtqRj6sOGDCp9e6yBaONiL6Ya8McmEMt8pNNT+G39LJn96UZ8PRIvow/qHr9gavNC5fc8ER8KF3UmeuU2/wVG3dPf0Qrm7qkTqD6S6xov0Vso4TtVjok1ZTJ1TbuBQmgLGd8HY6tjL2aw=,iv:Lvun3OSba/8NbwvmSDhDB3TVQ8xd6JNFp2pCNLr836E=,tag:24uLNtzZo+Rxii7IJkH34Q==,type:str]
+    version: 3.13.3

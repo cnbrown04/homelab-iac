@@ -1,0 +1,12 @@
+# Sonarr, Radarr, and Chaptarr use http://prowlarr.prowlarr.svc.cluster.local:9696, so the service keeps that port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowlarr
+spec:
+  selector:
+    app: prowlarr
+  ports:
+    - name: http
+      port: 9696
+      targetPort: http

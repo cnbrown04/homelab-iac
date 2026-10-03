@@ -1,0 +1,153 @@
+# qBittorrent behind gluetun. The two containers share the network namespace
+# of the pod. Each torrent packet goes through the ProtonVPN tunnel, or
+# nowhere:
+# - gluetun starts first, as a sidecar. qBittorrent starts only after the
+#   tunnel is up.
+# - The firewall of gluetun drops each packet that does not go through the
+#   tunnel. Only the web UI port 8080 is open on the pod network, for the
+#   gateway and the other apps. FIREWALL_OUTBOUND_SUBNETS is empty, so
+#   qBittorrent cannot reach the LAN or the cluster.
+# - qBittorrent binds to tun0 only when the forwarded port is up, and to lo
+#   when it goes down. Its old config starts on lo.
+# - The pod uses the DNS server of gluetun, so DNS goes through the tunnel
+#   too.
+# The secret gluetun holds the WireGuard key of ProtonVPN. Two pods with the
+# same key take the tunnel from each other, so a new pod starts after the old
+# pod stops.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+    spec:
+      dnsPolicy: None
+      dnsConfig:
+        nameservers: [127.0.0.1]
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # A new config volume gets the old config folder from data/migrate/
+        # one time. To restore a backup, put the folder there, and delete the
+        # claim config.
+        - name: seed-config
+          image: docker.io/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              if [ ! -e /config/qBittorrent/qBittorrent.conf ] && [ -e /seed/migrate/qBittorrent/qBittorrent.conf ]; then
+                cp -R /seed/migrate/. /config/
+                echo "Copied the config from /seed/migrate."
+              fi
+          securityContext: &container-security
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /seed
+        # A sidecar: it runs for the life of the pod, and the containers start
+        # after its startup probe passes.
+        - name: gluetun
+          image: ghcr.io/qdm12/gluetun:v3.41.3
+          restartPolicy: Always
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: protonvpn
+            - name: VPN_TYPE
+              value: wireguard
+            - name: SERVER_COUNTRIES
+              value: United States
+            # P2P servers only. Only they allow torrents and port forwarding.
+            - name: PORT_FORWARD_ONLY
+              value: "on"
+            - name: VPN_PORT_FORWARDING
+              value: "on"
+            # Give qBittorrent the forwarded port, and bind it to the tunnel.
+            # When the port goes down, bind it to lo. qBittorrent lets
+            # localhost use its API with no login (WebUI\LocalHostAuth=false).
+            - name: VPN_PORT_FORWARDING_UP_COMMAND
+              value: >-
+                /bin/sh -c 'wget -O- -nv --retry-connrefused --post-data
+                "json={\"listen_port\":{{PORT}},\"current_network_interface\":\"{{VPN_INTERFACE}}\",\"random_port\":false,\"upnp\":false}"
+                http://127.0.0.1:8080/api/v2/app/setPreferences'
+            - name: VPN_PORT_FORWARDING_DOWN_COMMAND
+              value: >-
+                /bin/sh -c 'wget -O- -nv --retry-connrefused --post-data
+                "json={\"listen_port\":0,\"current_network_interface\":\"lo\"}"
+                http://127.0.0.1:8080/api/v2/app/setPreferences'
+            # The web UI, for the gateway and the other apps.
+            - name: FIREWALL_INPUT_PORTS
+              value: "8080"
+          envFrom:
+            - secretRef:
+                name: gluetun
+          securityContext:
+            capabilities:
+              add: [NET_ADMIN]
+          # A pod that stopped abruptly can leave the routing rule of the
+          # tunnel behind. See the Kubernetes page of the gluetun wiki.
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "(ip rule del table 51820; ip -6 rule del table 51820) || true"]
+          startupProbe:
+            exec:
+              command: ["/gluetun-entrypoint", "healthcheck"]
+            periodSeconds: 5
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+      containers:
+        - name: qbittorrent
+          image: ghcr.io/home-operations/qbittorrent:5.2.4
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext: *container-security
+          # The API needs a login from outside the pod, so the probe only
+          # opens the port.
+          readinessProbe:
+            tcpSocket:
+              port: http
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /media
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
