@@ -101,6 +101,8 @@ spec:
               value: none
             - name: PROXY_CSP_CONFIG_FILE_LOCATION
               value: /etc/opencloud/csp.yaml
+            - name: STORAGE_USERS_POSIX_ROOT
+              value: /srv/opencloud/users
             - name: OC_LOG_LEVEL
               value: info
             - name: IDM_CREATE_DEMO_USERS
@@ -135,9 +137,12 @@ spec:
               subPath: csp.yaml
             - name: data
               mountPath: /var/lib/opencloud
-            # The posix driver keeps the files as normal files here.
+            # The posix driver keeps the files as normal files here. The
+            # mount is outside /var/lib/opencloud: a mount inside it makes
+            # the kubelet create storage/ as root, and OpenCloud then cannot
+            # create storage/metadata.
             - name: lethe
-              mountPath: /var/lib/opencloud/storage/users
+              mountPath: /srv/opencloud/users
               subPath: users
         - name: radicale
           image: docker.io/opencloudeu/radicale:v3.8.1
