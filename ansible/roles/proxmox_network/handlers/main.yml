@@ -22,3 +22,11 @@
     proxmox_network_reload.rc != 0 and
     proxmox_network_reload.stderr_lines | reject('match', '^warning:') | list | length > 0
   listen: Apply the network settings
+
+# The udev rule runs only when a NIC starts. So the handler changes the NICs
+# that run now. The driver does not reset the NIC for this change.
+- name: Turn off the offload of the e1000e interfaces
+  ansible.builtin.command:
+    cmd: /usr/sbin/ethtool -K {{ item }} tso off gso off
+  loop: "{{ proxmox_network_e1000e_interfaces }}"
+  changed_when: true

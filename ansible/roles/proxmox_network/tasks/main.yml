@@ -50,3 +50,39 @@
     state: absent
   when: proxmox_network_vlan_interfaces | length == 0
   notify: Apply the network settings
+
+# The e1000e driver can hang when TCP segmentation offload is on. On
+# 4 October 2026, the NIC of hyperion stopped for 8 hours, until a reboot.
+- name: Find the e1000e interfaces
+  ansible.builtin.set_fact:
+    proxmox_network_e1000e_interfaces: >-
+      {{ ansible_facts['interfaces']
+         | map('regex_replace', '-', '_')
+         | map('extract', ansible_facts)
+         | selectattr('module', 'defined')
+         | selectattr('module', 'equalto', 'e1000e')
+         | map(attribute='device')
+         | list }}
+
+- name: Install ethtool
+  ansible.builtin.apt:
+    name: ethtool
+    state: present
+  when: proxmox_network_e1000e_interfaces | length > 0
+
+# udev turns off the offload each time the NIC starts, also after a reboot.
+- name: Write the offload rule of the e1000e interfaces
+  ansible.builtin.template:
+    src: e1000e-offload.rules.j2
+    dest: /etc/udev/rules.d/70-ansible-e1000e-offload.rules
+    owner: root
+    group: root
+    mode: "0644"
+  when: proxmox_network_e1000e_interfaces | length > 0
+  notify: Turn off the offload of the e1000e interfaces
+
+- name: Delete the offload rule of the e1000e interfaces
+  ansible.builtin.file:
+    path: /etc/udev/rules.d/70-ansible-e1000e-offload.rules
+    state: absent
+  when: proxmox_network_e1000e_interfaces | length == 0

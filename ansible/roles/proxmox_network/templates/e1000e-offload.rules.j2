@@ -1,0 +1,4 @@
+# Ansible writes this file. See the role proxmox_network.
+# The e1000e driver can stop with "Detected Hardware Unit Hang" when TCP
+# segmentation offload is on. Then the NIC sends nothing until a reboot.
+ACTION=="add", SUBSYSTEM=="net", DRIVERS=="e1000e", RUN+="/usr/sbin/ethtool -K $name tso off gso off"
