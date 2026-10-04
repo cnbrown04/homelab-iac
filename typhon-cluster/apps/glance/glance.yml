@@ -193,10 +193,6 @@ pages:
                 url: https://audiobooks.buildwithcaleb.com
                 check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
                 icon: di:audiobookshelf
-              - title: OpenCloud
-                url: https://cloud.buildwithcaleb.com
-                check-url: http://opencloud.opencloud.svc.cluster.local/status.php
-                icon: di:open-cloud
               - title: Home Assistant
                 url: https://homeassistant.buildwithcaleb.com
                 check-url: http://10.0.1.69/manifest.json

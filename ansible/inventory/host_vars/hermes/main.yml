@@ -174,19 +174,6 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # OpenCloud has its own login. Its desktop and mobile apps cannot pass
-    # the Pangolin login, so SSO is off.
-    opencloud:
-      name: OpenCloud
-      mode: http
-      full-domain: cloud.buildwithcaleb.com
-      auth:
-        sso-enabled: false
-      targets:
-        - site: "{{ pangolin_typhon_site }}"
-          method: http
-          hostname: "{{ pangolin_typhon_target }}"
-          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:

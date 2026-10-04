@@ -7,7 +7,6 @@ resources:
   - glance
   - jackett
   - jellyfin
-  - opencloud
   - prowlarr
   - qbittorrent
   - radarr
