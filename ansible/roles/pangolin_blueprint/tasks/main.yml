@@ -25,7 +25,8 @@
       }}:{{ pangolin_blueprint_integration_port }}/v1
 
 # Ansible keeps the last blueprint that Pangolin accepted. It applies the
-# blueprint again only after a change.
+# blueprint again only after a change. The blueprint holds the basic auth
+# passwords, so the diff must not go to the public pipeline log.
 - name: Write the blueprint
   ansible.builtin.copy:
     content: "{{ pangolin_blueprint_resources | to_nice_json }}\n"
@@ -34,6 +35,7 @@
     group: root
     mode: "0600"
   register: pangolin_blueprint_file
+  no_log: true
 
 # A handler cannot use rescue, and the rescue keeps a failed apply visible.
 - name: Apply the blueprint  # noqa: no-handler

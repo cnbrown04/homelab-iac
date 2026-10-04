@@ -84,25 +84,33 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Sonarr has no login of its own. Keep SSO on.
+    # Sonarr has no login of its own. Keep SSO on. Ruddarr cannot pass the
+    # Pangolin login, so it uses basic auth. The API still needs the API key.
     sonarr:
       name: Sonarr
       mode: http
       full-domain: sonarr.buildwithcaleb.com
       auth:
         sso-enabled: true
+        basic-auth:
+          user: "{{ ruddarr_basic_auth_user }}"
+          password: "{{ ruddarr_basic_auth_password }}"
       targets:
         - site: "{{ pangolin_typhon_site }}"
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Radarr has no login of its own. Keep SSO on.
+    # Radarr has no login of its own. Keep SSO on. Ruddarr cannot pass the
+    # Pangolin login, so it uses basic auth. The API still needs the API key.
     radarr:
       name: Radarr
       mode: http
       full-domain: radarr.buildwithcaleb.com
       auth:
         sso-enabled: true
+        basic-auth:
+          user: "{{ ruddarr_basic_auth_user }}"
+          password: "{{ ruddarr_basic_auth_password }}"
       targets:
         - site: "{{ pangolin_typhon_site }}"
           method: http
