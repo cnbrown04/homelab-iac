@@ -234,7 +234,7 @@ the cluster.
 | `vpn.buildwithcaleb.com` | Headscale 0.29.4, a system service on `10.200.0.1:8085` | Traefik file route |
 | `pangolin.buildwithcaleb.com` | Pangolin Enterprise Edition, with Traefik and Gerbil | Traefik file route |
 | `auth.buildwithcaleb.com` | Pocket ID, the SSO provider | Pangolin resource, no Pangolin login |
-| `headplane.buildwithcaleb.com` | Headplane | Pangolin resource, Pangolin login |
+| `headplane.buildwithcaleb.com` | Headplane | Pangolin resource, no Pangolin login |
 | `dockge.buildwithcaleb.com` | Dockge | Pangolin resource, Pangolin login |
 
 - The Docker network `pangolin` has the subnet `10.200.0.0/24`. Headscale

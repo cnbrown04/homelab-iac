@@ -188,30 +188,26 @@ pangolin_blueprint_resources:
           hostname: "{{ pangolin_home_assistant_target }}"
           port: 80
     # Bambuddy runs as an app in Home Assistant OS, with the host network on
-    # port 8000. It controls the printer, so the Pangolin login stays on.
+    # port 8000. It has no Pangolin login. It logs in with OIDC through Pocket
+    # ID itself.
     bambuddy:
       name: Bambuddy
       mode: http
       full-domain: bambuddy.buildwithcaleb.com
       auth:
-        sso-enabled: true
+        sso-enabled: false
       targets:
         - site: "{{ pangolin_home_assistant_site }}"
           method: http
           hostname: "{{ pangolin_home_assistant_target }}"
           port: 8000
-    # The health route is public, so Glance can test it. It shows only "OK"
-    # or "ERROR", and it fails also when Headscale is down.
+    # Headplane has no Pangolin login. It logs in with Pocket ID itself.
     headplane:
       name: Headplane
       mode: http
       full-domain: headplane.buildwithcaleb.com
       auth:
-        sso-enabled: true
-      rules:
-        - action: allow
-          match: path
-          value: /admin/healthz
+        sso-enabled: false
       targets:
         - site: "{{ pangolin_local_site }}"
           method: http
