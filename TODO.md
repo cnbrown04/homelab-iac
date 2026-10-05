@@ -3,6 +3,15 @@
 - [ ]
 
 
+### Hosts
+- [ ] Add the RackNerd VPS iris to Ansible (scripts/vps-harden.sh, hosts.yml, a play like hermes). It hosts the websites and the personal projects. It has 1.5 GiB of RAM and 1 vCPU, so keep each service small.
+
+
+### Personal website
+- [ ] Find a good place for the documentation on the personal website
+- [ ] Build the personal website again with a CMS
+
+
 ### Backups
 - [ ] Daily etcd snapshot of typhon to R2 (one control plane, so this is urgent)
 - [ ] Off-site backup of the important data on lethe to R2 with restic (/lethe/k8s, app backups; decide which media)
