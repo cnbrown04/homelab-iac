@@ -39,6 +39,9 @@ document:
     <style>
     .theme-preset[data-key="default"] { display: none; }
     html .theme-choices:has(> :nth-child(3)) { --presets-per-row: 2; }
+    .big-clock { text-align: center; padding: 1rem 0; }
+    .big-clock-time { font-size: clamp(4rem, 10vw, 7rem); font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+    .big-clock-seconds { font-size: 0.3em; margin-left: 0.3em; letter-spacing: 0; }
     </style>
     <script>
     (function () {
@@ -67,9 +70,34 @@ document:
       follow();
       query.addEventListener("change", follow);
     })();
+
+    // The large clock of the page Home. Glance loads the widgets after
+    // this script, so each tick finds the clocks again.
+    (function () {
+      function pad(n) { return n < 10 ? "0" + n : String(n); }
+      function tick() {
+        var clocks = document.querySelectorAll("[data-big-clock]");
+        if (!clocks.length) return;
+        var now = new Date();
+        var parts = {
+          time: (now.getHours() % 12 || 12) + ":" + pad(now.getMinutes()),
+          seconds: pad(now.getSeconds()),
+          period: now.getHours() < 12 ? "AM" : "PM",
+          date: now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
+          utc: "UTC " + pad(now.getUTCHours()) + ":" + pad(now.getUTCMinutes())
+        };
+        clocks.forEach(function (clock) {
+          clock.querySelectorAll("[data-part]").forEach(function (part) {
+            part.textContent = parts[part.getAttribute("data-part")];
+          });
+        });
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
     </script>
 
-# Shared templates for the page "Lab". Glance does not read this key. The
+# Shared templates for the page "Homelab". Glance does not read this key. The
 # widgets use the templates through YAML anchors.
 lab-templates:
   # The nodes of a Proxmox cluster, from /cluster/resources?type=node.
@@ -163,11 +191,20 @@ lab-templates:
     {{ end }}
 
 pages:
-  # The start page: search, the apps, and the date.
+  # The start page: a clock, search, the apps, Self-Host Weekly, and the calendar.
   - name: Home
     slug: home
     width: slim
     center-vertically: true
+    # The script in document.head fills each [data-big-clock].
+    head-widgets:
+      - type: html
+        source: |
+          <div class="big-clock" data-big-clock>
+            <div class="big-clock-time color-highlight"><span data-part="time">--:--</span><span class="big-clock-seconds color-subdue"><span data-part="seconds">--</span> <span data-part="period"></span></span></div>
+            <div class="size-h3 margin-top-10" data-part="date"></div>
+            <div class="size-h6 color-subdue margin-top-5" data-part="utc"></div>
+          </div>
     columns:
       - size: full
         widgets:
@@ -202,10 +239,18 @@ pages:
                 check-url: http://10.0.1.69:8000/health
                 icon: di:bambu-lab
 
+          # This feed has only the issues of the newsletter, not the blog.
+          - type: rss
+            title: Self-Host Weekly
+            title-url: https://selfh.st/weekly/
+            style: horizontal-cards
+            limit: 6
+            cache: 6h
+            feeds:
+              - url: https://selfh.st/weekly/rss/
+
       - size: small
         widgets:
-          - type: clock
-            hour-format: 12h
           - type: calendar
             first-day-of-week: sunday
 
@@ -291,176 +336,181 @@ pages:
 
           # Glance reads the cluster with the read-only service account
           # glance. See rbac.yaml.
-          - type: custom-api
-            title: typhon nodes
-            cache: 1m
-            url: https://kubernetes.default.svc/api/v1/nodes
-            headers:
-              Authorization: "Bearer ${secret:kube-token}"
-            template: |
-              {{ if ne .Response.StatusCode 200 }}
-              <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
-              {{ else }}
-              <ul class="list list-gap-10">
-              {{ range sortByString "metadata.name" "asc" (.JSON.Array "items") }}
-              {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
-                <li class="flex items-center gap-10">
-                  <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
-                  <div class="grow min-width-0">
-                    <div class="color-highlight">{{ .String "metadata.name" }}</div>
-                    <div class="size-h6 color-subdue">{{ if .Exists `metadata.labels.node-role\.kubernetes\.io/control-plane` }}control plane{{ else }}worker{{ end }} · {{ .String `status.addresses.#(type=="InternalIP").address` }}</div>
-                  </div>
-                  <div class="size-h6 text-right shrink-0">
-                    <div>Kubernetes {{ .String "status.nodeInfo.kubeletVersion" }}</div>
-                    <div class="color-subdue">{{ .String "status.nodeInfo.osImage" }}</div>
-                  </div>
-                </li>
-              {{ end }}
-              </ul>
-              {{ end }}
+          - type: group
+            widgets:
+              - type: custom-api
+                title: typhon nodes
+                cache: 1m
+                url: https://kubernetes.default.svc/api/v1/nodes
+                headers:
+                  Authorization: "Bearer ${secret:kube-token}"
+                template: |
+                  {{ if ne .Response.StatusCode 200 }}
+                  <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
+                  {{ else }}
+                  <ul class="list list-gap-10">
+                  {{ range sortByString "metadata.name" "asc" (.JSON.Array "items") }}
+                  {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
+                    <li class="flex items-center gap-10">
+                      <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
+                      <div class="grow min-width-0">
+                        <div class="color-highlight">{{ .String "metadata.name" }}</div>
+                        <div class="size-h6 color-subdue">{{ if .Exists `metadata.labels.node-role\.kubernetes\.io/control-plane` }}control plane{{ else }}worker{{ end }} · {{ .String `status.addresses.#(type=="InternalIP").address` }}</div>
+                      </div>
+                      <div class="size-h6 text-right shrink-0">
+                        <div>Kubernetes {{ .String "status.nodeInfo.kubeletVersion" }}</div>
+                        <div class="color-subdue">{{ .String "status.nodeInfo.osImage" }}</div>
+                      </div>
+                    </li>
+                  {{ end }}
+                  </ul>
+                  {{ end }}
 
-          - type: custom-api
-            title: typhon workloads
-            cache: 1m
-            url: https://kubernetes.default.svc/api/v1/pods
-            headers:
-              Authorization: "Bearer ${secret:kube-token}"
-            subrequests:
-              deployments:
-                url: https://kubernetes.default.svc/apis/apps/v1/deployments
+              - type: custom-api
+                title: typhon workloads
+                cache: 1m
+                url: https://kubernetes.default.svc/api/v1/pods
                 headers:
                   Authorization: "Bearer ${secret:kube-token}"
-            template: |
-              {{ $deployments := .Subrequest "deployments" }}
-              {{ if or (ne .Response.StatusCode 200) (ne $deployments.Response.StatusCode 200) }}
-              <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
-              {{ else }}
-              {{ $pods := .JSON.Array "items" }}
-              {{ $running := .JSON.Array `items.#(status.phase=="Running")#` }}
-              {{ $notReady := .JSON.Array `items.#(status.containerStatuses.#(ready==false))#` }}
-              {{ $restarted := .JSON.Array `items.#(status.containerStatuses.#(restartCount>0))#` }}
-              {{ $allDeployments := $deployments.JSON.Array "items" }}
-              {{ $badDeployments := 0 }}
-              {{ range $allDeployments }}{{ if ne (.Int "status.readyReplicas") (.Int "spec.replicas") }}{{ $badDeployments = add $badDeployments 1 }}{{ end }}{{ end }}
-              <div class="flex justify-between">
-                <div><div class="size-h3 color-highlight">{{ len $running }} / {{ len $pods }}</div><div class="size-h6">pods running</div></div>
-                <div><div class="size-h3 {{ if gt (len $notReady) 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ len $notReady }}</div><div class="size-h6">pods not ready</div></div>
-                <div><div class="size-h3 {{ if gt $badDeployments 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ sub (len $allDeployments) $badDeployments }} / {{ len $allDeployments }}</div><div class="size-h6">deployments ready</div></div>
-              </div>
-              {{ if gt (len $notReady) 0 }}
-              <div class="size-h6 margin-top-15">Not ready</div>
-              <ul class="list list-gap-4 margin-top-5">
-              {{ range $notReady }}
-                <li class="color-negative text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }} · {{ .String "status.phase" }}</li>
-              {{ end }}
-              </ul>
-              {{ end }}
-              {{ if gt (len $restarted) 0 }}
-              <div class="size-h6 margin-top-15">Restarts</div>
-              <ul class="list list-gap-4 margin-top-5 collapsible-container" data-collapse-after="5">
-              {{ range $restarted }}
-              {{ $count := 0 }}
-              {{ range .Array "status.containerStatuses" }}{{ $count = add $count (.Int "restartCount") }}{{ end }}
-                <li class="flex justify-between gap-10">
-                  <span class="text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }}</span>
-                  <span class="color-highlight shrink-0">{{ $count }}</span>
-                </li>
-              {{ end }}
-              </ul>
-              {{ end }}
-              {{ end }}
+                subrequests:
+                  deployments:
+                    url: https://kubernetes.default.svc/apis/apps/v1/deployments
+                    headers:
+                      Authorization: "Bearer ${secret:kube-token}"
+                template: |
+                  {{ $deployments := .Subrequest "deployments" }}
+                  {{ if or (ne .Response.StatusCode 200) (ne $deployments.Response.StatusCode 200) }}
+                  <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
+                  {{ else }}
+                  {{ $pods := .JSON.Array "items" }}
+                  {{ $running := .JSON.Array `items.#(status.phase=="Running")#` }}
+                  {{ $notReady := .JSON.Array `items.#(status.containerStatuses.#(ready==false))#` }}
+                  {{ $restarted := .JSON.Array `items.#(status.containerStatuses.#(restartCount>0))#` }}
+                  {{ $allDeployments := $deployments.JSON.Array "items" }}
+                  {{ $badDeployments := 0 }}
+                  {{ range $allDeployments }}{{ if ne (.Int "status.readyReplicas") (.Int "spec.replicas") }}{{ $badDeployments = add $badDeployments 1 }}{{ end }}{{ end }}
+                  <div class="flex justify-between">
+                    <div><div class="size-h3 color-highlight">{{ len $running }} / {{ len $pods }}</div><div class="size-h6">pods running</div></div>
+                    <div><div class="size-h3 {{ if gt (len $notReady) 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ len $notReady }}</div><div class="size-h6">pods not ready</div></div>
+                    <div><div class="size-h3 {{ if gt $badDeployments 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ sub (len $allDeployments) $badDeployments }} / {{ len $allDeployments }}</div><div class="size-h6">deployments ready</div></div>
+                  </div>
+                  {{ if gt (len $notReady) 0 }}
+                  <div class="size-h6 margin-top-15">Not ready</div>
+                  <ul class="list list-gap-4 margin-top-5">
+                  {{ range $notReady }}
+                    <li class="color-negative text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }} · {{ .String "status.phase" }}</li>
+                  {{ end }}
+                  </ul>
+                  {{ end }}
+                  {{ if gt (len $restarted) 0 }}
+                  <div class="size-h6 margin-top-15">Restarts</div>
+                  <ul class="list list-gap-4 margin-top-5 collapsible-container" data-collapse-after="5">
+                  {{ range $restarted }}
+                  {{ $count := 0 }}
+                  {{ range .Array "status.containerStatuses" }}{{ $count = add $count (.Int "restartCount") }}{{ end }}
+                    <li class="flex justify-between gap-10">
+                      <span class="text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }}</span>
+                      <span class="color-highlight shrink-0">{{ $count }}</span>
+                    </li>
+                  {{ end }}
+                  </ul>
+                  {{ end }}
+                  {{ end }}
 
-          - type: custom-api
-            title: Flux
-            cache: 1m
-            url: https://kubernetes.default.svc/apis/kustomize.toolkit.fluxcd.io/v1/kustomizations
-            headers:
-              Authorization: "Bearer ${secret:kube-token}"
-            subrequests:
-              helmreleases:
-                url: https://kubernetes.default.svc/apis/helm.toolkit.fluxcd.io/v2/helmreleases
+              - type: custom-api
+                title: Flux
+                cache: 1m
+                url: https://kubernetes.default.svc/apis/kustomize.toolkit.fluxcd.io/v1/kustomizations
                 headers:
                   Authorization: "Bearer ${secret:kube-token}"
-              sources:
-                url: https://kubernetes.default.svc/apis/source.toolkit.fluxcd.io/v1/gitrepositories
-                headers:
-                  Authorization: "Bearer ${secret:kube-token}"
-            template: |
-              {{ $helm := .Subrequest "helmreleases" }}
-              {{ $sources := .Subrequest "sources" }}
-              {{ if or (ne .Response.StatusCode 200) (ne $helm.Response.StatusCode 200) (ne $sources.Response.StatusCode 200) }}
-              <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
-              {{ else }}
-              {{ $revision := $sources.JSON.String `items.#(metadata.name=="homelab-iac").status.artifact.revision` }}
-              {{ $commit := findSubmatch "sha1:([0-9a-f]{7})" $revision }}
-              <div class="flex justify-between items-center">
-                <div>
-                  <div class="size-h6">main is at</div>
-                  <a class="size-h3 color-highlight" href="https://github.com/cnbrown04/homelab-iac/commit/{{ $commit }}" target="_blank" rel="noreferrer">{{ $commit }}</a>
-                </div>
-                <div class="size-h6 text-right">fetched <span {{ parseRelativeTime "rfc3339" ($sources.JSON.String `items.#(metadata.name=="homelab-iac").status.artifact.lastUpdateTime`) }}></span> ago</div>
-              </div>
-              <div class="size-h6 margin-top-15">Kustomizations</div>
-              <ul class="list list-gap-4 margin-top-5">
-              {{ range .JSON.Array "items" }}
-              {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
-                <li class="flex items-center gap-10">
-                  <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
-                  <span class="grow text-truncate">{{ .String "metadata.name" }}</span>
-                  <span class="size-h6 color-subdue shrink-0">{{ findSubmatch "^([^@]+)@" (.String "status.lastAppliedRevision") }}@{{ findSubmatch "sha1:([0-9a-f]{7})" (.String "status.lastAppliedRevision") }}</span>
-                </li>
-              {{ end }}
-              </ul>
-              <div class="size-h6 margin-top-15">Helm releases</div>
-              <ul class="list list-gap-4 margin-top-5">
-              {{ range $helm.JSON.Array "items" }}
-              {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
-                <li class="flex items-center gap-10">
-                  <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
-                  <span class="grow text-truncate">{{ .String "metadata.name" }}</span>
-                  <span class="size-h6 color-subdue shrink-0">{{ .String "status.history.0.chartVersion" }}</span>
-                </li>
-              {{ end }}
-              </ul>
-              {{ end }}
+                subrequests:
+                  helmreleases:
+                    url: https://kubernetes.default.svc/apis/helm.toolkit.fluxcd.io/v2/helmreleases
+                    headers:
+                      Authorization: "Bearer ${secret:kube-token}"
+                  sources:
+                    url: https://kubernetes.default.svc/apis/source.toolkit.fluxcd.io/v1/gitrepositories
+                    headers:
+                      Authorization: "Bearer ${secret:kube-token}"
+                template: |
+                  {{ $helm := .Subrequest "helmreleases" }}
+                  {{ $sources := .Subrequest "sources" }}
+                  {{ if or (ne .Response.StatusCode 200) (ne $helm.Response.StatusCode 200) (ne $sources.Response.StatusCode 200) }}
+                  <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
+                  {{ else }}
+                  {{ $revision := $sources.JSON.String `items.#(metadata.name=="homelab-iac").status.artifact.revision` }}
+                  {{ $commit := findSubmatch "sha1:([0-9a-f]{7})" $revision }}
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <div class="size-h6">main is at</div>
+                      <a class="size-h3 color-highlight" href="https://github.com/cnbrown04/homelab-iac/commit/{{ $commit }}" target="_blank" rel="noreferrer">{{ $commit }}</a>
+                    </div>
+                    <div class="size-h6 text-right">fetched <span {{ parseRelativeTime "rfc3339" ($sources.JSON.String `items.#(metadata.name=="homelab-iac").status.artifact.lastUpdateTime`) }}></span> ago</div>
+                  </div>
+                  <div class="size-h6 margin-top-15">Kustomizations</div>
+                  <ul class="list list-gap-4 margin-top-5">
+                  {{ range .JSON.Array "items" }}
+                  {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
+                    <li class="flex items-center gap-10">
+                      <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
+                      <span class="grow text-truncate">{{ .String "metadata.name" }}</span>
+                      <span class="size-h6 color-subdue shrink-0">{{ findSubmatch "^([^@]+)@" (.String "status.lastAppliedRevision") }}@{{ findSubmatch "sha1:([0-9a-f]{7})" (.String "status.lastAppliedRevision") }}</span>
+                    </li>
+                  {{ end }}
+                  </ul>
+                  <div class="size-h6 margin-top-15">Helm releases</div>
+                  <ul class="list list-gap-4 margin-top-5">
+                  {{ range $helm.JSON.Array "items" }}
+                  {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
+                    <li class="flex items-center gap-10">
+                      <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
+                      <span class="grow text-truncate">{{ .String "metadata.name" }}</span>
+                      <span class="size-h6 color-subdue shrink-0">{{ .String "status.history.0.chartVersion" }}</span>
+                    </li>
+                  {{ end }}
+                  </ul>
+                  {{ end }}
 
           # The repository is public. GitHub allows 60 requests an hour with
           # no token, so the cache is 10 minutes.
-          - type: custom-api
-            title: Pipelines
-            title-url: https://github.com/cnbrown04/homelab-iac/actions
-            cache: 10m
-            url: https://api.github.com/repos/cnbrown04/homelab-iac/actions/runs
-            parameters:
-              per_page: 8
-            headers:
-              Accept: application/vnd.github+json
-            template: |
-              {{ if ne .Response.StatusCode 200 }}
-              <p class="color-negative">GitHub answered {{ .Response.Status }}.</p>
-              {{ else }}
-              <ul class="list list-gap-10">
-              {{ range .JSON.Array "workflow_runs" }}
-              {{ $status := .String "status" }}
-              {{ $result := .String "conclusion" }}
-                <li class="flex items-center gap-10">
-                  <span class="{{ if eq $result "success" }}color-positive{{ else if or (eq $result "failure") (eq $result "timed_out") (eq $result "startup_failure") }}color-negative{{ else if eq $status "completed" }}color-subdue{{ else }}color-primary{{ end }}">●</span>
-                  <div class="grow min-width-0">
-                    <div class="text-truncate"><a class="color-highlight" href="{{ .String "html_url" }}" target="_blank" rel="noreferrer">{{ .String "display_title" }}</a></div>
-                    <div class="size-h6 color-subdue">{{ .String "name" }} · {{ .String "event" }} · <span {{ parseRelativeTime "rfc3339" (.String "created_at") }}></span> ago</div>
-                  </div>
-                  <span class="size-h6 shrink-0{{ if eq $status "waiting" }} color-primary{{ end }}">{{ if eq $status "completed" }}{{ $result }}{{ else if eq $status "waiting" }}needs approval{{ else }}{{ $status }}{{ end }}</span>
-                </li>
-              {{ end }}
-              </ul>
-              {{ end }}
+          - type: group
+            widgets:
+              - type: custom-api
+                title: Pipelines
+                title-url: https://github.com/cnbrown04/homelab-iac/actions
+                cache: 10m
+                url: https://api.github.com/repos/cnbrown04/homelab-iac/actions/runs
+                parameters:
+                  per_page: 8
+                headers:
+                  Accept: application/vnd.github+json
+                template: |
+                  {{ if ne .Response.StatusCode 200 }}
+                  <p class="color-negative">GitHub answered {{ .Response.Status }}.</p>
+                  {{ else }}
+                  <ul class="list list-gap-10">
+                  {{ range .JSON.Array "workflow_runs" }}
+                  {{ $status := .String "status" }}
+                  {{ $result := .String "conclusion" }}
+                    <li class="flex items-center gap-10">
+                      <span class="{{ if eq $result "success" }}color-positive{{ else if or (eq $result "failure") (eq $result "timed_out") (eq $result "startup_failure") }}color-negative{{ else if eq $status "completed" }}color-subdue{{ else }}color-primary{{ end }}">●</span>
+                      <div class="grow min-width-0">
+                        <div class="text-truncate"><a class="color-highlight" href="{{ .String "html_url" }}" target="_blank" rel="noreferrer">{{ .String "display_title" }}</a></div>
+                        <div class="size-h6 color-subdue">{{ .String "name" }} · {{ .String "event" }} · <span {{ parseRelativeTime "rfc3339" (.String "created_at") }}></span> ago</div>
+                      </div>
+                      <span class="size-h6 shrink-0{{ if eq $status "waiting" }} color-primary{{ end }}">{{ if eq $status "completed" }}{{ $result }}{{ else if eq $status "waiting" }}needs approval{{ else }}{{ $status }}{{ end }}</span>
+                    </li>
+                  {{ end }}
+                  </ul>
+                  {{ end }}
 
-          - type: repository
-            repository: cnbrown04/homelab-iac
-            cache: 1h
-            pull-requests-limit: 5
-            issues-limit: 3
-            commits-limit: 5
+              - type: repository
+                title: Repository
+                repository: cnbrown04/homelab-iac
+                cache: 1h
+                pull-requests-limit: 5
+                issues-limit: 3
+                commits-limit: 5
 
           - type: videos
             style: grid-cards
@@ -513,8 +563,6 @@ pages:
                 title: Proxmox
               - url: https://kubernetes.io/feed.xml
                 title: Kubernetes
-              - url: https://selfh.st/rss/
-                title: selfh.st
 
           - type: group
             widgets:
