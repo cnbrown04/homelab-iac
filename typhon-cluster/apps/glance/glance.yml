@@ -209,170 +209,9 @@ pages:
           - type: calendar
             first-day-of-week: sunday
 
-  # The detailed page: each service, each node, and the releases.
+  # The homelab: the Proxmox nodes and guests, typhon, the pipelines, and the news.
   - name: Homelab
     slug: homelab
-    width: wide
-    columns:
-      - size: full
-        widgets:
-          - type: monitor
-            title: Media
-            cache: 1m
-            sites:
-              - title: Jellyfin
-                url: https://jellyfin.buildwithcaleb.com
-                check-url: http://jellyfin.jellyfin.svc.cluster.local/health
-                icon: di:jellyfin
-              - title: Seerr
-                url: https://seerr.buildwithcaleb.com
-                check-url: http://seerr.seerr.svc.cluster.local/api/v1/status
-                icon: di:jellyseerr
-              - title: Audiobookshelf
-                url: https://audiobooks.buildwithcaleb.com
-                check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
-                icon: di:audiobookshelf
-
-          - type: monitor
-            title: Downloads
-            cache: 1m
-            sites:
-              - title: Sonarr
-                url: https://sonarr.buildwithcaleb.com
-                check-url: http://sonarr.sonarr.svc.cluster.local:8989/ping
-                icon: di:sonarr
-              - title: Radarr
-                url: https://radarr.buildwithcaleb.com
-                check-url: http://radarr.radarr.svc.cluster.local:7878/ping
-                icon: di:radarr
-              - title: Chaptarr
-                url: https://chaptarr.buildwithcaleb.com
-                check-url: http://chaptarr.chaptarr.svc.cluster.local:8789/
-                icon: di:readarr
-              - title: Prowlarr
-                url: https://prowlarr.buildwithcaleb.com
-                check-url: http://prowlarr.prowlarr.svc.cluster.local:9696/ping
-                icon: di:prowlarr
-              - title: Jackett
-                url: https://jackett.buildwithcaleb.com
-                check-url: http://jackett.jackett.svc.cluster.local:9117/health
-                icon: di:jackett
-              - title: qBittorrent
-                url: https://qbittorrent.buildwithcaleb.com
-                check-url: http://qbittorrent.qbittorrent.svc.cluster.local:8080/
-                icon: di:qbittorrent
-
-          # check-url tests the service on the network of the homelab, where
-          # the cluster can reach it.
-          - type: monitor
-            title: Proxmox
-            cache: 1m
-            sites:
-              - title: gaia
-                url: https://gaia.vnet.buildwithcaleb.com
-                check-url: https://10.0.1.120:8006
-                allow-insecure: true
-                icon: di:proxmox
-              - title: hyperion
-                url: https://hyperion.vnet.buildwithcaleb.com
-                check-url: https://10.0.1.101:8006
-                allow-insecure: true
-                icon: di:proxmox
-              - title: tartarus
-                url: https://tartarus.vnet.buildwithcaleb.com
-                check-url: https://10.0.1.113:8006
-                allow-insecure: true
-                icon: di:proxmox
-              - title: theia
-                url: https://theia.vnet.buildwithcaleb.com
-                check-url: https://10.0.1.131:8006
-                allow-insecure: true
-                icon: di:proxmox
-              - title: atlas
-                url: https://atlas.vnet.buildwithcaleb.com
-                check-url: https://10.0.1.124:8006
-                allow-insecure: true
-                icon: di:proxmox
-
-          # Home Assistant OS runs on atlas, outside the cluster.
-          - type: monitor
-            title: Home
-            cache: 1m
-            sites:
-              - title: Home Assistant
-                url: https://homeassistant.buildwithcaleb.com
-                check-url: http://10.0.1.69/manifest.json
-                icon: di:home-assistant
-              - title: Bambuddy
-                url: https://bambuddy.buildwithcaleb.com
-                check-url: http://10.0.1.69:8000/health
-                icon: di:bambu-lab
-
-          - type: monitor
-            title: hermes
-            cache: 1m
-            sites:
-              - title: Headscale
-                url: https://vpn.buildwithcaleb.com/health
-                icon: di:headscale
-              - title: Pocket ID
-                url: https://auth.buildwithcaleb.com
-                icon: di:pocket-id
-              - title: Pangolin
-                url: https://pangolin.buildwithcaleb.com
-                icon: di:pangolin
-              - title: Headplane
-                url: https://headplane.buildwithcaleb.com
-                check-url: https://headplane.buildwithcaleb.com/admin/healthz
-                icon: di:headplane
-              - title: Dockge
-                url: https://dockge.buildwithcaleb.com
-                check-url: https://dockge.buildwithcaleb.com/robots.txt
-                icon: di:dockge
-
-      - size: small
-        widgets:
-          - type: bookmarks
-            groups:
-              - title: Admin
-                links:
-                  - title: Pangolin
-                    url: https://pangolin.buildwithcaleb.com
-                  - title: Headplane
-                    url: https://headplane.buildwithcaleb.com
-                  - title: Dockge
-                    url: https://dockge.buildwithcaleb.com
-                  - title: Pocket ID
-                    url: https://auth.buildwithcaleb.com
-                  - title: GitHub
-                    url: https://github.com/cnbrown04/homelab-iac
-
-          # GitHub allows 60 requests an hour with no token. The cache keeps
-          # this widget far below that.
-          - type: releases
-            cache: 6h
-            show-source-icon: true
-            limit: 10
-            collapse-after: 5
-            repositories:
-              - jellyfin/jellyfin
-              - seerr-team/seerr
-              - advplyr/audiobookshelf
-              - Sonarr/Sonarr
-              - Radarr/Radarr
-              - Prowlarr/Prowlarr
-              - qbittorrent/qBittorrent
-              - qdm12/gluetun
-              - siderolabs/talos
-              - fosrl/pangolin
-              - juanfont/headscale
-              - pocket-id/pocket-id
-              - home-assistant/core
-
-  # A pool of widgets. Keep the widgets that you like, then move them to the
-  # other pages.
-  - name: Lab
-    slug: lab
     width: wide
     columns:
       - size: small
@@ -687,3 +526,163 @@ pages:
                 subreddit: selfhosted
                 show-thumbnails: true
                 collapse-after: 5
+
+  # The services: each app, each node, and the releases of the apps.
+  - name: Services
+    slug: services
+    width: wide
+    columns:
+      - size: full
+        widgets:
+          - type: monitor
+            title: Media
+            cache: 1m
+            sites:
+              - title: Jellyfin
+                url: https://jellyfin.buildwithcaleb.com
+                check-url: http://jellyfin.jellyfin.svc.cluster.local/health
+                icon: di:jellyfin
+              - title: Seerr
+                url: https://seerr.buildwithcaleb.com
+                check-url: http://seerr.seerr.svc.cluster.local/api/v1/status
+                icon: di:jellyseerr
+              - title: Audiobookshelf
+                url: https://audiobooks.buildwithcaleb.com
+                check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
+                icon: di:audiobookshelf
+
+          - type: monitor
+            title: Downloads
+            cache: 1m
+            sites:
+              - title: Sonarr
+                url: https://sonarr.buildwithcaleb.com
+                check-url: http://sonarr.sonarr.svc.cluster.local:8989/ping
+                icon: di:sonarr
+              - title: Radarr
+                url: https://radarr.buildwithcaleb.com
+                check-url: http://radarr.radarr.svc.cluster.local:7878/ping
+                icon: di:radarr
+              - title: Chaptarr
+                url: https://chaptarr.buildwithcaleb.com
+                check-url: http://chaptarr.chaptarr.svc.cluster.local:8789/
+                icon: di:readarr
+              - title: Prowlarr
+                url: https://prowlarr.buildwithcaleb.com
+                check-url: http://prowlarr.prowlarr.svc.cluster.local:9696/ping
+                icon: di:prowlarr
+              - title: Jackett
+                url: https://jackett.buildwithcaleb.com
+                check-url: http://jackett.jackett.svc.cluster.local:9117/health
+                icon: di:jackett
+              - title: qBittorrent
+                url: https://qbittorrent.buildwithcaleb.com
+                check-url: http://qbittorrent.qbittorrent.svc.cluster.local:8080/
+                icon: di:qbittorrent
+
+          # check-url tests the service on the network of the homelab, where
+          # the cluster can reach it.
+          - type: monitor
+            title: Proxmox
+            cache: 1m
+            sites:
+              - title: gaia
+                url: https://gaia.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.120:8006
+                allow-insecure: true
+                icon: di:proxmox
+              - title: hyperion
+                url: https://hyperion.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.101:8006
+                allow-insecure: true
+                icon: di:proxmox
+              - title: tartarus
+                url: https://tartarus.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.113:8006
+                allow-insecure: true
+                icon: di:proxmox
+              - title: theia
+                url: https://theia.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.131:8006
+                allow-insecure: true
+                icon: di:proxmox
+              - title: atlas
+                url: https://atlas.vnet.buildwithcaleb.com
+                check-url: https://10.0.1.124:8006
+                allow-insecure: true
+                icon: di:proxmox
+
+          # Home Assistant OS runs on atlas, outside the cluster.
+          - type: monitor
+            title: Home
+            cache: 1m
+            sites:
+              - title: Home Assistant
+                url: https://homeassistant.buildwithcaleb.com
+                check-url: http://10.0.1.69/manifest.json
+                icon: di:home-assistant
+              - title: Bambuddy
+                url: https://bambuddy.buildwithcaleb.com
+                check-url: http://10.0.1.69:8000/health
+                icon: di:bambu-lab
+
+          - type: monitor
+            title: hermes
+            cache: 1m
+            sites:
+              - title: Headscale
+                url: https://vpn.buildwithcaleb.com/health
+                icon: di:headscale
+              - title: Pocket ID
+                url: https://auth.buildwithcaleb.com
+                icon: di:pocket-id
+              - title: Pangolin
+                url: https://pangolin.buildwithcaleb.com
+                icon: di:pangolin
+              - title: Headplane
+                url: https://headplane.buildwithcaleb.com
+                check-url: https://headplane.buildwithcaleb.com/admin/healthz
+                icon: di:headplane
+              - title: Dockge
+                url: https://dockge.buildwithcaleb.com
+                check-url: https://dockge.buildwithcaleb.com/robots.txt
+                icon: di:dockge
+
+      - size: small
+        widgets:
+          - type: bookmarks
+            groups:
+              - title: Admin
+                links:
+                  - title: Pangolin
+                    url: https://pangolin.buildwithcaleb.com
+                  - title: Headplane
+                    url: https://headplane.buildwithcaleb.com
+                  - title: Dockge
+                    url: https://dockge.buildwithcaleb.com
+                  - title: Pocket ID
+                    url: https://auth.buildwithcaleb.com
+                  - title: GitHub
+                    url: https://github.com/cnbrown04/homelab-iac
+
+          # GitHub allows 60 requests an hour with no token. The cache keeps
+          # this widget far below that.
+          - type: releases
+            cache: 6h
+            show-source-icon: true
+            limit: 10
+            collapse-after: 5
+            repositories:
+              - jellyfin/jellyfin
+              - seerr-team/seerr
+              - advplyr/audiobookshelf
+              - Sonarr/Sonarr
+              - Radarr/Radarr
+              - Prowlarr/Prowlarr
+              - qbittorrent/qBittorrent
+              - qdm12/gluetun
+              - siderolabs/talos
+              - fosrl/pangolin
+              - juanfont/headscale
+              - pocket-id/pocket-id
+              - home-assistant/core
