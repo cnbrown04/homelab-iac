@@ -4,6 +4,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: glance
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Glance
+    glance/icon: di:glance
 spec:
   replicas: 1
   selector:

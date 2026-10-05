@@ -1,5 +1,6 @@
-# Glance reads the state of the cluster from the Kubernetes API. The role can
-# only read, and it has no access to Secrets.
+# Glance reads the state of Flux from the Kubernetes API. The role can only
+# read, and it has no access to Secrets. glance-k8s reads the nodes and the
+# apps with its own role. See glance-k8s.yaml.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -21,12 +22,6 @@ kind: ClusterRole
 metadata:
   name: glance-reader
 rules:
-  - apiGroups: [""]
-    resources: [nodes, pods]
-    verbs: [list]
-  - apiGroups: [apps]
-    resources: [deployments, statefulsets, daemonsets]
-    verbs: [list]
   - apiGroups: [kustomize.toolkit.fluxcd.io]
     resources: [kustomizations]
     verbs: [list]

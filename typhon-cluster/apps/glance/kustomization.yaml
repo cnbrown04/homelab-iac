@@ -6,6 +6,7 @@ resources:
   - rbac.yaml
   - secrets.sops.yaml
   - deployment.yaml
+  - glance-k8s.yaml
   - service.yaml
   - httproute.yaml
 # A change to glance.yml gives the ConfigMap a new name, so the pod restarts.

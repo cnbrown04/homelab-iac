@@ -3,6 +3,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: radarr
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Radarr
+    glance/icon: di:radarr
 spec:
   replicas: 1
   # SQLite and a local-path volume allow one pod only.

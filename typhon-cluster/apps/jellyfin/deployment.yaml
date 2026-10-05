@@ -5,6 +5,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jellyfin
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Jellyfin
+    glance/icon: di:jellyfin
 spec:
   replicas: 1
   # SQLite, a local-path volume, and one GPU allow one pod only.

@@ -3,6 +3,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prowlarr
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Prowlarr
+    glance/icon: di:prowlarr
 spec:
   replicas: 1
   # SQLite and a local-path volume allow one pod only.

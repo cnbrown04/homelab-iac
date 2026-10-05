@@ -1,0 +1,105 @@
+# glance-k8s gives Glance the widgets for the nodes and the apps of typhon.
+# See https://github.com/lukasdietrich/glance-k8s. Glance calls it on
+# http://glance-k8s.glance.svc.cluster.local/extension/<widget>.
+#
+# An app shows in the widget when its Deployment has the annotation
+# glance/name. Add glance/icon also. The widget gets the URL of the app from
+# its HTTPRoute.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: glance-k8s
+---
+# The role can only read. It has no access to Secrets or to pods.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: glance-k8s
+rules:
+  - apiGroups: ["", metrics.k8s.io]
+    resources: [nodes]
+    verbs: [list]
+  - apiGroups: [""]
+    resources: [services]
+    verbs: [list]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [list]
+  - apiGroups: [gateway.networking.k8s.io]
+    resources: [httproutes]
+    verbs: [list]
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets, daemonsets]
+    verbs: [list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: glance-k8s
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: glance-k8s
+subjects:
+  - kind: ServiceAccount
+    name: glance-k8s
+    namespace: glance
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glance-k8s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: glance-k8s
+  template:
+    metadata:
+      labels:
+        app: glance-k8s
+    spec:
+      serviceAccountName: glance-k8s
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: glance-k8s
+          image: ghcr.io/lukasdietrich/glance-k8s/glance-k8s:v0.5.7
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glance-k8s
+spec:
+  selector:
+    app: glance-k8s
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -18,6 +18,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: qbittorrent
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: qBittorrent
+    glance/icon: di:qbittorrent
 spec:
   replicas: 1
   strategy:

@@ -4,6 +4,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: seerr
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Seerr
+    glance/icon: di:jellyseerr
 spec:
   replicas: 1
   # SQLite and a local-path volume allow one pod only.

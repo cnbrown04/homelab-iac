@@ -5,6 +5,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jackett
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Jackett
+    glance/icon: di:jackett
 spec:
   replicas: 1
   strategy:

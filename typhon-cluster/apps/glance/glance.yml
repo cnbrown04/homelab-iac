@@ -42,6 +42,23 @@ document:
     .big-clock { text-align: center; padding: 1rem 0; }
     .big-clock-time { font-size: clamp(4rem, 10vw, 7rem); font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
     .big-clock-seconds { font-size: 0.3em; margin-left: 0.3em; letter-spacing: 0; }
+    .bookmark-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.6rem; font-size: 1.2rem; }
+    .bookmark-bar a { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--color-text-subdue); }
+    .bookmark-bar a:hover { color: var(--color-text-highlight); }
+    .bookmark-bar img { width: 1.4rem; height: 1.4rem; }
+    /* A black icon, for example GitHub, is white on the dark theme. */
+    [data-scheme="dark"] .bookmark-bar img.mono { filter: invert(1); }
+    .weekly-issue .rss-detailed-thumbnail > * { height: 14rem; }
+    .weekly-issue .rss-detailed-description { -webkit-line-clamp: 4; line-clamp: 4; }
+    .weekly-issue .attachments { display: none; }
+    /* glance-k8s draws a server icon for each node. The mask shows the Talos
+       logo in its place, in the color of the state of the node. */
+    .typhon-nodes .server-icon path { display: none; }
+    .typhon-nodes .server-icon {
+      background-color: currentColor;
+      -webkit-mask: url("https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/talos.svg") center / contain no-repeat;
+      mask: url("https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/talos.svg") center / contain no-repeat;
+    }
     </style>
     <script>
     (function () {
@@ -141,14 +158,18 @@ lab-templates:
     {{ end }}
 
   # The VMs and containers of a Proxmox cluster, from
-  # /cluster/resources?type=vm. Templates are not in the list.
+  # /cluster/resources?type=vm. Templates are not in the list. A VM with the
+  # tag talos is a node of typhon, and the typhon nodes tab shows it, so it is
+  # not in the list. When no guest is left, the widget shows a short text.
   proxmox-guests: &proxmox-guests |
     {{ if ne .Response.StatusCode 200 }}
     <p class="color-negative">Proxmox answered {{ .Response.Status }}. Check the API token.</p>
     {{ else }}
+    {{ $shown := 0 }}
     <ul class="list list-gap-10 collapsible-container" data-collapse-after="6">
     {{ range sortByInt "vmid" "asc" (.JSON.Array "data") }}
-    {{ if ne (.Int "template") 1 }}
+    {{ if and (ne (.Int "template") 1) (eq (findMatch "(^|;)talos(;|$)" (.String "tags")) "") }}
+    {{ $shown = add $shown 1 }}
       <li class="flex items-center gap-10">
         <span class="{{ if eq (.String "status") "running" }}color-positive{{ else }}color-subdue{{ end }}">●</span>
         <div class="grow min-width-0">
@@ -167,6 +188,9 @@ lab-templates:
     {{ end }}
     {{ end }}
     </ul>
+    {{ if eq $shown 0 }}
+    <p class="color-subdue">No guests outside typhon.</p>
+    {{ end }}
     {{ end }}
 
   # The storage of a Proxmox cluster, from /cluster/resources?type=storage.
@@ -191,99 +215,142 @@ lab-templates:
     {{ end }}
 
 pages:
-  # The start page: a clock, search, the apps, Self-Host Weekly, and the calendar.
+  # The start page: a clock, a bar of links, search, Self-Host Weekly, Hacker
+  # News, and Lobsters. It has one
+  # column, so the widgets use the full width of a slim page.
   - name: Home
     slug: home
     width: slim
     center-vertically: true
-    # The script in document.head fills each [data-big-clock].
+    # The clock and the weather of Auburn. The script in document.head fills
+    # each [data-big-clock]. Glance gets the weather from Open-Meteo, which
+    # needs no key. When Open-Meteo fails, the clock shows with no weather.
     head-widgets:
-      - type: html
-        source: |
+      - type: custom-api
+        hide-header: true
+        frameless: true
+        cache: 15m
+        url: https://api.open-meteo.com/v1/forecast
+        parameters:
+          latitude: 32.6099
+          longitude: -85.4808
+          current: temperature_2m,weather_code
+          daily: temperature_2m_max,temperature_2m_min,precipitation_probability_max
+          temperature_unit: fahrenheit
+          timezone: America/Chicago
+          forecast_days: 1
+        template: |
           <div class="big-clock" data-big-clock>
             <div class="big-clock-time color-highlight"><span data-part="time">--:--</span><span class="big-clock-seconds color-subdue"><span data-part="seconds">--</span> <span data-part="period"></span></span></div>
             <div class="size-h3 margin-top-10" data-part="date"></div>
-            <div class="size-h6 color-subdue margin-top-5" data-part="utc"></div>
+            <div class="size-h5 color-subdue margin-top-5">
+              {{ if eq .Response.StatusCode 200 }}
+              {{ $code := .JSON.Int "current.weather_code" }}
+              <span class="color-highlight">{{ printf "%.0f" (.JSON.Float "current.temperature_2m") }}°F</span>
+              · {{ if eq $code 0 }}Clear{{ else if eq $code 1 }}Mainly clear{{ else if eq $code 2 }}Partly cloudy{{ else if eq $code 3 }}Overcast{{ else if le $code 48 }}Fog{{ else if le $code 57 }}Drizzle{{ else if le $code 67 }}Rain{{ else if le $code 77 }}Snow{{ else if le $code 82 }}Showers{{ else if le $code 86 }}Snow showers{{ else }}Thunderstorm{{ end }}
+              · H {{ printf "%.0f" (.JSON.Float "daily.temperature_2m_max.0") }}° L {{ printf "%.0f" (.JSON.Float "daily.temperature_2m_min.0") }}°
+              · {{ .JSON.Int "daily.precipitation_probability_max.0" }}% rain ·
+              {{ end }}
+              <span data-part="utc"></span>
+            </div>
           </div>
     columns:
       - size: full
         widgets:
+          # A small bar of links. The style is in document.head.
+          - type: html
+            source: |
+              <nav class="bookmark-bar">
+                <a href="https://github.com/cnbrown04/homelab-iac" target="_blank" rel="noreferrer"><img class="mono" src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/github.svg" alt="">GitHub</a>
+                <a href="https://gaia.vnet.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/proxmox.svg" alt="">Proxmox</a>
+                <a href="https://seerr.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyseerr.svg" alt="">Seerr</a>
+                <a href="https://homeassistant.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" alt="">Home Assistant</a>
+                <a href="https://bambuddy.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bambu-lab.svg" alt="">Bambuddy</a>
+              </nav>
+
           - type: search
             search-engine: duckduckgo
             autofocus: true
 
-          # url opens the public name. check-url tests the service from inside
-          # the cluster.
-          - type: monitor
-            title: Apps
-            cache: 1m
-            sites:
-              - title: Jellyfin
-                url: https://jellyfin.buildwithcaleb.com
-                check-url: http://jellyfin.jellyfin.svc.cluster.local/health
-                icon: di:jellyfin
-              - title: Seerr
-                url: https://seerr.buildwithcaleb.com
-                check-url: http://seerr.seerr.svc.cluster.local/api/v1/status
-                icon: di:jellyseerr
-              - title: Audiobookshelf
-                url: https://audiobooks.buildwithcaleb.com
-                check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
-                icon: di:audiobookshelf
-              - title: Home Assistant
-                url: https://homeassistant.buildwithcaleb.com
-                check-url: http://10.0.1.69/manifest.json
-                icon: di:home-assistant
-              - title: Bambuddy
-                url: https://bambuddy.buildwithcaleb.com
-                check-url: http://10.0.1.69:8000/health
-                icon: di:bambu-lab
-
-          # This feed has only the issues of the newsletter, not the blog.
+          # The newest issue of Self-Host Weekly, as one large card. This feed
+          # has only the issues of the newsletter, not the blog.
           - type: rss
             title: Self-Host Weekly
             title-url: https://selfh.st/weekly/
-            style: horizontal-cards
-            limit: 6
+            css-class: weekly-issue
+            style: detailed-list
+            limit: 1
             cache: 6h
             feeds:
               - url: https://selfh.st/weekly/rss/
 
-      - size: small
-        widgets:
-          - type: calendar
-            first-day-of-week: sunday
+          # The top 10 of Hacker News and of Lobsters, side by side. -1 shows
+          # all items, with no button to show more. The front page of Hacker
+          # News (top) mixes points and age. best has the posts with the most
+          # points of about the last two days, in the order of the points.
+          - type: split-column
+            max-columns: 2
+            widgets:
+              - type: hacker-news
+                sort-by: best
+                limit: 10
+                collapse-after: -1
+              - type: lobsters
+                tags: [devops, linux, networking]
+                sort-by: hot
+                limit: 10
+                collapse-after: -1
 
-  # The homelab: the Proxmox nodes and guests, typhon, the pipelines, and the news.
+  # The videos and Reddit. The news is on the page Home.
+  - name: Feed
+    slug: feed
+    width: wide
+    columns:
+      - size: full
+        widgets:
+          - type: videos
+            style: grid-cards
+            collapse-after-rows: 1
+            # YouTube answers 404 for the feed with no Shorts (playlist
+            # UULF...). The feed of the channel works, but it has the Shorts.
+            include-shorts: true
+            # Glance takes the ID of a channel only, not the link. The comment
+            # gives the link. To find the ID of a channel, open its page and
+            # look for "channel/UC..." in the canonical link of the source.
+            channels:
+              - UCZNhwA1B5YqiY1nLzmM0ZRg # Christian Lempa, https://www.youtube.com/@christianlempa
+              - UCR-DXc1voovS8nhAvccRZhg # Jeff Geerling, https://www.youtube.com/@JeffGeerling
+              - UCsnGwSIHyoYN0kiINAGUKxg # Wolfgang's Channel, https://www.youtube.com/@WolfgangsChannel
+              - UCHkYOD-3fZbuGhwsADBd9ZQ # Lawrence Systems, https://www.youtube.com/@LAWRENCESYSTEMS
+              - UCOk-gHyjcWZNj3Br4oxwh0A # Techno Tim, https://www.youtube.com/@TechnoTim
+              - UCYeiozh-4QwuC1sjgCmB92w # DevOps Toolbox, https://www.youtube.com/@devopstoolbox
+              - UCJa14zeVf8p6clixTOIOVyQ # jakkuh, https://www.youtube.com/@jakkuh_t
+              - UCgdTVe88YVSrOZ9qKumhULQ # Hardware Haven, https://www.youtube.com/@HardwareHaven
+              - UCWQaM7SpSECp9FELz-cHzuQ # Dreams of Code, https://www.youtube.com/@dreamsofcode
+              - UCmlzNHg8QiWVutUyFOV2UdQ # The Stock Pot, https://www.youtube.com/@TheStockPot-AU
+              - UC4w1YQAJMWOz4qtxinq55LQ # Level1Techs, https://www.youtube.com/@Level1Techs
+              - UCp3yVOm6A55nx65STpm3tXQ # Craft Computing, https://www.youtube.com/@CraftComputing
+              - UCx0ObGO7YJZpPPf6tbHpqPQ # Servers at Home, https://www.youtube.com/@ServersatHome
+              - UCv6J_jJa8GJqFwQNgNrMuww # ServeTheHome, https://www.youtube.com/@ServeTheHomeVideo
+
+          - type: split-column
+            max-columns: 2
+            widgets:
+              - type: reddit
+                subreddit: homelab
+                show-thumbnails: true
+                collapse-after: 5
+              - type: reddit
+                subreddit: selfhosted
+                show-thumbnails: true
+                collapse-after: 5
+
+  # The homelab: the Proxmox nodes and guests, typhon, the pipelines, the storage,
+  # and the releases.
   - name: Homelab
     slug: homelab
     width: wide
     columns:
-      - size: small
-        widgets:
-          - type: clock
-            hour-format: 12h
-            timezones:
-              - timezone: Etc/UTC
-                label: UTC
-
-          - type: weather
-            location: Auburn, Alabama, United States
-            units: imperial
-            hour-format: 12h
-
-          - type: to-do
-            id: lab
-
-          - type: hacker-news
-            limit: 10
-            collapse-after: 5
-
-          - type: lobsters
-            tags: [devops, linux, networking]
-            limit: 10
-            collapse-after: 5
-
       - size: full
         widgets:
           # Each Proxmox widget uses the read-only token of glance@pve. The
@@ -334,88 +401,26 @@ pages:
                   Authorization: "PVEAPIToken=glance@pve!glance=${secret:proxmox-atlas-token}"
                 template: *proxmox-guests
 
-          # Glance reads the cluster with the read-only service account
+          # glance-k8s gives the nodes and the apps. See glance-k8s.yaml. The
+          # Flux tab reads the cluster with the read-only service account
           # glance. See rbac.yaml.
           - type: group
             widgets:
-              - type: custom-api
+              - type: extension
                 title: typhon nodes
-                cache: 1m
-                url: https://kubernetes.default.svc/api/v1/nodes
-                headers:
-                  Authorization: "Bearer ${secret:kube-token}"
-                template: |
-                  {{ if ne .Response.StatusCode 200 }}
-                  <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
-                  {{ else }}
-                  <ul class="list list-gap-10">
-                  {{ range sortByString "metadata.name" "asc" (.JSON.Array "items") }}
-                  {{ $ready := .String `status.conditions.#(type=="Ready").status` }}
-                    <li class="flex items-center gap-10">
-                      <span class="{{ if eq $ready "True" }}color-positive{{ else }}color-negative{{ end }}">●</span>
-                      <div class="grow min-width-0">
-                        <div class="color-highlight">{{ .String "metadata.name" }}</div>
-                        <div class="size-h6 color-subdue">{{ if .Exists `metadata.labels.node-role\.kubernetes\.io/control-plane` }}control plane{{ else }}worker{{ end }} · {{ .String `status.addresses.#(type=="InternalIP").address` }}</div>
-                      </div>
-                      <div class="size-h6 text-right shrink-0">
-                        <div>Kubernetes {{ .String "status.nodeInfo.kubeletVersion" }}</div>
-                        <div class="color-subdue">{{ .String "status.nodeInfo.osImage" }}</div>
-                      </div>
-                    </li>
-                  {{ end }}
-                  </ul>
-                  {{ end }}
+                css-class: typhon-nodes
+                url: http://glance-k8s.glance.svc.cluster.local/extension/nodes
+                allow-potentially-dangerous-html: true
+                cache: 30s
 
-              - type: custom-api
-                title: typhon workloads
-                cache: 1m
-                url: https://kubernetes.default.svc/api/v1/pods
-                headers:
-                  Authorization: "Bearer ${secret:kube-token}"
-                subrequests:
-                  deployments:
-                    url: https://kubernetes.default.svc/apis/apps/v1/deployments
-                    headers:
-                      Authorization: "Bearer ${secret:kube-token}"
-                template: |
-                  {{ $deployments := .Subrequest "deployments" }}
-                  {{ if or (ne .Response.StatusCode 200) (ne $deployments.Response.StatusCode 200) }}
-                  <p class="color-negative">The Kubernetes API answered {{ .Response.Status }}.</p>
-                  {{ else }}
-                  {{ $pods := .JSON.Array "items" }}
-                  {{ $running := .JSON.Array `items.#(status.phase=="Running")#` }}
-                  {{ $notReady := .JSON.Array `items.#(status.containerStatuses.#(ready==false))#` }}
-                  {{ $restarted := .JSON.Array `items.#(status.containerStatuses.#(restartCount>0))#` }}
-                  {{ $allDeployments := $deployments.JSON.Array "items" }}
-                  {{ $badDeployments := 0 }}
-                  {{ range $allDeployments }}{{ if ne (.Int "status.readyReplicas") (.Int "spec.replicas") }}{{ $badDeployments = add $badDeployments 1 }}{{ end }}{{ end }}
-                  <div class="flex justify-between">
-                    <div><div class="size-h3 color-highlight">{{ len $running }} / {{ len $pods }}</div><div class="size-h6">pods running</div></div>
-                    <div><div class="size-h3 {{ if gt (len $notReady) 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ len $notReady }}</div><div class="size-h6">pods not ready</div></div>
-                    <div><div class="size-h3 {{ if gt $badDeployments 0 }}color-negative{{ else }}color-highlight{{ end }}">{{ sub (len $allDeployments) $badDeployments }} / {{ len $allDeployments }}</div><div class="size-h6">deployments ready</div></div>
-                  </div>
-                  {{ if gt (len $notReady) 0 }}
-                  <div class="size-h6 margin-top-15">Not ready</div>
-                  <ul class="list list-gap-4 margin-top-5">
-                  {{ range $notReady }}
-                    <li class="color-negative text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }} · {{ .String "status.phase" }}</li>
-                  {{ end }}
-                  </ul>
-                  {{ end }}
-                  {{ if gt (len $restarted) 0 }}
-                  <div class="size-h6 margin-top-15">Restarts</div>
-                  <ul class="list list-gap-4 margin-top-5 collapsible-container" data-collapse-after="5">
-                  {{ range $restarted }}
-                  {{ $count := 0 }}
-                  {{ range .Array "status.containerStatuses" }}{{ $count = add $count (.Int "restartCount") }}{{ end }}
-                    <li class="flex justify-between gap-10">
-                      <span class="text-truncate">{{ .String "metadata.namespace" }}/{{ .String "metadata.name" }}</span>
-                      <span class="color-highlight shrink-0">{{ $count }}</span>
-                    </li>
-                  {{ end }}
-                  </ul>
-                  {{ end }}
-                  {{ end }}
+              - type: extension
+                title: typhon apps
+                url: http://glance-k8s.glance.svc.cluster.local/extension/apps
+                allow-potentially-dangerous-html: true
+                cache: 30s
+                parameters:
+                  show-if: |
+                    "glance/name" in annotations
 
               - type: custom-api
                 title: Flux
@@ -512,16 +517,6 @@ pages:
                 issues-limit: 3
                 commits-limit: 5
 
-          - type: videos
-            style: grid-cards
-            collapse-after-rows: 1
-            channels:
-              - UCR-DXc1voovS8nhAvccRZhg # Jeff Geerling
-              - UCOk-gHyjcWZNj3Br4oxwh0A # Techno Tim
-              - UCHkYOD-3fZbuGhwsADBd9ZQ # Lawrence Systems
-              - UCZNhwA1B5YqiY1nLzmM0ZRg # Christian Lempa
-              - UCsnGwSIHyoYN0kiINAGUKxg # Wolfgang's Channel
-
       - size: small
         widgets:
           - type: custom-api
@@ -551,29 +546,6 @@ pages:
               - fosrl/newt
               - tale/headplane
               - louislam/dockge
-
-          - type: rss
-            title: News
-            style: detailed-list
-            limit: 10
-            collapse-after: 5
-            cache: 1h
-            feeds:
-              - url: https://forum.proxmox.com/forums/announcements.7/index.rss
-                title: Proxmox
-              - url: https://kubernetes.io/feed.xml
-                title: Kubernetes
-
-          - type: group
-            widgets:
-              - type: reddit
-                subreddit: homelab
-                show-thumbnails: true
-                collapse-after: 5
-              - type: reddit
-                subreddit: selfhosted
-                show-thumbnails: true
-                collapse-after: 5
 
   # The services: each app, each node, and the releases of the apps.
   - name: Services
