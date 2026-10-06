@@ -31,6 +31,6 @@
 ### Service Checklist
 - [ ] Termix (SSO BACKED)
 - [x] Glance Dashboard
-- [ ] Jellyfin
-- [ ] Arr-stack (SSO BACKED)
+- [x] Jellyfin
+- [x] Arr-stack (SSO BACKED)
 - [x] Audiobookshelf
