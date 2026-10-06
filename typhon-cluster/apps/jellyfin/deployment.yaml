@@ -56,7 +56,7 @@ spec:
               mountPath: /seed
       containers:
         - name: jellyfin
-          image: docker.io/jellyfin/jellyfin:12.1.20260915-010956
+          image: docker.io/jellyfin/jellyfin:12.2.20261005-225228
           env:
             - name: JELLYFIN_PublishedServerUrl
               value: https://jellyfin.buildwithcaleb.com
