@@ -464,7 +464,50 @@ tofu -chdir=tofu/targets/atlas plan
 - Do not run Headscale in the homelab.
 - Do not make a Pangolin resource for `vpn.buildwithcaleb.com`.
 
-## 5. The `context/` folder
+## 5. Select the language for a backend
+
+These rules apply when an agent writes a service. They also apply when an
+agent recommends an app to self-host.
+
+### Terms
+
+- A **backend** is a program that runs as a service. It answers requests,
+  runs jobs, or keeps a connection open. An API, a worker, a daemon, and
+  server-side rendering are each a backend.
+- A **frontend** is code that runs in the browser of the user.
+- A **tool** is a program that a person or a pipeline starts. It stops when
+  its job is complete. A tool is not a backend.
+
+### Rules
+
+- Write a backend in Go, Rust, C, C++, C#, Java, or Ruby.
+- You can write a backend in JavaScript or TypeScript if Deno or Bun runs
+  it.
+- Do not write a backend in Python or PHP.
+- Do not run a backend on Node.js.
+- Write a frontend in JavaScript or TypeScript if you must.
+- If a project has a frontend and a backend, write the backend in an
+  approved language, on an approved runtime.
+- Use the server part of a full-stack framework, for example Next.js, Nuxt,
+  or SvelteKit, only on Deno or Bun. If the framework needs Node.js, build
+  the frontend as static files, and write a separate backend.
+- Look at the language and the runtime of the backend when you recommend an
+  app. The language of its frontend is not important.
+- If no good app with an approved language and runtime exists, you can
+  recommend an app that breaks this rule. Tell the owner that the app breaks
+  the rule, and give the reason for the choice.
+
+### Exceptions
+
+- A tool can use Python or bash. Ansible, an Ansible module, a script in
+  `scripts/`, and a step in a workflow are tools.
+- A plugin for an app uses the language of that app. For example, an
+  integration for Home Assistant uses Python.
+- The apps that run in the homelab now stay. Pangolin, Headplane, Seerr,
+  Audiobookshelf, and Home Assistant are examples. Do not recommend to
+  replace an app only because of this rule.
+
+## 6. The `context/` folder
 
 `context/` holds scratch notes for one task. Git ignores the folder, and it
 stays on one machine. Read it for background. Do not commit it. If a fact must
