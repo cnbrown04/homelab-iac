@@ -180,11 +180,12 @@ variable "pci_mappings" {
 }
 
 variable "virtiofs_mappings" {
-  description = "Host folders, by the name of their cluster directory mapping. expose_acl also passes the extended attributes."
+  description = "Host folders, by the name of their cluster directory mapping. expose_acl also turns on expose_xattr."
   type = list(object({
-    mapping    = string
-    cache      = optional(string, "auto")
-    expose_acl = optional(bool, false)
+    mapping      = string
+    cache        = optional(string, "auto")
+    expose_acl   = optional(bool, false)
+    expose_xattr = optional(bool, false)
   }))
   default = []
 }

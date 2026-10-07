@@ -125,6 +125,9 @@ resource "proxmox_virtual_environment_vm" "this" {
       mapping    = virtiofs.value.mapping
       cache      = virtiofs.value.cache
       expose_acl = virtiofs.value.expose_acl
+      # Proxmox needs the extended attributes for the ACLs. The provider
+      # refuses expose_acl with expose_xattr = false, so send true or nothing.
+      expose_xattr = virtiofs.value.expose_acl || virtiofs.value.expose_xattr ? true : null
     }
   }
 
