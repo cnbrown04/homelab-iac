@@ -34,3 +34,7 @@
 - [x] Jellyfin
 - [x] Arr-stack (SSO BACKED)
 - [x] Audiobookshelf
+
+
+### Files
+- [ ] Check Spacedrive when its iOS app is in the App Store (the beta is planned for 1 November 2026). It can give the shares in /lethe/shares to the iOS Files app with no tailnet. Its server is Rust.
