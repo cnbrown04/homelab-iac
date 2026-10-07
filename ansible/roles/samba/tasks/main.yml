@@ -15,40 +15,6 @@
     name: qemu-guest-agent
     state: present
 
-- name: Create the group of the file owner
-  ansible.builtin.group:
-    name: "{{ samba_file_owner }}"
-    gid: "{{ samba_file_owner_id }}"
-    system: true
-
-- name: Create the file owner
-  ansible.builtin.user:
-    name: "{{ samba_file_owner }}"
-    uid: "{{ samba_file_owner_id }}"
-    group: "{{ samba_file_owner }}"
-    system: true
-    create_home: false
-    home: /nonexistent
-    shell: /usr/sbin/nologin
-
-# The folder is the dataset lethe/shares on gaia.
-- name: Mount the shares
-  ansible.posix.mount:
-    src: "{{ samba_virtiofs_tag }}"
-    path: "{{ samba_share_root }}"
-    fstype: virtiofs
-    opts: defaults,nofail
-    state: mounted
-
-- name: Create the folder of each user
-  ansible.builtin.file:
-    path: "{{ samba_share_root }}/{{ item }}"
-    state: directory
-    owner: "{{ samba_file_owner }}"
-    group: "{{ samba_file_owner }}"
-    mode: "0770"
-  loop: "{{ samba_users }}"
-
 # Samba packages from backports get a higher priority than the default 100,
 # so an upgrade keeps them on backports. Other backports packages stay on
 # stable.
@@ -80,6 +46,49 @@
     state: present
   register: samba_package
 
+- name: Create the group of the file owner
+  ansible.builtin.group:
+    name: "{{ samba_file_owner }}"
+    gid: "{{ samba_file_owner_id }}"
+    system: true
+  register: samba_owner_group
+
+# A check run on a new host does not install Samba or create the group. Then
+# the tasks that need them skip.
+- name: Find the parts that a check run did not create
+  ansible.builtin.set_fact:
+    samba_check_new: "{{ ansible_check_mode and (samba_package is changed or samba_owner_group is changed) }}"
+
+- name: Create the file owner
+  ansible.builtin.user:
+    name: "{{ samba_file_owner }}"
+    uid: "{{ samba_file_owner_id }}"
+    group: "{{ samba_file_owner }}"
+    system: true
+    create_home: false
+    home: /nonexistent
+    shell: /usr/sbin/nologin
+  when: not samba_check_new
+
+# The folder is the dataset lethe/shares on gaia.
+- name: Mount the shares
+  ansible.posix.mount:
+    src: "{{ samba_virtiofs_tag }}"
+    path: "{{ samba_share_root }}"
+    fstype: virtiofs
+    opts: defaults,nofail
+    state: mounted
+
+- name: Create the folder of each user
+  ansible.builtin.file:
+    path: "{{ samba_share_root }}/{{ item }}"
+    state: directory
+    owner: "{{ samba_file_owner }}"
+    group: "{{ samba_file_owner }}"
+    mode: "0770"
+  loop: "{{ samba_users }}"
+  when: not samba_check_new
+
 - name: Write the Samba configuration
   ansible.builtin.template:
     src: smb.conf.j2
@@ -88,6 +97,7 @@
     group: root
     mode: "0644"
   notify: Samba configuration changed
+  when: not samba_check_new
 
 # Samba needs a Linux account for each user. The account has no password and
 # no shell. Samba forces samba_file_owner for each file.
@@ -100,15 +110,15 @@
     shell: /usr/sbin/nologin
     password: "!"
   loop: "{{ samba_users }}"
+  when: not samba_check_new
 
-# A check run did not install Samba, so the services do not exist yet.
 - name: Start and enable Samba
   ansible.builtin.systemd_service:
     name: "{{ item }}"
     enabled: true
     state: started
   loop: [smbd, avahi-daemon]
-  when: not (ansible_check_mode and samba_package is changed)
+  when: not samba_check_new
 
 # smbclient logs in with the password from SOPS. A failed login means that the
 # user is new or that the password changed.
@@ -123,7 +133,7 @@
   check_mode: false
   loop: "{{ samba_users }}"
   no_log: true
-  when: not (ansible_check_mode and samba_package is changed)
+  when: not samba_check_new
 
 - name: Set the password of each user
   ansible.builtin.command:
