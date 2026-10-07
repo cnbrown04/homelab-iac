@@ -241,6 +241,8 @@ the cluster.
   Pocket ID user name, so FileBrowser shows the same folder.
 - User 3000 (`shares`) owns each file. Samba forces this user, and FileBrowser
   runs as it.
+- The shares use the SMB3 POSIX extensions, for development work. A Linux
+  client mounts a share with the option `posix`. Do not add `acl_xattr`.
 - Run its playbook by hand. No pipeline reaches it.
 
 ### The services on `hermes`
@@ -458,6 +460,9 @@ tofu -chdir=tofu/targets/atlas plan
   to the user. The user has the custom role `IaCProvisioner` on `/`.
 - A download from a URL to Proxmox storage needs `Sys.AccessNetwork`. It is
   in `IaCProvisioner`. Do not give `Sys.Modify` for this.
+- Samba on `mnemosyne` does not see a change that `gaia` or NFS makes through
+  virtiofs. So `smb.conf` turns off oplocks and leases. With a lease, a
+  client shows an old folder list.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
   512. The host looks at byte 4096 and finds no partition. Do not wipe the

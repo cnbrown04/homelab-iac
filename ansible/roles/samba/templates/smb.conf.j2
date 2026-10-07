@@ -18,9 +18,30 @@
    printing = bsd
    printcap name = /dev/null
    disable spoolss = yes
+
+   # The POSIX semantics of a share for development. These settings keep the
+   # mode bits that a client sets. Some are the defaults of Samba, but the
+   # file sets them, so it does not depend on the version.
+   unix charset = UTF-8
+   mangled names = no
+   store dos attributes = yes
+   # With map archive, Samba uses the exec bit of the user for the DOS archive
+   # flag, and Git shows mode changes.
+   map archive = no
+   map hidden = no
+   map system = no
+
    log file = /var/log/samba/log.%m
    max log size = 1000
    logging = file
+
+   # FileBrowser changes the same files through NFS on gaia. Samba does not
+   # see a change on the host through virtiofs, so it cannot break a lease.
+   # With a lease, a client keeps an old copy of a file or a folder list.
+   oplocks = no
+   level2 oplocks = no
+   smb2 leases = no
+   smb3 directory leases = no
 
    # The macOS clients. streams_xattr keeps the metadata in extended
    # attributes, so the virtiofs mount must pass them.
@@ -40,7 +61,11 @@
    read only = no
    force user = {{ samba_file_owner }}
    force group = {{ samba_file_owner }}
-   create mask = 0660
-   directory mask = 0770
+   # A Linux client mounts with the option posix. The masks keep each mode
+   # bit that the client sends. The folders of the dataset are 0770, so other
+   # users on gaia cannot open the files.
+   smb3 unix extensions = yes
+   create mask = 0777
+   directory mask = 0777
 
 {% endfor %}
