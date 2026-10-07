@@ -1,0 +1,37 @@
+# The secrets of Multica. JWT_SECRET is random. Set the password of
+# PlanetScale in DATABASE_URL, and the email addresses that can make an
+# account in ALLOWED_EMAILS (comma-separated), with sops set. The addresses
+# are here, not in the plain files, because the repository is public.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: multica
+type: Opaque
+stringData:
+    DATABASE_URL: ENC[AES256_GCM,data:pebhxEKChdGDy+HRxHKsqwYdpfV4HguPYIoTFfBOOEo5QQyzZYhtM31C9/YNsGixofTezlxig7zzB0LswabrPTyUed1FG0eS7GAFfiHnEGwv3YK5lCD3J8DBpbWDtV3XUwlYYxqQmo6c+EcjBZusUuOgBmTKMx0R02WUqOI0DM+TQVje2CfS4u3dgjF8/olHm6KO0mC4Z62H,iv:a/SCNyheX+qIsJNAJQkJORCtp7juzQ22+DitxOy3RbU=,tag:ah6zsw9o/K/7tKoyZy9mvw==,type:str]
+    JWT_SECRET: ENC[AES256_GCM,data:NQzFDrHwKtqqPQKEl4PlE5Du6QJr5uInerRH3Lhwk76F6SVB7AOB6eC2nXh+fiG/h0hiq6l0MCr67MWQhwik0Q==,iv:D173rZrh/6xvyABx+g1SFP7WKRBnKTn7gTNk8bXUwq8=,tag:+oikTtRN566eXZvwKCPU5Q==,type:str]
+    ALLOWED_EMAILS: ENC[AES256_GCM,data:IP9/Mo+mzDY+GZ4AQEmH0g==,iv:GvTIrF8EI/ExhzfFXW0s99toZwXd/WcH/RZ3fB5Dt1Y=,tag:oR7iIuhEaOpPHiRctxbmog==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBMUWh6eFBFc1RzTitUaFYx
+            YWV4QkFlSVBQMS91Tm9rcDJrWitoQVI0eFJNCnA2dVFjd203SFpmSjZWbGwrTzg2
+            eUYwMjQwUE14aEhCQmRRTlZLaXJTbDgKLS0tIFRzN3dzNlZNUGhwLzExMnBNR1A0
+            N3gvZEt5WlBuSVRBd2crdVYwZGdiU2cKXO2kRfmETM+Rs5hxe+Puqk9f+INHEKO2
+            dvjdTL+2gUjzg+ULF9ACiny/PY6JwuQuDnDzhDHl+SaRpJJTI8PRyg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJVFc0UzRIZ0QxQlhQQW9r
+            QVRlUTdidk55UFRlSjV4SUFsL0NEQktWblc4CkZUVTVTc01BeWdCamk4Z1NWSXc4
+            cGt3VUVJYmxvTHNzdWRxQlhxbFpMM3cKLS0tIDRZbEc2dDBPbGV3bnVSSnc2NmNM
+            eXJYdXB6empDWmVsS1lhUENza1NkZlkKiTHnApyRTDdyGnf88o9KspYJmumP1uze
+            CVN/NQ/N4eCGwwDqcsG/jYAtXdtX3dmi8+B50LNVCYvkRQZo56q5ug==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-07T04:12:58Z"
+    mac: ENC[AES256_GCM,data:JgC7AEOLsEAGFQbt2L4QGv3LieLKBWuc8bg7XyPxYocDlmP/veZjtUdZbv29bUEhAr1E+0JV4wh9ZXfIK1VtnUuGQ3GQRIJUCfB75EF2MYXh0+SVB/c9mpPFDjliXu85UvNIQnSPR58mOzA8U62tUiTCMwZgnQj30HAYDV98ziQ=,iv:Vc2HR6bmDSd06qLXgVbNQcW5SLyBqqdW/7qo1+VpFQ8=,tag:gxoMzM3DUm5avU9cesAYMQ==,type:str]
+    version: 3.13.3

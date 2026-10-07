@@ -1,0 +1,61 @@
+# A daily dump of the database on PlanetScale to /lethe/k8s/kaneo/Backups on
+# gaia, at 01:45. PlanetScale keeps its own backups, so this is a second copy
+# in the homelab. The job keeps 14 days. To restore: scale kaneo to 0, then
+# run pg_restore --clean --dbname="$DATABASE_URL".
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+spec:
+  schedule: "45 1 * * *"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          # User 1000 owns the folder on gaia.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: pg-dump
+              image: docker.io/library/postgres:18.6-alpine
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  file="/backups/kaneo-$(date +%F).dump"
+                  pg_dump --dbname="$DATABASE_URL" --format=custom --file="$file.tmp"
+                  mv "$file.tmp" "$file"
+                  find /backups -name 'kaneo-*.dump' -mtime +13 -delete
+                  echo "Wrote $file."
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: kaneo
+                      key: DATABASE_URL
+                # The URL has sslmode=verify-full. libpq checks the
+                # certificate of PlanetScale against the CAs of the image.
+                - name: PGSSLROOTCERT
+                  value: system
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: backups

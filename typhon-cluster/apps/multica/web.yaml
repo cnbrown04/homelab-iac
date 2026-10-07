@@ -1,0 +1,64 @@
+# The web app of Multica, a Next.js server on Node.js. It sends /api to the
+# backend. Node.js breaks section 5 of AGENTS.md. The owner chose Multica as
+# an exception for testing on 6 October 2026.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multica-web
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Multica
+    glance/icon: mdi:robot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multica-web
+  template:
+    metadata:
+      labels:
+        app: multica-web
+    spec:
+      # The image runs as nextjs (1001).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: ghcr.io/multica-ai/multica-web:v0.6.1
+          env:
+            - name: HOSTNAME
+              value: 0.0.0.0
+            - name: REMOTE_API_URL
+              value: http://multica-backend:8080
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            tcpSocket:
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multica-web
+spec:
+  selector:
+    app: multica-web
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

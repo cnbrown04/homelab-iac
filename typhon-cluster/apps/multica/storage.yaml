@@ -1,0 +1,36 @@
+# The uploads and attachments of Multica, in /lethe/k8s/multica/uploads on
+# gaia. Ansible creates the folder. See zfs_nfs_directories of gaia. The
+# database is on PlanetScale. The volume keeps its data when the claim goes
+# away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: multica-uploads
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: multica
+    name: uploads
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: multica-uploads
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/multica/uploads
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: multica-uploads
+  resources:
+    requests:
+      storage: 20Gi
