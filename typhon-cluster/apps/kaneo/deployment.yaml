@@ -42,6 +42,10 @@ spec:
               value: https://auth.buildwithcaleb.com/.well-known/openid-configuration
             - name: CUSTOM_OAUTH_SCOPES
               value: openid,profile,email
+            # The first user can make an account. After that, a new user
+            # needs an invitation to the same email address.
+            - name: DISABLE_REGISTRATION
+              value: "true"
             - name: DISABLE_LOGIN_FORM
               value: "true"
             - name: DISABLE_PASSWORD_REGISTRATION

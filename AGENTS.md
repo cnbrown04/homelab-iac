@@ -227,7 +227,7 @@ the cluster.
     the Pocket ID user name. The SQLite database is on `local-path`.
 - Kaneo is at `kaneo.buildwithcaleb.com`, with no Pangolin login. It logs in
   with OIDC through Pocket ID only. The owner made its Pocket ID client by
-  hand.
+  hand. Registration is off, so a new user needs an invitation.
   - Its database is `kaneo` on PlanetScale, out of the homelab. A CronJob
     writes a `pg_dump` each day at 01:45 to `/lethe/k8s/kaneo/Backups`.
   - Its API runs on Node.js. The owner chose it as an exception to section 5
