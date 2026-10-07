@@ -38,3 +38,4 @@
 
 ### Files
 - [ ] Check Spacedrive when its iOS app is in the App Store (the beta is planned for 1 November 2026). It can give the shares in /lethe/shares to the iOS Files app with no tailnet. Its server is Rust.
+- [ ] Try Taildrive on mnemosyne after Headscale 0.30 (it adds nodeAttrs and app grants). Give drive:share to tag:nas and drive:access to the devices of the owner, plus a tailscale.com/cap/drive grant for each share. Check that the files get user 3000. Taildrive is alpha and needs the tailnet, like SMB.
