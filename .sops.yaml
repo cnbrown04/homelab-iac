@@ -1,7 +1,7 @@
 creation_rules:
   - path_regex: ^secrets/.*\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
-  - path_regex: ^ansible/inventory/host_vars/hermes/.*\.sops\.(yaml|yml|json)$
+  - path_regex: ^ansible/inventory/host_vars/(hermes|mnemosyne)/.*\.sops\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
   - path_regex: ^ansible/inventory/group_vars/(all|proxmox_nodes)/.*\.sops\.(yaml|yml|json)$
     age: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d

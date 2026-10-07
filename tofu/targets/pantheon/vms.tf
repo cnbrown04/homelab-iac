@@ -70,6 +70,36 @@ locals {
       disks          = [{ interface = "scsi0", datastore_id = "local-lvm", size = 32, import_from = proxmox_download_file.talos["hyperion"].id }]
       initialization = merge(local.typhon_network, { ipv4_address = "10.0.20.24/24" })
     })
+
+    # The SMB server. It shares /lethe/shares of gaia through virtiofs, so it
+    # must run on gaia. Ansible creates the directory mapping and configures
+    # the VM. See ansible/playbooks/mnemosyne.yml.
+    mnemosyne = {
+      node_name   = "gaia"
+      vm_id       = 200
+      description = "Samba, the shares in /lethe/shares. OpenTofu manages this VM from homelab-iac."
+      tags        = ["samba", "debian"]
+      cpu_type    = "host"
+      cpu_cores   = 2
+      memory_mb   = 2048
+      # The image has no guest agent. Ansible installs it.
+      agent_wait_for_ip = false
+      disks             = [{ interface = "scsi0", datastore_id = "local-lvm", size = 16, import_from = proxmox_download_file.debian["gaia"].id }]
+      network_devices   = [{ bridge = "vmbr0" }]
+      initialization = {
+        datastore_id = "local-lvm"
+        ipv4_address = "10.0.1.16/24"
+        ipv4_gateway = "10.0.1.1"
+        dns_servers  = ["10.0.1.1"]
+        user_account = {
+          username = "iac-admin"
+          keys     = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP88BOfNMfJoF99u1UYpf3CDUGl5nv+Ovbh0B8fyaqTH"]
+        }
+      }
+      # expose_acl passes the POSIX ACLs and the extended attributes, for the
+      # macOS metadata of Samba (streams_xattr).
+      virtiofs_mappings = [{ mapping = "lethe-shares", expose_acl = true }]
+    }
   }
 }
 
@@ -94,6 +124,7 @@ module "vm" {
   network_devices   = each.value.network_devices
   initialization    = try(each.value.initialization, null)
   pci_mappings      = try(each.value.pci_mappings, [])
+  virtiofs_mappings = try(each.value.virtiofs_mappings, [])
   usb_devices       = try(each.value.usb_devices, [])
   serial_devices    = try(each.value.serial_devices, [])
 }

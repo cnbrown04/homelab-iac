@@ -1,0 +1,12 @@
+---
+# The host folders that a VM can mount with virtiofs. Each item is
+# { mapping, path }, for example { mapping: lethe-shares, path: /lethe/shares }.
+# The role creates a cluster directory mapping for this node. The folder must
+# exist.
+proxmox_dir_mapping_folders: []
+
+# The users that can attach the mapped folders to a VM, for example tofu@pve.
+# Without a mapping, only root@pam can attach a folder. Give the rule to the
+# user: a token with no privilege separation ignores a rule for the token.
+proxmox_dir_mapping_users: []
+proxmox_dir_mapping_role: PVEMappingUser

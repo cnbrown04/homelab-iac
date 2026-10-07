@@ -6,6 +6,7 @@
   "tagOwners": {
     "tag:github-actions": [],
     "tag:proxmox": [],
+    "tag:nas": [],
   },
 
   // Headscale approves these routes when a node with the tag advertises them.

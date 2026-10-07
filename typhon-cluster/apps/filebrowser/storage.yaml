@@ -1,0 +1,49 @@
+# The volumes of FileBrowser:
+# - shares: the SMB shares, in /lethe/shares on gaia. mnemosyne serves the
+#   same folders with SMB.
+# - data: the SQLite database, on the disk of a worker. SQLite must not go on
+#   NFS.
+# The static volume keeps its data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filebrowser-shares
+spec:
+  capacity:
+    storage: 1Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: filebrowser
+    name: shares
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: filebrowser-shares
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/shares
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shares
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: filebrowser-shares
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi

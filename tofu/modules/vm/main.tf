@@ -81,6 +81,15 @@ resource "proxmox_virtual_environment_vm" "this" {
       dns {
         servers = initialization.value.dns_servers
       }
+
+      # The first user of a cloud image. Ansible logs in as this user.
+      dynamic "user_account" {
+        for_each = initialization.value.user_account == null ? [] : [initialization.value.user_account]
+        content {
+          username = user_account.value.username
+          keys     = user_account.value.keys
+        }
+      }
     }
   }
 
@@ -104,6 +113,18 @@ resource "proxmox_virtual_environment_vm" "this" {
       mapping = hostpci.value.mapping
       pcie    = hostpci.value.pcie
       rombar  = hostpci.value.rombar
+    }
+  }
+
+  # A host folder through a cluster directory mapping. With a mapping, an API
+  # token with Mapping.Use can attach the folder. The guest mounts it with the
+  # mapping name as the tag.
+  dynamic "virtiofs" {
+    for_each = var.virtiofs_mappings
+    content {
+      mapping    = virtiofs.value.mapping
+      cache      = virtiofs.value.cache
+      expose_acl = virtiofs.value.expose_acl
     }
   }
 

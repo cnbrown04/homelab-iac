@@ -1,0 +1,12 @@
+---
+- name: Check the Samba configuration
+  ansible.builtin.command:
+    cmd: testparm --suppress-prompt /etc/samba/smb.conf
+  changed_when: false
+  listen: Samba configuration changed
+
+- name: Reload Samba
+  ansible.builtin.systemd_service:
+    name: smbd
+    state: reloaded
+  listen: Samba configuration changed

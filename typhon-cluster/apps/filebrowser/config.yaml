@@ -1,0 +1,35 @@
+# The settings of FileBrowser Quantum. The secret oidc holds the client ID and
+# the client secret of Pocket ID.
+server:
+  port: 8080
+  database: /data/database.db
+  cacheDir: /cache
+  externalUrl: https://files.buildwithcaleb.com
+  disableUpdateCheck: true
+  sources:
+    # The SMB shares of mnemosyne. Each user sees only the folder with the
+    # Pocket ID user name, the same folder as the SMB share of that user.
+    - path: /srv/shares
+      name: shares
+      config:
+        defaultEnabled: true
+        createUserDir: true
+auth:
+  methods:
+    password:
+      enabled: false
+    oidc:
+      enabled: true
+      issuerUrl: https://auth.buildwithcaleb.com
+      scopes: openid email profile groups
+      userIdentifier: preferred_username
+      adminGroup: filebrowser-admins
+userDefaults:
+  permissions:
+    api: false
+    admin: false
+    modify: true
+    share: false
+    delete: true
+    create: true
+    download: true

@@ -9,6 +9,16 @@ proxmox_network_vlan_interfaces:
 zfs_nfs_pool: lethe
 zfs_nfs_datasets:
   - name: lethe/k8s
+  # The SMB shares of mnemosyne, one folder for each user. User 3000 owns each
+  # file: Samba forces it, and FileBrowser runs as it. Samba keeps the macOS
+  # metadata in extended attributes.
+  - name: lethe/shares
+    properties:
+      xattr: sa
+      acltype: posixacl
+    owner: "3000"
+    group: "3000"
+    mode: "0770"
 zfs_nfs_exports:
   # The dynamic volumes of csi-driver-nfs.
   - path: /lethe/k8s
@@ -18,6 +28,18 @@ zfs_nfs_exports:
   - path: /lethe/data/media
     clients: 10.0.20.0/24
     options: rw,sync,no_subtree_check,no_root_squash,crossmnt
+  # FileBrowser in typhon. mnemosyne uses virtiofs, not NFS.
+  - path: /lethe/shares
+    clients: 10.0.20.0/24
+    options: rw,sync,no_subtree_check,no_root_squash
+
+# mnemosyne mounts /lethe/shares with virtiofs. The user of the OpenTofu token
+# for pantheon attaches the mapping to the VM.
+proxmox_dir_mapping_folders:
+  - mapping: lethe-shares
+    path: /lethe/shares
+proxmox_dir_mapping_users:
+  - tofu@pve
 
 # gaia routes the typhon VLAN for the devices on the tailnet. The Headscale
 # policy approves the route. tag:github-actions gets no access to it.

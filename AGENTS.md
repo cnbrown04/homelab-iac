@@ -128,6 +128,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `tartarus` | Proxmox VE, cluster `pantheon` | `10.0.1.113` | `100.64.0.4` |
 | `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
+| `mnemosyne` | Samba VM on `gaia` (VMID `200`), Debian 13. | `10.0.1.16` | MagicDNS |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
@@ -219,11 +220,28 @@ the cluster.
   by their service names. Its SQLite database and `settings.json` are on
   `local-path`. To restore: put the old config folder in
   `/lethe/k8s/seerr/migrate/`, then delete the pod and the claim `config`.
+- FileBrowser Quantum is at `files.buildwithcaleb.com`, with no Pangolin
+  login. It logs in with OIDC through Pocket ID. The owner made its Pocket ID
+  client by hand. The group `filebrowser-admins` gets the admin role.
+  - It shows `/lethe/shares` through NFS. Each user sees only the folder with
+    the Pocket ID user name. The SQLite database is on `local-path`.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site
   `{{ pangolin_typhon_site }}`, the hostname `{{ pangolin_typhon_target }}`,
   and the port `80`.
+
+### The Samba server `mnemosyne`
+
+- Samba comes from trixie-backports. An APT pin keeps the Samba packages on
+  backports, and unattended-upgrades upgrades them.
+- `mnemosyne` mounts `/lethe/shares` of `gaia` with virtiofs, through the
+  directory mapping `lethe-shares`. So the VM must stay on `gaia`.
+- Each user in `samba_users` gets one share, `/lethe/shares/<name>`. Use the
+  Pocket ID user name, so FileBrowser shows the same folder.
+- User 3000 (`shares`) owns each file. Samba forces this user, and FileBrowser
+  runs as it.
+- Run its playbook by hand. No pipeline reaches it.
 
 ### The services on `hermes`
 
@@ -290,7 +308,7 @@ These decisions are closed. Ask the owner before you re-open one.
 tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap
+ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens
@@ -385,6 +403,7 @@ tofu -chdir=tofu/targets/atlas plan
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The password hash of `iac-admin` |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys |
+  | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
   | `typhon-cluster/talos/talsecret.sops.yaml` | The secrets of Talos. The owner key only. |
 

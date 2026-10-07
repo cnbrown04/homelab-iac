@@ -1,0 +1,4 @@
+Explanation: Ansible writes this file. See the role samba.
+Package: {{ samba_backports_packages | join(' ') }}
+Pin: release n={{ samba_apt_release }}
+Pin-Priority: 500

@@ -1,0 +1,85 @@
+# FileBrowser Quantum, the web access to the SMB shares of mnemosyne. Its
+# users log in with Pocket ID, so Pangolin does not put SSO in front of it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: FileBrowser
+    glance/icon: di:filebrowser-quantum
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+    spec:
+      # User 3000 owns each file in /lethe/shares. Samba on mnemosyne forces
+      # the same user. No fsGroup.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 3000
+        runAsGroup: 3000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: filebrowser
+          image: docker.io/gtstef/filebrowser:1.5.8-stable
+          env:
+            - name: FILEBROWSER_CONFIG
+              value: /config/config.yaml
+            - name: FILEBROWSER_DATABASE
+              value: /data/database.db
+          envFrom:
+            - secretRef:
+                name: oidc
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: data
+              mountPath: /data
+            - name: shares
+              mountPath: /srv/shares
+            - name: cache
+              mountPath: /cache
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: filebrowser-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: shares
+          persistentVolumeClaim:
+            claimName: shares
+        - name: cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

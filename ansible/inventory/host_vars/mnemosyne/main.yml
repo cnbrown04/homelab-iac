@@ -1,0 +1,20 @@
+---
+# The SMB server. It shares the dataset lethe/shares of gaia, through the
+# directory mapping lethe-shares. FileBrowser in typhon shows the same folders
+# at files.buildwithcaleb.com.
+
+# Only the admin user logs in with SSH.
+ssh_hardening_allow_users:
+  - iac-admin
+
+# The devices on the tailnet reach the shares at
+# mnemosyne.vnet.buildwithcaleb.com.
+tailscale_login_server: https://vpn.buildwithcaleb.com
+tailscale_tags:
+  - tag:nas
+
+samba_virtiofs_tag: lethe-shares
+# One share for each user. Use the Pocket ID user name, so FileBrowser shows
+# the same folder. secrets.sops.yml holds samba_user_passwords.
+samba_users:
+  - caleb

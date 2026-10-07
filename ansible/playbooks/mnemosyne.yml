@@ -1,0 +1,29 @@
+---
+# Run this play by hand. No pipeline reaches the VM.
+#
+# The first run after OpenTofu creates the VM: cloud-init gave iac-admin sudo
+# with no password, so -K accepts any password. The play sets the password,
+# then deletes the cloud-init rule.
+- name: Configure mnemosyne
+  hosts: samba_servers
+  roles:
+    - role: common
+    - role: admin_user
+      tags: [admin_user]
+    - role: ssh_hardening
+      tags: [security]
+    - role: sysctl_hardening
+      tags: [security]
+    - role: unattended_upgrades
+      tags: [security]
+    - role: tailscale
+      tags: [tailscale]
+    - role: samba
+      tags: [samba]
+  tasks:
+    # admin_user set the sudo password, so sudo asks for it from now on.
+    - name: Delete the sudo rule of cloud-init
+      ansible.builtin.file:
+        path: /etc/sudoers.d/90-cloud-init-users
+        state: absent
+      tags: [admin_user]

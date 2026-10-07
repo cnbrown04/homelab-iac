@@ -1,0 +1,135 @@
+---
+- name: Check the Samba settings
+  ansible.builtin.assert:
+    that:
+      - samba_virtiofs_tag | length > 0
+      - samba_users | select('match', '^[a-z_][a-z0-9_-]*$') | list | length == samba_users | length
+      - samba_users | reject('in', samba_user_passwords) | list | length == 0
+    fail_msg: >-
+      Set the virtiofs tag, user names in lowercase, and a password for each
+      user in samba_user_passwords.
+  no_log: true
+
+- name: Install the QEMU guest agent
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+    state: present
+
+- name: Create the group of the file owner
+  ansible.builtin.group:
+    name: "{{ samba_file_owner }}"
+    gid: "{{ samba_file_owner_id }}"
+    system: true
+
+- name: Create the file owner
+  ansible.builtin.user:
+    name: "{{ samba_file_owner }}"
+    uid: "{{ samba_file_owner_id }}"
+    group: "{{ samba_file_owner }}"
+    system: true
+    create_home: false
+    home: /nonexistent
+    shell: /usr/sbin/nologin
+
+# The folder is the dataset lethe/shares on gaia.
+- name: Mount the shares
+  ansible.posix.mount:
+    src: "{{ samba_virtiofs_tag }}"
+    path: "{{ samba_share_root }}"
+    fstype: virtiofs
+    opts: defaults,nofail
+    state: mounted
+
+- name: Create the folder of each user
+  ansible.builtin.file:
+    path: "{{ samba_share_root }}/{{ item }}"
+    state: directory
+    owner: "{{ samba_file_owner }}"
+    group: "{{ samba_file_owner }}"
+    mode: "0770"
+  loop: "{{ samba_users }}"
+
+# Samba packages from backports get a higher priority than the default 100,
+# so an upgrade keeps them on backports. Other backports packages stay on
+# stable.
+- name: Keep the Samba packages on backports
+  ansible.builtin.template:
+    src: samba-backports.pref.j2
+    dest: /etc/apt/preferences.d/samba-backports
+    owner: root
+    group: root
+    mode: "0644"
+
+# unattended-upgrades does not look at backports by default.
+- name: Upgrade the Samba packages from backports each day
+  ansible.builtin.copy:
+    content: |
+      // Ansible writes this file. See the role samba.
+      Unattended-Upgrade::Origins-Pattern {
+              "origin=Debian Backports,codename={{ samba_apt_release }}";
+      };
+    dest: /etc/apt/apt.conf.d/52unattended-upgrades-samba
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install Samba
+  ansible.builtin.apt:
+    name: [samba, smbclient, avahi-daemon]
+    default_release: "{{ samba_apt_release }}"
+    state: present
+  register: samba_package
+
+- name: Write the Samba configuration
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Samba configuration changed
+
+# Samba needs a Linux account for each user. The account has no password and
+# no shell. Samba forces samba_file_owner for each file.
+- name: Create the accounts of the users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    group: "{{ samba_file_owner }}"
+    create_home: false
+    home: /nonexistent
+    shell: /usr/sbin/nologin
+    password: "!"
+  loop: "{{ samba_users }}"
+
+# A check run did not install Samba, so the services do not exist yet.
+- name: Start and enable Samba
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: [smbd, avahi-daemon]
+  when: not (ansible_check_mode and samba_package is changed)
+
+# smbclient logs in with the password from SOPS. A failed login means that the
+# user is new or that the password changed.
+- name: Test the password of each user
+  ansible.builtin.command:
+    argv: [smbclient, "//127.0.0.1/{{ item }}", "--user={{ item }}", --command=exit]
+  environment:
+    PASSWD: "{{ samba_user_passwords[item] }}"
+  register: samba_login
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  loop: "{{ samba_users }}"
+  no_log: true
+  when: not (ansible_check_mode and samba_package is changed)
+
+- name: Set the password of each user
+  ansible.builtin.command:
+    argv: [smbpasswd, -s, -a, "{{ item.item }}"]
+    stdin: "{{ samba_user_passwords[item.item] }}\n{{ samba_user_passwords[item.item] }}"
+  changed_when: true
+  loop: "{{ samba_login.results | default([]) }}"
+  no_log: true
+  when: item.rc is defined and item.rc != 0

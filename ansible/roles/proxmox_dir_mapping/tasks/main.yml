@@ -1,0 +1,101 @@
+---
+- name: Check the directory mapping settings
+  ansible.builtin.assert:
+    that:
+      - item.mapping is match('^[a-z0-9-]+$')
+      - item.path is match('^/')
+    fail_msg: "A directory mapping needs a mapping name and an absolute path."
+    quiet: true
+  loop: "{{ proxmox_dir_mapping_folders }}"
+  loop_control:
+    label: "{{ item.mapping | default('?') }}"
+
+- name: Check that the folders exist
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  register: proxmox_dir_mapping_paths
+  loop: "{{ proxmox_dir_mapping_folders }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+# In a check run, a role before this one can show a new dataset that does not
+# exist yet.
+- name: Stop when a folder is missing
+  ansible.builtin.assert:
+    that:
+      - item.stat.isdir | default(false)
+    fail_msg: "The folder {{ item.item.path }} does not exist."
+    quiet: true
+  loop: "{{ proxmox_dir_mapping_paths.results }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+  when: not ansible_check_mode
+
+# The mappings are data of the cluster, in /etc/pve. Each node can write them.
+- name: Read the directory mappings
+  ansible.builtin.command:
+    cmd: pvesh get /cluster/mapping/dir --output-format json
+  register: proxmox_dir_mapping_current
+  changed_when: false
+  check_mode: false
+
+- name: Create the directory mappings
+  ansible.builtin.command:
+    argv:
+      - pvesh
+      - create
+      - /cluster/mapping/dir
+      - "--id={{ item.mapping }}"
+      - "--map=node={{ inventory_hostname }},path={{ item.path }}"
+      - "--description=Ansible, the role proxmox_dir_mapping"
+  changed_when: true
+  loop: "{{ proxmox_dir_mapping_folders }}"
+  loop_control:
+    label: "{{ item.mapping }}"
+  when: item.mapping not in (proxmox_dir_mapping_current.stdout | from_json | map(attribute='id') | list)
+
+- name: Update the directory mappings that differ
+  ansible.builtin.command:
+    argv:
+      - pvesh
+      - set
+      - "/cluster/mapping/dir/{{ item.mapping }}"
+      - "--map=node={{ inventory_hostname }},path={{ item.path }}"
+  changed_when: true
+  loop: "{{ proxmox_dir_mapping_folders }}"
+  loop_control:
+    label: "{{ item.mapping }}"
+  vars:
+    proxmox_dir_mapping_item: >-
+      {{ proxmox_dir_mapping_current.stdout | from_json
+         | selectattr('id', 'equalto', item.mapping) | list }}
+  when: >-
+    proxmox_dir_mapping_item | length > 0
+    and proxmox_dir_mapping_item[0].map != ['node=' ~ inventory_hostname ~ ',path=' ~ item.path]
+
+- name: Read the access rules
+  ansible.builtin.command:
+    cmd: pveum acl list --output-format json
+  register: proxmox_dir_mapping_acl
+  changed_when: false
+  check_mode: false
+
+- name: Let the users use the mappings
+  ansible.builtin.command:
+    argv:
+      - pveum
+      - acl
+      - modify
+      - "/mapping/dir/{{ item.0.mapping }}"
+      - "--users={{ item.1 }}"
+      - "--roles={{ proxmox_dir_mapping_role }}"
+  changed_when: true
+  loop: "{{ proxmox_dir_mapping_folders | product(proxmox_dir_mapping_users) | list }}"
+  loop_control:
+    label: "{{ item.0.mapping }} {{ item.1 }}"
+  when: >-
+    proxmox_dir_mapping_acl.stdout | from_json
+    | selectattr('path', 'equalto', '/mapping/dir/' ~ item.0.mapping)
+    | selectattr('ugid', 'equalto', item.1)
+    | selectattr('roleid', 'equalto', proxmox_dir_mapping_role)
+    | list | length == 0

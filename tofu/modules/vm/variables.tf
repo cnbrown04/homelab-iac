@@ -161,6 +161,10 @@ variable "initialization" {
     ipv4_address = string
     ipv4_gateway = string
     dns_servers  = optional(list(string), [])
+    user_account = optional(object({
+      username = string
+      keys     = list(string)
+    }))
   })
   default = null
 }
@@ -171,6 +175,16 @@ variable "pci_mappings" {
     mapping = string
     pcie    = optional(bool, true)
     rombar  = optional(bool, true)
+  }))
+  default = []
+}
+
+variable "virtiofs_mappings" {
+  description = "Host folders, by the name of their cluster directory mapping. expose_acl also passes the extended attributes."
+  type = list(object({
+    mapping    = string
+    cache      = optional(string, "auto")
+    expose_acl = optional(bool, false)
   }))
   default = []
 }

@@ -1,0 +1,44 @@
+---
+# The folder that holds the shares. The host mounts it with virtiofs from the
+# directory mapping samba_virtiofs_tag. Each user gets the share
+# <samba_share_root>/<name>.
+samba_share_root: /srv/shares
+samba_virtiofs_tag: ""
+
+# The owner of each file in the shares. Samba forces this user and group, so
+# FileBrowser in typhon can read each file. The IDs must be the same on gaia.
+samba_file_owner: shares
+samba_file_owner_id: 3000
+
+# The users of Samba. Each user gets a Linux account with no login and one
+# share. samba_user_passwords in secrets.sops.yml holds the password of each
+# user, as { name: password }.
+samba_users: []
+samba_user_passwords: {}
+
+# Samba comes from this suite. Debian stable has an older Samba.
+samba_apt_release: "{{ ansible_facts['distribution_release'] }}-backports"
+
+# The packages that APT takes from backports, as APT globs. Samba needs its
+# libraries from the same suite.
+samba_backports_packages:
+  - samba
+  - samba-*
+  - smbclient
+  - libsmbclient*
+  - libwbclient*
+  - python3-samba
+  - winbind
+  - libnss-winbind
+  - libpam-winbind
+  - ctdb
+  - registry-tools
+  - ldb-tools
+  - libldb*
+  - python3-ldb
+  - libtalloc*
+  - python3-talloc
+  - libtevent*
+  - libtdb*
+  - python3-tdb
+  - tdb-tools

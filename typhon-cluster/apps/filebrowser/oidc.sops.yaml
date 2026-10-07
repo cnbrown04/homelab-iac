@@ -1,0 +1,35 @@
+# The Pocket ID client of FileBrowser. The callback URL is
+# https://files.buildwithcaleb.com/api/auth/oidc/callback. Set each value with
+# sops set.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: oidc
+type: Opaque
+stringData:
+    FILEBROWSER_OIDC_CLIENT_ID: ENC[AES256_GCM,data:uLr9voBRKq5qwR+s62M/2pcF2mMRDa/N16+DraevHGJHHPoM,iv:3tLI6yjgvgODDtWI0cruaND5iKwTokAYgF4e+xk3Kvc=,tag:HYPU0iyyX9HhJMOUOUL+sg==,type:str]
+    FILEBROWSER_OIDC_CLIENT_SECRET: ENC[AES256_GCM,data:53SqDFeGE5EP4sTllZAVNMGTnA8LbqBzxJitGBlaEP0=,iv:c2m9yaxuN0LRjKtTu3wkybxQWGk2vEBii0ykb9jWSNE=,tag:xlFAXBdU+B7VaJ+HsLsVvQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWMTNzRUxKcHFiaEIvdzRI
+            VGJxUmpuNmsxY1dMRUFlbENETVk4WHNLTHdrCmppLy9MbTJYbmcrZzhpaEFKTUFn
+            SzRBNWVjOENHQVIrREZwMmVlRTRuMTgKLS0tIGVHY2Z2cXg4bktnVSt5NkJ2aG9E
+            TU5WUytYMm8ydTRTMEtFT0pVNUlER1UKwjlIAOeBLMAjcFoo1d0S9VKDgwLGycQz
+            MwIrz3Ml23QFYHyD/8OqgtkeZ/0tie06iib9U+J4TrUywZ2RZKrLFw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBnNEJqU0ZLenhCcHl3d2pp
+            SitHZENyekFxL1NMMjdwbWJrSVBacnZlNWdFCkhJd3pLZkNPeUZEMEcyUFlGcEw1
+            S1A3MmJwUVBQaFlDV3NDSEs4dzIzQ1kKLS0tIHBIUXRRUVdjVWFIcG85c09xNnk2
+            R3RCajFQWFhFZHVIblZ2ekNucDNsKzQKBO8hoU5j9A6nDrQ7CWOnNx/cb4bHQkY2
+            AxTnY462ZC3/SJyse3uvcgC//j0exYmz6Kf1Mw5GAXoDBjW8U/PAHQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-07T01:30:15Z"
+    mac: ENC[AES256_GCM,data:Ik7CX1QghEoGDVY22Dh8D5yZoNBPdweqma6Nd8okhWZQ0RyvAYDbZSLhyCJfC6wUacJZW2qcQ+h2znaSrqJdhhJ0gTREq2ozDsBXLrscqd3yo1O4iMfLewQ3M87L+vwfGSs+pd+8EcDo6TKFsE1ak68k88Gnp0mYFHPhzECCx8Q=,iv:GW+qrGD7BElOiQk8cZubi6wvmypTFcBFbsJ7HV9GgPw=,tag:WZswTYjpukV0pBfrJGVEkg==,type:str]
+    version: 3.13.3
