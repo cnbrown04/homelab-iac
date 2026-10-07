@@ -480,6 +480,9 @@ tofu -chdir=tofu/targets/atlas plan
 - Samba on `mnemosyne` does not see a change that `gaia` or NFS makes through
   virtiofs. So `smb.conf` turns off oplocks and leases. With a lease, a
   client shows an old folder list.
+- Do not put `sslrootcert=system` in the `DATABASE_URL` of an app. The `pg`
+  driver of Node.js reads it as a file path and fails. Only libpq (`psql`,
+  `pg_dump`) needs it, so the backup job sets `PGSSLROOTCERT=system`.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
   512. The host looks at byte 4096 and finds no partition. Do not wipe the
