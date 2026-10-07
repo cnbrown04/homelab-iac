@@ -28,6 +28,14 @@
 - [ ] Fix the local mail on the Proxmox nodes: /etc/aliases.db is missing, so postfix defers each mail
 
 
+### Cluster
+- [ ] Find a web page to manage Flux in typhon, with the Pocket ID login. Compare these:
+  - Capacitor (gimlet-io/capacitor, Apache-2.0): a general UI for Flux. The last change was in February 2026, so check that it is maintained, and check the runtime of its backend.
+  - The Flux Web UI of the Flux Operator (controlplaneio-fluxcd/flux-operator, Go, AGPL-3.0): active. typhon does not use the Flux Operator now, so this needs a move to the operator first.
+  - Weave GitOps: now a community project. Check that it still gets releases.
+  - Headlamp with its Flux plugin: a general Kubernetes UI.
+
+
 ### Service Checklist
 - [ ] Termix (SSO BACKED)
 - [x] Glance Dashboard
