@@ -36,6 +36,14 @@
   - Headlamp with its Flux plugin: a general Kubernetes UI.
 
 
+### Databases
+- [ ] Manage the PlanetScale Postgres in code, not by hand. Today the owner made the databases kaneo and multica and the extension vector with psql.
+  - The provider planetscale/planetscale (1.12.0) has postgres_branch, postgres_branch_role (one role for each app, not the default role), postgres_backup_policy, and postgres_bouncer.
+  - The databases and the extensions inside the branch need a second tool: the OpenTofu provider of PostgreSQL, or the Ansible collection community.postgresql (5.0.0).
+  - Decision 2 in AGENTS.md says that OpenTofu manages Proxmox guests only. Choose the tool first, and change the decision if OpenTofu gets the job.
+  - Put the password of each role in SOPS, and give each app its own role.
+
+
 ### Service Checklist
 - [ ] Termix (SSO BACKED)
 - [x] Glance Dashboard
