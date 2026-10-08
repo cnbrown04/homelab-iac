@@ -571,6 +571,9 @@ agent recommends an app to self-host.
   Audiobookshelf, and Home Assistant are examples. Do not recommend to
   replace an app only because of this rule.
 - The owner chose Kaneo, which runs on Node.js, on 6 October 2026.
+- These rules apply only when you select or recommend an app. If the owner
+  names an app, the owner chose it. Do not tell the owner that its language
+  or its runtime breaks this rule.
 
 ## 6. The `context/` folder
 
