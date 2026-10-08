@@ -580,3 +580,19 @@ last, put it in this file.
 
 The owner writes the documentation of the homelab by hand. Do not add a
 document to the repository unless the owner asks for it.
+
+## 7. Keep Glance current
+
+Glance at `home.buildwithcaleb.com` shows the state of the homelab. Its
+config is `typhon-cluster/apps/glance/glance.yml`. Each change to the homelab
+must also change Glance in the same change.
+
+- When you add, move, or delete an app, a host, or a service, update each
+  page of Glance that shows it.
+- On the page "Services", give each app a site in a `monitor` widget. Give
+  each site a `check-url` that the cluster can reach.
+- Add the repository of each app to the `releases` widget of its page.
+- Give each Deployment in `typhon` the annotations `glance/name` and
+  `glance/icon`, so the widget "typhon apps" shows it.
+- When you delete an app, also delete it from each widget.
+- After the change, run `scripts/glance-preview.sh` and look at each page.

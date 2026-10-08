@@ -600,6 +600,19 @@ pages:
                 check-url: http://qbittorrent.qbittorrent.svc.cluster.local:8080/
                 icon: di:qbittorrent
 
+          - type: monitor
+            title: Tools
+            cache: 1m
+            sites:
+              - title: FileBrowser
+                url: https://files.buildwithcaleb.com
+                check-url: http://filebrowser.filebrowser.svc.cluster.local:8080/health
+                icon: di:filebrowser-quantum
+              - title: Kaneo
+                url: https://kaneo.buildwithcaleb.com
+                check-url: http://kaneo.kaneo.svc.cluster.local:5173/api/health
+                icon: sh:kaneo
+
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
           - type: monitor
@@ -701,6 +714,9 @@ pages:
               - Prowlarr/Prowlarr
               - qbittorrent/qBittorrent
               - qdm12/gluetun
+              - Jackett/Jackett
+              - gtsteffaniak/filebrowser
+              - usekaneo/kaneo
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale
