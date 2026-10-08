@@ -44,7 +44,7 @@ services:
       - 80:80
 
   traefik:
-    image: docker.io/traefik:v3.7.13
+    image: docker.io/traefik:v3.7.14
     container_name: traefik
     restart: unless-stopped
     # Traefik uses the network of Gerbil, so Gerbil publishes its ports.
