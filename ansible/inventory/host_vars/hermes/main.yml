@@ -199,19 +199,6 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Multica has no OIDC, so the Pangolin login with Pocket ID is in front
-    # of it. Its own login is a code in the log of the backend.
-    multica:
-      name: Multica
-      mode: http
-      full-domain: multica.buildwithcaleb.com
-      auth:
-        sso-enabled: true
-      targets:
-        - site: "{{ pangolin_typhon_site }}"
-          method: http
-          hostname: "{{ pangolin_typhon_target }}"
-          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:

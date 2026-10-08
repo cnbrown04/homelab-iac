@@ -9,7 +9,6 @@ resources:
   - jackett
   - jellyfin
   - kaneo
-  - multica
   - prowlarr
   - qbittorrent
   - radarr

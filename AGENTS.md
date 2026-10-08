@@ -232,13 +232,6 @@ the cluster.
     writes a `pg_dump` each day at 01:45 to `/lethe/k8s/kaneo/Backups`.
   - Its API runs on Node.js. The owner chose it as an exception to section 5
     on 6 October 2026.
-- Multica is at `multica.buildwithcaleb.com`, for testing, with the Pangolin
-  login. It has no OIDC. Only the addresses in `ALLOWED_EMAILS` can make an
-  account, and the login code is in the log of `multica-backend`.
-  - Its database is `multica` on PlanetScale, with the extension `vector`.
-    The uploads are in `/lethe/k8s/multica/uploads`.
-  - Its web app is a Next.js server on Node.js. The owner chose it as an
-    exception to section 5 for testing on 6 October 2026.
 - The PlanetScale Postgres of the apps is at `us-east-5.pg.psdb.cloud:5432`,
   with one database for each app. Each `DATABASE_URL` uses
   `sslmode=verify-full`.
@@ -551,8 +544,6 @@ agent recommends an app to self-host.
   Audiobookshelf, and Home Assistant are examples. Do not recommend to
   replace an app only because of this rule.
 - The owner chose Kaneo, which runs on Node.js, on 6 October 2026.
-- The owner chose Multica, whose web app runs on Node.js, for testing on
-  6 October 2026.
 
 ## 6. The `context/` folder
 
