@@ -42,6 +42,12 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 - [ ] Fix the local mail on the Proxmox nodes: /etc/aliases.db is missing, so postfix defers each mail
 
 
+### Security
+- [ ] Add Wazuh, a security platform. It collects the security events of each host and shows the threats that it finds.
+  - Put the Wazuh agent on each host with an Ansible role. Each agent sends its events to one Wazuh server.
+  - Choose the host of the server first. The Wazuh indexer needs about 8 GiB of RAM, so a Talos worker or hermes is too small.
+
+
 ### Cluster
 - [ ] Find a web page to manage Flux in typhon, with the Pocket ID login. Compare these:
   - Capacitor (gimlet-io/capacitor, Apache-2.0): a general UI for Flux. The last change was in February 2026, so check that it is maintained, and check the runtime of its backend.
