@@ -17,6 +17,12 @@ on:
         description: Fail when the plan has changes. The weekly drift check uses this.
         type: boolean
         default: false
+      lock:
+        description: >-
+          Lock the state for the plan. The plan of a pull request writes no
+          state, and no job applies it, so it does not wait for the lock.
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -52,9 +58,11 @@ jobs:
       # Exit code 0 is no change, 2 is a change, and 1 is an error.
       - name: Plan
         id: plan
+        env:
+          LOCK: ${{ inputs.lock }}
         run: |
           set +e
-          tofu plan -no-color -lock-timeout=5m -detailed-exitcode -out=tfplan
+          tofu plan -no-color -lock="$LOCK" -lock-timeout=5m -detailed-exitcode -out=tfplan
           code=$?
           set -e
           if [ "$code" -eq 1 ]; then

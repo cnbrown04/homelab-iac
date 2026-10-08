@@ -7,6 +7,20 @@
 - [ ] Add the RackNerd VPS iris to Ansible (scripts/vps-harden.sh, hosts.yml, a play like hermes). It hosts the websites and the personal projects. It has 1.5 GiB of RAM and 1 vCPU, so keep each service small.
 
 
+### Pipelines and speed
+These notes come from the measurements of 7 and 8 October 2026. A check of
+hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
+- [ ] Push the speed changes, then compare the times in GitHub. Before: the job check of ansible took 110 s, and the plan of pantheon took 136 s.
+- [ ] Apply proxmox_nodes.yml. It deletes the key "WSL Ubuntu" (SHA256:wgY56...) from iac-admin on the 5 Proxmox nodes. The owner chose to delete it on 8 October 2026.
+- [ ] ansible-core deprecates third-party strategy plugins, with no removal date. Read the changelog of each ansible-core bump. If Mitogen stops, delete strategy_plugins and strategy from ansible/ansible.cfg.
+- [x] Short commands for the checks: mise run check:hermes, check:proxmox, check:mnemosyne, check:all, lint:ansible, plan:atlas, plan:pantheon.
+- [x] The cache of mise in the pipelines uses only the tools of the job (.github/actions/mise-install). A bump of a different tool does not empty it.
+- Not changed, with the reason:
+  - proxmox_web makes 8 pvesh reads at about 1.4 s each. Each pvesh call starts Perl, so one task with 8 calls is not faster. The nodes run in parallel, so run_once gives no time. Only a parse of the raw files in /etc/pve is faster, and that is fragile. The gain is about 10 s on a playbook that runs by hand.
+  - tofu.yml runs the lint (12 s) before the plans. The apply is in the reusable workflow, so it cannot wait for a lint job that runs at the same time. The change needs a new structure for 12 s.
+  - stacks.yml has no tags, but hermes_compose_stacks is empty, so the play does nothing.
+
+
 ### Personal website
 - [ ] Find a good place for the documentation on the personal website
 - [ ] Build the personal website again with a CMS

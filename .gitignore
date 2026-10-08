@@ -19,3 +19,6 @@ crash.log
 
 # The local preview of Glance. See scripts/glance-preview.sh.
 .glance-preview/
+
+# The local settings of Claude Code on one machine.
+.claude/settings.local.json

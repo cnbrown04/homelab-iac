@@ -7,5 +7,8 @@
 # After this play, Ansible logs in as the admin user. See the README.
 - name: Create the admin user on the Proxmox hosts
   hosts: proxmox_nodes
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
   roles:
     - role: admin_user

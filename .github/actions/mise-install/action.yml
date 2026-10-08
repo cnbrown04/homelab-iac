@@ -1,0 +1,45 @@
+name: Install tools with mise
+description: >-
+  Install some tools of mise.toml with a cache. The cache key uses only the
+  versions of these tools, and the env and settings of mise. So a bump of a
+  different tool does not empty the cache. The workflow must check out the
+  repository first.
+inputs:
+  tools:
+    description: The tools of mise.toml to install. Separate them with spaces.
+    required: true
+runs:
+  using: composite
+  steps:
+    # The system Python of the runner has tomllib. The mise Python is not
+    # installed at this point. The changes action reads mise.toml the same way.
+    - name: Hash the versions of the tools
+      id: hash
+      shell: bash
+      env:
+        TOOLS: ${{ inputs.tools }}
+      run: |
+        hash=$(python3 - mise.toml $TOOLS <<'EOF'
+        import hashlib
+        import json
+        import sys
+        import tomllib
+
+        path, *tools = sys.argv[1:]
+        with open(path, "rb") as f:
+            config = tomllib.load(f)
+        view = (
+            {tool: config.get("tools", {}).get(tool) for tool in tools},
+            config.get("env"),
+            config.get("settings"),
+        )
+        print(hashlib.sha256(json.dumps(view, sort_keys=True).encode()).hexdigest()[:16])
+        EOF
+        )
+        echo "hash=$hash" >> "$GITHUB_OUTPUT"
+
+    - name: Install the tools
+      uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+      with:
+        install_args: ${{ inputs.tools }}
+        cache_key: "{{cache_key_prefix}}-{{platform}}-{{install_args_hash}}-${{ steps.hash.outputs.hash }}"

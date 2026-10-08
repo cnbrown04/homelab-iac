@@ -15,7 +15,8 @@ zfs_nfs_datasets:
   - name: lethe/shares
     properties:
       xattr: sa
-      acltype: posixacl
+      # ZFS shows posixacl by its canonical name, posix.
+      acltype: posix
     owner: "3000"
     group: "3000"
     mode: "0770"

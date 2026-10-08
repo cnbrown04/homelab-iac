@@ -1,10 +1,11 @@
 # Deploys hermes with Ansible. See AGENTS.md, "The pipelines".
 #
-# - A pull request: lint, then a check run that shows the changes.
-# - A push to main: lint, then a check run. If the check shows a change, an
-#   apply follows, then a second run that must show no change. The environment
-#   "hermes" needs the approval of the owner. See decision 8 in AGENTS.md. A
-#   push with no change needs no approval.
+# - A pull request: lint, and a check run that shows the changes. The two jobs
+#   run at the same time.
+# - A push to main: lint, and a check run. If the lint passes and the check
+#   shows a change, an apply follows, then a second run that must show no
+#   change. The environment "hermes" needs the approval of the owner. See
+#   decision 8 in AGENTS.md. A push with no change needs no approval.
 # - A change to mise.toml starts the jobs only when it changes a tool of
 #   Ansible.
 # - Each Monday, a check run looks for drift. It fails when the check shows a
@@ -20,6 +21,7 @@ on:
       - ".github/actions/ansible-setup/**"
       - ".github/actions/ansible-access/**"
       - ".github/actions/changes/**"
+      - ".github/actions/mise-install/**"
   push:
     branches: [main]
     paths:
@@ -29,6 +31,7 @@ on:
       - ".github/actions/ansible-setup/**"
       - ".github/actions/ansible-access/**"
       - ".github/actions/changes/**"
+      - ".github/actions/mise-install/**"
   workflow_dispatch:
     inputs:
       force:
@@ -71,9 +74,23 @@ jobs:
             .github/actions/ansible-setup/**
             .github/actions/ansible-access/**
             .github/actions/changes/**
+            .github/actions/mise-install/**
           tools: python ansible-core pypi:ansible-lint uv sops age
 
-  # Lint and check in one job, so the setup runs one time.
+  # The lint has its own job, so the lint tools never run on a runner with a
+  # secret. It runs at the same time as the check.
+  lint:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/ansible-setup
+      - name: Lint
+        working-directory: ansible
+        run: ansible-lint
+
   check:
     needs: changes
     if: needs.changes.outputs.run == 'true'
@@ -90,10 +107,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/ansible-setup
-      # The lint tools run before a step writes a secret to the runner.
-      - name: Lint
-        working-directory: ansible
-        run: ansible-lint
       - name: Check the syntax
         working-directory: ansible
         run: ansible-playbook --syntax-check playbooks/site.yml
@@ -101,7 +114,6 @@ jobs:
         if: env.TRUSTED == 'true'
         with:
           ssh-key: ${{ secrets.HERMES_SSH_KEY }}
-          become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
       - name: Show the changes for hermes
         id: check
         if: env.TRUSTED == 'true'
@@ -114,7 +126,7 @@ jobs:
         run: |
           set -o pipefail
           ansible-playbook playbooks/site.yml --check --diff --limit hermes \
-            -e @"$RUNNER_TEMP/become.json" | tee "$RUNNER_TEMP/check.txt"
+            | tee "$RUNNER_TEMP/check.txt"
           if grep -qE '^hermes .*changed=[1-9]' "$RUNNER_TEMP/check.txt"; then
             echo "changes=true" >> "$GITHUB_OUTPUT"
             # The names of the changed tasks only. The diff stays in the log.
@@ -148,7 +160,7 @@ jobs:
       github.event_name != 'pull_request'
       && github.event_name != 'schedule'
       && (needs.check.outputs.changes == 'true' || inputs.force)
-    needs: check
+    needs: [lint, check]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     environment: hermes
@@ -160,12 +172,10 @@ jobs:
       - uses: ./.github/actions/ansible-access
         with:
           ssh-key: ${{ secrets.HERMES_SSH_KEY }}
-          become-password: ${{ secrets.ANSIBLE_BECOME_PASSWORD }}
       - name: Apply to hermes
         working-directory: ansible
         run: >-
           ansible-playbook playbooks/site.yml --diff --limit hermes
-          -e @"$RUNNER_TEMP/become.json"
       - name: Check that a second run changes nothing
         working-directory: ansible
         # No color codes, so the recap line starts with the host name.
@@ -175,7 +185,7 @@ jobs:
         run: |
           set -o pipefail
           ansible-playbook playbooks/site.yml --check --limit hermes \
-            -e @"$RUNNER_TEMP/become.json" | tee "$RUNNER_TEMP/verify.txt"
+            | tee "$RUNNER_TEMP/verify.txt"
           if grep -E '^hermes .*changed=[1-9]' "$RUNNER_TEMP/verify.txt"; then
             echo "::error::The check run after the apply shows a change. The playbook is not idempotent."
             exit 1

@@ -1,6 +1,8 @@
 ---
 ansible_become: true
-ansible_python_interpreter: auto_silent
+# Each host runs Debian or Ubuntu with /usr/bin/python3. A fixed path saves the
+# discovery call of each host.
+ansible_python_interpreter: /usr/bin/python3
 
 common_base_packages:
   - ca-certificates

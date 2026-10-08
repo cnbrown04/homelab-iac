@@ -18,9 +18,9 @@ runs:
     # Install only the tools of OpenTofu. tofu-env.sh needs sops, and the
     # python3 of the runner. The Python of mise.toml is for Ansible.
     - name: Install the toolchain from mise.toml
-      uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+      uses: ./.github/actions/mise-install
       with:
-        install_args: opentofu sops age
+        tools: opentofu sops age
 
     # tofu-env.sh is the same script as on a workstation. The mask stops a
     # value from showing in the log.

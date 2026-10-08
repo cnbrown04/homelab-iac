@@ -1,6 +1,7 @@
 # Plans and applies the OpenTofu targets. See AGENTS.md, "The pipelines".
 #
-# - A pull request: format and validate, then a plan for each target.
+# - A pull request: format and validate, then a plan for each target. The
+#   plan does not lock the state, because nothing applies it.
 # - A push to main: a plan for each target. A target with changes waits for the
 #   approval of the owner, then the saved plan is applied.
 # - A change to mise.toml starts the jobs only when it changes a tool of
@@ -20,6 +21,7 @@ on:
       - ".github/workflows/tofu-target.yml"
       - ".github/actions/tofu-setup/**"
       - ".github/actions/changes/**"
+      - ".github/actions/mise-install/**"
   push:
     branches: [main]
     paths:
@@ -31,6 +33,7 @@ on:
       - ".github/workflows/tofu-target.yml"
       - ".github/actions/tofu-setup/**"
       - ".github/actions/changes/**"
+      - ".github/actions/mise-install/**"
   workflow_dispatch:
   # Monday at 12:00 UTC.
   schedule:
@@ -58,6 +61,7 @@ jobs:
             .github/workflows/tofu-target.yml
             .github/actions/tofu-setup/**
             .github/actions/changes/**
+            .github/actions/mise-install/**
           tools: opentofu sops age
 
   lint:
@@ -67,9 +71,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+      - uses: ./.github/actions/mise-install
         with:
-          install_args: opentofu
+          tools: opentofu
       - name: Check the format
         run: tofu fmt -check -recursive -diff tofu
       - name: Validate each target
@@ -96,4 +100,5 @@ jobs:
       target: ${{ matrix.target }}
       apply: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
       fail-on-changes: ${{ github.event_name == 'schedule' }}
+      lock: ${{ github.event_name != 'pull_request' }}
     secrets: inherit

@@ -1,6 +1,9 @@
 ---
 - name: Configure Proxmox hosts
   hosts: proxmox_nodes
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
   roles:
     - role: common
     - role: admin_user

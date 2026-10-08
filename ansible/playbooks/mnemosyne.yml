@@ -2,10 +2,13 @@
 # Run this play by hand. No pipeline reaches the VM.
 #
 # The first run after OpenTofu creates the VM: cloud-init gave iac-admin sudo
-# with no password, so -K accepts any password. The play sets the password,
-# then deletes the cloud-init rule.
+# with no password, so sudo ignores the password from SOPS. The play sets the
+# password, then deletes the cloud-init rule.
 - name: Configure mnemosyne
   hosts: samba_servers
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
   roles:
     - role: common
     - role: admin_user

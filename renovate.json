@@ -34,6 +34,18 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n\\s*[A-Za-z0-9_]+\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update Mitogen in the uvx_args of ansible-core in mise.toml",
+      "managerFilePatterns": [
+        "/^mise\\.toml$/"
+      ],
+      "matchStrings": [
+        "--with mitogen==(?<currentValue>[0-9][^\"\\s]*)"
+      ],
+      "datasourceTemplate": "pypi",
+      "depNameTemplate": "mitogen"
     }
   ],
   "dependencyDashboard": true,
@@ -86,6 +98,15 @@
         "talosctl"
       ],
       "groupName": "talos"
+    },
+    {
+      "description": "Bump ansible-core and Mitogen in one pull request. Each version of Mitogen supports a set of ansible-core versions, and the check of hermes tests the pair. Wait 3 days, because the pipelines run them with the secrets.",
+      "matchDepNames": [
+        "ansible-core",
+        "mitogen"
+      ],
+      "groupName": "ansible-core and mitogen",
+      "minimumReleaseAge": "3 days"
     }
   ],
   "flux": {

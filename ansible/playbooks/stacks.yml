@@ -1,6 +1,9 @@
 ---
 - name: Deploy application stacks on hermes
   hosts: hermes
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
   tasks:
     - name: Deploy each declared Compose stack
       ansible.builtin.include_role:

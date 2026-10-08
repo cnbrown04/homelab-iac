@@ -1,13 +1,11 @@
 name: Give Ansible access to the hosts
 description: >-
-  Write the SSH key and the sudo password for Ansible. Use this action after
-  the lint, so that the lint tools do not get the secrets.
+  Write the SSH key for Ansible. The sudo password is in
+  ansible/inventory/group_vars/all/secrets.sops.yml, so Ansible reads it with
+  SOPS_AGE_KEY.
 inputs:
   ssh-key:
     description: The private SSH key of the pipeline.
-    required: true
-  become-password:
-    description: The sudo password of the admin user.
     required: true
 runs:
   using: composite
@@ -22,11 +20,3 @@ runs:
         printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
         # The repository holds the host key, so SSH checks it.
         install -m 644 ansible/known_hosts ~/.ssh/known_hosts
-
-    - name: Write the sudo password to a file
-      shell: bash
-      env:
-        BECOME_PASSWORD: ${{ inputs.become-password }}
-      run: |
-        install -m 600 /dev/null "$RUNNER_TEMP/become.json"
-        jq -n --arg p "$BECOME_PASSWORD" '{ansible_become_password: $p}' > "$RUNNER_TEMP/become.json"

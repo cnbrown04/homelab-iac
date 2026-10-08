@@ -7,9 +7,9 @@ runs:
   steps:
     # Install only the tools of Ansible, not the tools of the clusters.
     - name: Install the toolchain from mise.toml
-      uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+      uses: ./.github/actions/mise-install
       with:
-        install_args: python ansible-core pypi:ansible-lint uv sops age
+        tools: python ansible-core pypi:ansible-lint uv sops age
 
     # Galaxy is slow and sometimes down. The cache holds the exact versions
     # of requirements.yml, so a hit needs no install.

@@ -12,7 +12,10 @@ opentofu = "1.13.1"
 # Configures hosts that are already running. Collections live in
 # ansible/requirements.yml, not here.
 python = "3.14.8"
-ansible-core = "2.21.4"
+# Mitogen goes into the environment of ansible-core, because Ansible imports
+# its strategy plugin. See ansible/ansible.cfg. Renovate bumps the two
+# together. Each version of Mitogen supports a set of ansible-core versions.
+ansible-core = { version = "2.21.4", uvx_args = "--with mitogen==0.3.53" }
 
 # Lints the Ansible content on every PR. Check collection compatibility in
 # ansible/requirements.yml before a version bump.
@@ -59,3 +62,36 @@ idiomatic_version_file_enable_tools = []
 # Use a precompiled Python only. A build from source takes minutes, and the
 # runner has no bz2, lzma, or readline for it.
 python.compile = false
+
+# Short commands for the checks. Each task makes no change. Put more flags of
+# ansible-playbook after --, for example: mise run check:hermes -- --tags pangolin
+[tasks."check:hermes"]
+description = "Check hermes with Ansible. The pipeline runs the same check."
+run = "ansible-playbook ansible/playbooks/site.yml --check --diff --limit hermes"
+
+[tasks."check:proxmox"]
+description = "Check the Proxmox nodes with Ansible"
+run = "ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff"
+
+[tasks."check:mnemosyne"]
+description = "Check mnemosyne with Ansible"
+run = "ansible-playbook ansible/playbooks/mnemosyne.yml --check --diff"
+
+[tasks."check:all"]
+description = "Check each host with Ansible"
+run = "ansible-playbook ansible/playbooks/site.yml --check --diff"
+
+[tasks."lint:ansible"]
+description = "Lint the Ansible content, as the pipeline does"
+dir = "{{config_root}}/ansible"
+run = "ansible-lint"
+
+[tasks."plan:atlas"]
+description = "Plan the OpenTofu target atlas"
+shell = "bash -c"
+run = "source scripts/tofu-env.sh atlas && tofu -chdir=tofu/targets/atlas plan"
+
+[tasks."plan:pantheon"]
+description = "Plan the OpenTofu target pantheon"
+shell = "bash -c"
+run = "source scripts/tofu-env.sh pantheon && tofu -chdir=tofu/targets/pantheon plan"

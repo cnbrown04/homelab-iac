@@ -24,9 +24,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+      - uses: ./.github/actions/mise-install
         with:
-          install_args: aqua:koalaman/shellcheck
+          tools: aqua:koalaman/shellcheck
 
       - name: Check the shell scripts
         run: git ls-files -z '*.sh' | xargs -0 --no-run-if-empty shellcheck

@@ -1,5 +1,8 @@
 ---
 - name: Apply the Pangolin resources on hermes
   hosts: hermes
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
   roles:
     - role: pangolin_blueprint

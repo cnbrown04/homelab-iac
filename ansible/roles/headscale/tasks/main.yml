@@ -27,7 +27,13 @@
     headscale_listen_port_number: "{{ headscale_listen_addr | regex_search('[0-9]+$') }}"
 
 # Headscale cannot bind to an address that does not exist. The Pangolin role
-# creates the Docker network that owns the address.
+# creates the Docker network that owns the address. The play does not gather
+# facts again (gathering = smart), so read the addresses after the Pangolin
+# role.
+- name: Read the network addresses
+  ansible.builtin.setup:
+    gather_subset: [network]
+
 - name: Check that the listener address exists on the host
   ansible.builtin.assert:
     that:

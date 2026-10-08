@@ -23,6 +23,10 @@ locals {
 
 # A VM reads its image only when OpenTofu creates it. talosctl upgrades a
 # running node, so a new image here changes no VM.
+#
+# The file name holds the version, so a new image is a new resource. So
+# overwrite is false: the provider does not ask the URL for the size of the
+# file at each refresh. The Image Factory took more than 2 minutes to answer.
 resource "proxmox_download_file" "talos" {
   for_each = local.talos_images
 
@@ -31,11 +35,13 @@ resource "proxmox_download_file" "talos" {
   content_type = "import"
   url          = "https://factory.talos.dev/image/${local.talos_schematics[each.value]}/${local.talos_version}/nocloud-amd64.qcow2"
   file_name    = "talos-${local.talos_version}-${each.value}-nocloud-amd64.qcow2"
+  overwrite    = false
 }
 
 # The Debian cloud image of the Debian VMs. A VM reads its image only when
 # OpenTofu creates it, so a new image here changes no VM. The list of images
-# is at https://cloud.debian.org/images/cloud/trixie/.
+# is at https://cloud.debian.org/images/cloud/trixie/. The file name holds the
+# version, so overwrite is false, as for the Talos images.
 locals {
   debian_image = "20261001-2618"
   debian_nodes = ["gaia"]
@@ -51,4 +57,5 @@ resource "proxmox_download_file" "debian" {
   file_name          = "debian-13-genericcloud-amd64-${local.debian_image}.qcow2"
   checksum           = "f46f0671a6e5bdec5291ab8972bae2f10e5408c2f64a74078f11efc2f06a436a9d0313ed50e0472542eeabf780e9f7c792ac0a314c6c20507fcd9fd81b468c3d"
   checksum_algorithm = "sha512"
+  overwrite          = false
 }

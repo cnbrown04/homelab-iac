@@ -3,3 +3,6 @@
 exclude_paths:
   - .ansible/
   - inventory/**/*.sops.yml
+# ansible-setup installs the collections of requirements.yml. ansible-lint
+# does not install them again.
+offline: true

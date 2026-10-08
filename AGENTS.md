@@ -135,7 +135,8 @@ Kubernetes cluster `typhon`.
 The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
 Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
 Ansible logs in to each host as `iac-admin`, with sudo and a password. The
-password is the same on each host.
+password is the same on each host. SOPS holds it as `ansible_become_password`,
+so a run needs no `-K`.
 
 ### The `typhon` cluster
 
@@ -351,8 +352,10 @@ change a version by hand.
 
 ### Working with the owner
 
-- The agent has no sudo password. For a run with `-K` or a command as root,
-  give the owner the exact command, and ask for the output.
+- The agent can run a playbook with `--check`, because SOPS holds the sudo
+  password. The agent runs a playbook without `--check` only when the owner
+  asks for it. For a command as root outside Ansible, give the owner the
+  exact command, and ask for the output.
 - Give numbered steps with complete commands. After a change of plan, give the
   complete list of steps again.
 - Write each command for the owner to run from the root of the repository.
@@ -364,25 +367,31 @@ change a version by hand.
 
 ```sh
 # Ansible. mise sets ANSIBLE_CONFIG to ansible/ansible.cfg.
-ansible-playbook ansible/playbooks/hermes.yml --check --diff -K
-ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff -K
+ansible-playbook ansible/playbooks/hermes.yml --check --diff
+ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff
 
 # OpenTofu
 source scripts/tofu-env.sh atlas
 tofu -chdir=tofu/targets/atlas plan
+
+# The same checks as mise tasks. Put more flags after --.
+mise run check:hermes -- --tags pangolin
+mise run plan:pantheon
 ```
 
 ### The pipelines
 
-- `ansible-hermes.yml`: lint, then a check with `--diff`. On a push to
-  `main`, an apply follows only when the check shows a change. It waits for
+- `ansible-hermes.yml`: the lint and a check with `--diff` run in two jobs
+  at the same time. On a push to `main`, an apply follows only when the lint
+  passes and the check shows a change. It waits for
   approval in the environment `hermes`. Then a second check must show no
   change. A run by hand with `force` applies also with no change, because a
   check does not run `command` tasks.
 - `tofu.yml`: lint, then a plan of each target. On a push to `main`, a plan
   with changes waits for approval in the environment `atlas` or `pantheon`.
   Then the job applies the saved plan, and a new plan must show no change. A
-  plan with no change needs no approval.
+  plan with no change needs no approval. The plan of a pull request does not
+  lock the state, because no job applies it.
 - After a failed apply, start a new run. The saved plan is stale.
 - A change to `mise.toml` starts `ansible-hermes.yml`, `tofu.yml`, or
   `typhon.yml` only when it changes a tool of that workflow. The action
@@ -392,14 +401,17 @@ tofu -chdir=tofu/targets/atlas plan
   pulls from GitHub.
 - `lint.yml` runs shellcheck, and checks that each SOPS file is encrypted. It
   runs for each change.
+- Each job installs its tools with `.github/actions/mise-install`. Its cache
+  key uses only the versions of those tools, so a bump of a different tool
+  does not empty the cache.
 - mise does not compile Python. Renovate waits 7 days for a new Python, so a
   precompiled build exists. It waits 3 days for each other bump of code that
   the pipelines run with the secrets.
 - Each Monday at 12:00 UTC, `ansible-hermes.yml` and `tofu.yml` look for
   drift. The run fails when the check or the plan shows a change. It does not
   apply.
-- In `ansible-hermes.yml`, the lint runs before `ansible-access` writes the SSH
-  key and the sudo password. Only the steps that use `SOPS_AGE_KEY` get it.
+- In `ansible-hermes.yml`, the lint job gets no secret. Only the steps that
+  use `SOPS_AGE_KEY` get it.
 - The Proxmox nodes are not in a pipeline, because the tailnet policy blocks
   SSH. Run their playbook by hand. The owner chose this on 28 September 2026.
   Do not open SSH to `tag:proxmox` for a pipeline. OpenTofu still deploys the
@@ -412,16 +424,16 @@ tofu -chdir=tofu/targets/atlas plan
   | File | Content |
   | --- | --- |
   | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens |
-  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The password hash of `iac-admin` |
+  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The password of `iac-admin` for sudo, and its hash |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
   | `typhon-cluster/talos/talsecret.sops.yaml` | The secrets of Talos. The owner key only. |
 
-- GitHub secrets: `SOPS_AGE_KEY`, `HEADSCALE_AUTHKEY`, `HERMES_SSH_KEY`, and
-  `ANSIBLE_BECOME_PASSWORD`. `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and
-  `TOFU_STATE_PASSPHRASE` are not used.
+- GitHub secrets: `SOPS_AGE_KEY`, `HEADSCALE_AUTHKEY`, and `HERMES_SSH_KEY`.
+  `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `TOFU_STATE_PASSPHRASE`, and
+  `ANSIBLE_BECOME_PASSWORD` are not used.
 - `HEADSCALE_AUTHKEY` is a reusable, ephemeral pre-auth key with
   `tag:github-actions`. It expires on 24 September 2036.
 - Headplane gets its Headscale API key from Ansible. Ansible makes a new key
@@ -435,6 +447,21 @@ tofu -chdir=tofu/targets/atlas plan
 - Use the tailnet IP of a Proxmox node, not its MagicDNS name. Runners use
   `--accept-dns=false`, and public DNS sends `*.vnet.buildwithcaleb.com` to
   `hermes`.
+- Ansible gathers the facts of a host one time for each run
+  (`gathering = smart`), and keeps them for 30 minutes. Each play gathers
+  `min` and `network` only. A task that needs facts after a change runs
+  `ansible.builtin.setup` itself. Delete `~/.cache/ansible/facts/homelab-iac`
+  to clear the cache.
+- Ansible uses the Mitogen strategy (`mitogen_linear`). mise installs Mitogen
+  in the environment of `ansible-core` with `uvx_args`. Renovate bumps the two
+  in one pull request. ansible-core deprecates third-party strategy plugins.
+  If Mitogen fails, delete `strategy_plugins` and `strategy` from
+  `ansible.cfg`. Each task still works without Mitogen, but more slowly.
+- Use the canonical value of a ZFS property, for example `acltype: posix`
+  and not `posixacl`. With an alias, each check shows a change.
+- A `proxmox_download_file` has `overwrite = false`. The file name holds the
+  version. With `true`, each refresh asks the URL for the size, and the Talos
+  Image Factory took more than 2 minutes.
 - In a check run, `command` tasks do not run. Give a read-only task
   `check_mode: false`. A task or handler for a service that the check run did
   not install must skip in check mode.
