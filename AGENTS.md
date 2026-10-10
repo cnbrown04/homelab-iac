@@ -528,6 +528,10 @@ mise run plan:pantheon
 - Do not put `sslrootcert=system` in the `DATABASE_URL` of an app. The `pg`
   driver of Node.js reads it as a file path and fails. Only libpq (`psql`,
   `pg_dump`) needs it, so the backup job sets `PGSSLROOTCERT=system`.
+- A GitHub release can come before its container image. Before you pin a
+  tag, make sure that the registry has it.
+- The level `restricted` refuses a probe with `host`. A sidecar that gives a
+  health endpoint must listen on the pod IP.
 - Do not use the Ubuntu 26.04 cloud image. Its initramfs (dracut) starts
   DHCP, so cloud-init cannot set the static IP. Use 24.04.
 - A change to `import_from` does not replace a VM. To make a VM again from a
