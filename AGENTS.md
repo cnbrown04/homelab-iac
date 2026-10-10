@@ -514,6 +514,9 @@ mise run plan:pantheon
   to the user. The user has the custom role `IaCProvisioner` on `/`.
 - A download from a URL to Proxmox storage needs `Sys.AccessNetwork`. It is
   in `IaCProvisioner`. Do not give `Sys.Modify` for this.
+- The delete of a file in storage needs `Datastore.Allocate`. `tofu@pve`
+  has the role `PVEDatastoreAdmin` on `/storage/local` only, so a new image
+  can replace the old file. The owner chose this on 10 October 2026.
 - Samba on `mnemosyne` does not see a change that `gaia` or NFS makes through
   virtiofs. So `smb.conf` turns off oplocks and leases. With a lease, a
   client shows an old folder list.
