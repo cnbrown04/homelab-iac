@@ -9,6 +9,10 @@ ssh_hardening_allow_users:
   - caleb
   - iac-admin
 
+# caleb runs docker with no sudo.
+docker_users:
+  - caleb
+
 # The firewall. Docker publishes the ports of Gerbil (UDP 51820, UDP 21820,
 # and UDP 443) with its own iptables rules, so they are not here. The headscale
 # role adds the rule for the Pangolin network.

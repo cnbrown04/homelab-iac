@@ -16,3 +16,7 @@ docker_packages:
   - docker-ce
   - docker-ce-cli
   - docker-compose-plugin
+
+# These users get the group docker, so they run docker with no sudo. The
+# group gives root access to the host.
+docker_users: []

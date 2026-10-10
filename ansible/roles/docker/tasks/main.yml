@@ -53,3 +53,13 @@
     name: docker
     enabled: true
     state: started
+
+# A check run does not install Docker, so the group does not exist yet. A new
+# group takes effect at the next login of the user.
+- name: Add the users to the docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: [docker]
+    append: true
+  loop: "{{ docker_users }}"
+  when: not (ansible_check_mode and docker_repository is changed)
