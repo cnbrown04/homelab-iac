@@ -1,0 +1,34 @@
+# The join key of the Tailscale sidecar, from Headscale on hermes, with
+# tag:termix. The sidecar uses it for the first login only. Set it with sops
+# set.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: tailscale
+type: Opaque
+stringData:
+    TS_AUTHKEY: ENC[AES256_GCM,data:2I7FS9zJ9EPxAbVc+KE4xVmuXtEMQB1dLiHkApW8Fp1wfxjZYivFVoYDYvgViJ/1IJTR2wHUPQ+ptxQNhcXPIkYqPDceadWZWqb1hrEe5ZGujz5yIn3Taw==,iv:ck/8ZZMcWB+0/V+jVoYHmLQkVz1OKmh83xSPt+S2LsQ=,tag:/6BnbV/y8HbtWprzu5FtDg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA0NytTdUxVcnU2Y1pwZHpI
+            TlE5OGF3QzArRzBxQnRFSFJGUlJRM3pZQUZjClpFaGJSZ3FPSTZOMzZNMVBWV3pL
+            U21wRGhaS0FVTU9NbEhTY3ZwWXB1Vk0KLS0tIHRHdzhVMjVQTDd6VDhrZ0ZCeFpE
+            OFZyNVhGYkx3VDYydlplcTQraXRPejQKL45g3FJamaKXc1FI/mIlzV+kL/MzLfpY
+            cwgdZDwi9U1kV721DXUITH9Np2TRIayCg1IYXGW5G0bWbq6mxYvuRg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBIek1sazNSUUQxQ0pUNXNT
+            dmhDUjRNY0RuTS9nbVpHenBOYWJQbkpKQ2drCmp6SVpzWnZGdFZ2SnYzbGphOTZm
+            MFNVc1puVVIvNDJDVkNpZzFQZEFabVUKLS0tIHlWSm1BOHRQTlphbUFWOHdzSlF3
+            cW1iUGdoZlgzYlNWS0xONzVONkJxU1kKUN3Biv+T6q9MRwGAF04yCynK35m9xrTv
+            sFDH4Ah5IfntUTlY94738z0oWqrXJYmR1ybNbQlmw7HSN2rTxGJTew==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-10T19:05:27Z"
+    mac: ENC[AES256_GCM,data:TTXyImRx54V7elPuCf17t6jiZvBr6vdmwOOwMl6QA6xzB6plM6bhX7ETm4iZ5NVKuNfWB1pYqQVZwfzNUYOSE++At3ARC2MNtTY4cniIDLsb21cfHjNoNuzZPJEsr8oE4vZiNSg0U29NdQK1Y0741Uu1GnLrSNC8gLkY33bFr+A=,iv:0XvBxtuemjq1ikxclOBR/1OPc8rFk4GHLxz+0zhDDK4=,tag:Dkgbs+iLsSfXvJkCJUnlvw==,type:str]
+    version: 3.13.3

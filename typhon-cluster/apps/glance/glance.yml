@@ -608,6 +608,10 @@ pages:
                 url: https://files.buildwithcaleb.com
                 check-url: http://filebrowser.filebrowser.svc.cluster.local:8080/health
                 icon: di:filebrowser-quantum
+              - title: Termix
+                url: https://termix.buildwithcaleb.com
+                check-url: http://termix.termix.svc.cluster.local:8080/health
+                icon: sh:termix
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
@@ -712,6 +716,7 @@ pages:
               - qdm12/gluetun
               - Jackett/Jackett
               - gtsteffaniak/filebrowser
+              - Termix-SSH/Termix
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

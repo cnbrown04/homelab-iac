@@ -227,6 +227,18 @@ the cluster.
   client by hand. The group `filebrowser-admins` gets the admin role.
   - It shows `/lethe/shares` through NFS. Each user sees only the folder with
     the Pocket ID user name. The SQLite database is on `local-path`.
+- Termix is at `termix.buildwithcaleb.com`, with the Pangolin login in front
+  of its Pocket ID login. The owner sets OIDC in the admin UI of Termix. The
+  callback is `/users/auth/<id>/callback`. The SQLite database is on
+  `local-path`.
+  - A Tailscale sidecar joins the tailnet as `termix`, with `tag:termix`. It
+    runs in userspace mode, so the namespace stays `restricted`. The policy
+    gives `tag:termix` TCP `22` on each node.
+  - A host on the tailnet needs the SOCKS5 proxy `127.0.0.1:1055` in its
+    settings in Termix. A host on the LAN does not.
+  - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
+    sidecar uses it for the first login only, and keeps its state on the
+    claim `tailscale`.
 - The PlanetScale Postgres of the apps is at `us-east-5.pg.psdb.cloud:5432`,
   with one database for each app. Each `DATABASE_URL` uses
   `sslmode=verify-full`.

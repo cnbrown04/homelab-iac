@@ -1,0 +1,8 @@
+# The Tailscale sidecar runs in userspace mode, with no capability, so the
+# namespace stays restricted.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: termix
+  labels:
+    pod-security.kubernetes.io/enforce: restricted

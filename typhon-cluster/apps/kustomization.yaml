@@ -13,3 +13,4 @@ resources:
   - radarr
   - seerr
   - sonarr
+  - termix

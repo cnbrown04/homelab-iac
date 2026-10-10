@@ -1,0 +1,25 @@
+# The volumes of Termix, on the disk of a worker. SQLite must not go on NFS.
+# - data: the encrypted SQLite database of Termix and its keys.
+# - tailscale: the state of the Tailscale node, so the node keeps its name
+#   and its address after a restart.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tailscale
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 64Mi

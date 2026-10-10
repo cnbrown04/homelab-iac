@@ -187,6 +187,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Termix logs in with Pocket ID, but it opens SSH to the hosts. Keep SSO
+    # on, also because the first user to register gets the admin role.
+    termix:
+      name: Termix
+      mode: http
+      full-domain: termix.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:

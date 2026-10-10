@@ -1,0 +1,128 @@
+# Termix, the web SSH client. Its users log in with Pocket ID, and the
+# Pangolin login stays in front of it, because it opens SSH to the hosts.
+#
+# A Tailscale sidecar joins the tailnet as the node termix, with tag:termix.
+# It runs in userspace mode and gives a SOCKS5 proxy on localhost:1055. A
+# host on the tailnet needs this proxy in its settings in Termix. A host on
+# the LAN does not.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: termix
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Termix
+    glance/icon: sh:termix
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only. Two pods with the same
+  # Tailscale state take the node from each other.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: termix
+  template:
+    metadata:
+      labels:
+        app: termix
+    spec:
+      automountServiceAccountToken: false
+      # The image runs Termix as the user node, 1000.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # A sidecar: it runs for the life of the pod. Termix starts after the
+        # node is on the tailnet.
+        - name: tailscale
+          image: ghcr.io/tailscale/tailscale:v1.104.1
+          restartPolicy: Always
+          env:
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_SOCKS5_SERVER
+              value: localhost:1055
+            # Keep the state on the volume, not in a Kubernetes secret. The
+            # pod has no token for the API.
+            - name: TS_KUBE_SECRET
+              value: ""
+            - name: TS_STATE_DIR
+              value: /var/lib/tailscale
+            - name: TS_HOSTNAME
+              value: termix
+            # The key is for the first login only. Then the state logs in.
+            - name: TS_AUTH_ONCE
+              value: "true"
+            - name: TS_EXTRA_ARGS
+              value: --login-server=https://vpn.buildwithcaleb.com
+            - name: TS_ENABLE_HEALTH_CHECK
+              value: "true"
+            - name: TS_LOCAL_ADDR_PORT
+              value: 127.0.0.1:9002
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: tailscale
+                  key: TS_AUTHKEY
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 9002
+            periodSeconds: 2
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: tailscale
+              mountPath: /var/lib/tailscale
+            - name: tailscale-tmp
+              mountPath: /tmp
+      containers:
+        - name: termix
+          image: ghcr.io/lukegus/termix:2.9.2
+          env:
+            - name: PORT
+              value: "8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: tailscale
+          persistentVolumeClaim:
+            claimName: tailscale
+        - name: tailscale-tmp
+          emptyDir: {}
