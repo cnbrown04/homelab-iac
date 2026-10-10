@@ -111,6 +111,13 @@ spec:
               value: 127.0.0.1
             - name: GUACD_PORT
               value: "4822"
+            # The opkssh plugin uses the same opkssh as the hosts. Keep it
+            # at opkssh_version of ansible/roles/opkssh. The checksum is the
+            # one of opkssh-linux-amd64 in checksums.txt of the release.
+            - name: OPKSSH_VERSION
+              value: v0.17.0
+            - name: OPKSSH_SHA256_AMD64
+              value: 7da9090ce4abb448683b6770af5efd30d0e6f2c0667cb9b4ddef9a4da3dfc88e
           ports:
             - name: http
               containerPort: 8080
