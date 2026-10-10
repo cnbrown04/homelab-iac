@@ -62,10 +62,13 @@ resource "proxmox_download_file" "debian" {
 
 # The Ubuntu cloud image of the Ubuntu VMs. A VM reads its image only when
 # OpenTofu creates it, so a new image here changes no VM. The list of images
-# is at https://cloud-images.ubuntu.com/releases/resolute/. The file is a qcow2
+# is at https://cloud-images.ubuntu.com/releases/noble/. The file is a qcow2
 # image with the extension .img, and Proxmox needs .qcow2 for an import.
+#
+# Do not use 26.04 yet. Its initramfs (dracut) starts DHCP before cloud-init,
+# so cloud-init cannot set the static IP.
 locals {
-  ubuntu_image = "20260927"
+  ubuntu_image = "20260926"
   ubuntu_nodes = ["tartarus"]
 }
 
@@ -75,9 +78,9 @@ resource "proxmox_download_file" "ubuntu" {
   node_name          = each.key
   datastore_id       = "local"
   content_type       = "import"
-  url                = "https://cloud-images.ubuntu.com/releases/resolute/release-${local.ubuntu_image}/ubuntu-26.04-server-cloudimg-amd64.img"
-  file_name          = "ubuntu-26.04-server-cloudimg-amd64-${local.ubuntu_image}.qcow2"
-  checksum           = "8800651811af9a85465ad1d552add729947bb16488dddb4a9b5305a3d97332b2"
+  url                = "https://cloud-images.ubuntu.com/releases/noble/release-${local.ubuntu_image}/ubuntu-24.04-server-cloudimg-amd64.img"
+  file_name          = "ubuntu-24.04-server-cloudimg-amd64-${local.ubuntu_image}.qcow2"
+  checksum           = "6a81c37564db9b1ee84e141922625e1d7c5b389b99bb3c572e0243607d5bb4d2"
   checksum_algorithm = "sha256"
   overwrite          = false
 }

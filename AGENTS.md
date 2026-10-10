@@ -129,7 +129,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
 | `mnemosyne` | Samba VM on `gaia` (VMID `200`), Debian 13. | `10.0.1.16` | MagicDNS |
-| `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 26.04. | `10.0.1.17` | MagicDNS |
+| `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
@@ -520,6 +520,12 @@ mise run plan:pantheon
 - Do not put `sslrootcert=system` in the `DATABASE_URL` of an app. The `pg`
   driver of Node.js reads it as a file path and fails. Only libpq (`psql`,
   `pg_dump`) needs it, so the backup job sets `PGSSLROOTCERT=system`.
+- Do not use the Ubuntu 26.04 cloud image. Its initramfs (dracut) starts
+  DHCP, so cloud-init cannot set the static IP. Use 24.04.
+- A change to `import_from` does not replace a VM. To make a VM again from a
+  new image, run `apply -replace` on the VM.
+- cloud-init gives `iac-admin` an SSH key and no password. The console login
+  works only after the first run of Ansible.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
   512. The host looks at byte 4096 and finds no partition. Do not wipe the

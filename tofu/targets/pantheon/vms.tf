@@ -106,7 +106,7 @@ locals {
     daedalus = {
       node_name   = "tartarus"
       vm_id       = 300
-      description = "Development, Ubuntu 26.04. OpenTofu manages this VM from homelab-iac."
+      description = "Development, Ubuntu 24.04. OpenTofu manages this VM from homelab-iac."
       tags        = ["dev", "ubuntu"]
       cpu_type    = "host"
       cpu_cores   = 8
