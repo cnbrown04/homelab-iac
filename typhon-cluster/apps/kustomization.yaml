@@ -8,7 +8,6 @@ resources:
   - glance
   - jackett
   - jellyfin
-  - kaneo
   - prowlarr
   - qbittorrent
   - radarr

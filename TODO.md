@@ -57,7 +57,7 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 
 
 ### Databases
-- [ ] Manage the PlanetScale Postgres in code, not by hand. Today the owner made the database kaneo with psql.
+- [ ] Manage the PlanetScale Postgres in code, not by hand. Today the owner makes each database by hand with psql.
   - The provider planetscale/planetscale (1.12.0) has postgres_branch, postgres_branch_role (one role for each app, not the default role), postgres_backup_policy, and postgres_bouncer.
   - The databases and the extensions inside the branch need a second tool: the OpenTofu provider of PostgreSQL, or the Ansible collection community.postgresql (5.0.0).
   - Decision 2 in AGENTS.md says that OpenTofu manages Proxmox guests only. Choose the tool first, and change the decision if OpenTofu gets the job.

@@ -608,10 +608,6 @@ pages:
                 url: https://files.buildwithcaleb.com
                 check-url: http://filebrowser.filebrowser.svc.cluster.local:8080/health
                 icon: di:filebrowser-quantum
-              - title: Kaneo
-                url: https://kaneo.buildwithcaleb.com
-                check-url: http://kaneo.kaneo.svc.cluster.local:5173/api/health
-                icon: sh:kaneo
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
@@ -716,7 +712,6 @@ pages:
               - qdm12/gluetun
               - Jackett/Jackett
               - gtsteffaniak/filebrowser
-              - usekaneo/kaneo
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

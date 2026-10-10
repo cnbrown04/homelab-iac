@@ -227,13 +227,6 @@ the cluster.
   client by hand. The group `filebrowser-admins` gets the admin role.
   - It shows `/lethe/shares` through NFS. Each user sees only the folder with
     the Pocket ID user name. The SQLite database is on `local-path`.
-- Kaneo is at `kaneo.buildwithcaleb.com`, with no Pangolin login. It logs in
-  with OIDC through Pocket ID only. The owner made its Pocket ID client by
-  hand. Registration is off, so a new user needs an invitation.
-  - Its database is `kaneo` on PlanetScale, out of the homelab. A CronJob
-    writes a `pg_dump` each day at 01:45 to `/lethe/k8s/kaneo/Backups`.
-  - Its API runs on Node.js. The owner chose it as an exception to section 5
-    on 6 October 2026.
 - The PlanetScale Postgres of the apps is at `us-east-5.pg.psdb.cloud:5432`,
   with one database for each app. Each `DATABASE_URL` uses
   `sslmode=verify-full`.
@@ -596,7 +589,6 @@ agent recommends an app to self-host.
 - The apps that run in the homelab now stay. Pangolin, Headplane, Seerr,
   Audiobookshelf, and Home Assistant are examples. Do not recommend to
   replace an app only because of this rule.
-- The owner chose Kaneo, which runs on Node.js, on 6 October 2026.
 - These rules apply only when you select or recommend an app. If the owner
   names an app, the owner chose it. Do not tell the owner that its language
   or its runtime breaks this rule.

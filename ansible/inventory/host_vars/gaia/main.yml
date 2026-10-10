@@ -20,17 +20,6 @@ zfs_nfs_datasets:
     owner: "3000"
     group: "3000"
     mode: "0770"
-# The folders of the static volumes that need an owner. The backup job of
-# Kaneo runs as user 1000.
-zfs_nfs_directories:
-  - path: /lethe/k8s/kaneo
-    owner: iac-admin
-    group: iac-admin
-    mode: "0755"
-  - path: /lethe/k8s/kaneo/Backups
-    owner: iac-admin
-    group: iac-admin
-    mode: "0755"
 zfs_nfs_exports:
   # The dynamic volumes of csi-driver-nfs.
   - path: /lethe/k8s

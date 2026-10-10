@@ -187,18 +187,6 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Kaneo has its own login through Pocket ID, so SSO is off.
-    kaneo:
-      name: Kaneo
-      mode: http
-      full-domain: kaneo.buildwithcaleb.com
-      auth:
-        sso-enabled: false
-      targets:
-        - site: "{{ pangolin_typhon_site }}"
-          method: http
-          hostname: "{{ pangolin_typhon_target }}"
-          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:
