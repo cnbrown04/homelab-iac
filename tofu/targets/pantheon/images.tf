@@ -59,3 +59,25 @@ resource "proxmox_download_file" "debian" {
   checksum_algorithm = "sha512"
   overwrite          = false
 }
+
+# The Ubuntu cloud image of the Ubuntu VMs. A VM reads its image only when
+# OpenTofu creates it, so a new image here changes no VM. The list of images
+# is at https://cloud-images.ubuntu.com/releases/resolute/. The file is a qcow2
+# image with the extension .img, and Proxmox needs .qcow2 for an import.
+locals {
+  ubuntu_image = "20260927"
+  ubuntu_nodes = ["tartarus"]
+}
+
+resource "proxmox_download_file" "ubuntu" {
+  for_each = toset(local.ubuntu_nodes)
+
+  node_name          = each.key
+  datastore_id       = "local"
+  content_type       = "import"
+  url                = "https://cloud-images.ubuntu.com/releases/resolute/release-${local.ubuntu_image}/ubuntu-26.04-server-cloudimg-amd64.img"
+  file_name          = "ubuntu-26.04-server-cloudimg-amd64-${local.ubuntu_image}.qcow2"
+  checksum           = "8800651811af9a85465ad1d552add729947bb16488dddb4a9b5305a3d97332b2"
+  checksum_algorithm = "sha256"
+  overwrite          = false
+}

@@ -77,6 +77,10 @@ run = "ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff"
 description = "Check mnemosyne with Ansible"
 run = "ansible-playbook ansible/playbooks/mnemosyne.yml --check --diff"
 
+[tasks."check:daedalus"]
+description = "Check daedalus with Ansible"
+run = "ansible-playbook ansible/playbooks/daedalus.yml --check --diff"
+
 [tasks."check:all"]
 description = "Check each host with Ansible"
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff"

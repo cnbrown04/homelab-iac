@@ -1,0 +1,7 @@
+# Ansible writes this file. See the role dev_tools. Change the tools in
+# dev_tools_mise_tools, not here. Put a tool for one project in the mise.toml
+# of that project.
+[tools]
+{% for name, version in dev_tools_mise_tools | dictsort %}
+"{{ name }}" = "{{ version }}"
+{% endfor %}

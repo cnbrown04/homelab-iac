@@ -1,0 +1,20 @@
+---
+# The user that develops on the host. The role makes the user, with sudo and
+# Docker, and installs the tools for this user.
+dev_tools_user: ""
+dev_tools_shell: /usr/bin/zsh
+# The user module makes the home folder here.
+dev_tools_home: "/home/{{ dev_tools_user }}"
+
+# APT installs these packages. A package that you delete from this list stays
+# on the host. Put it in dev_tools_apt_absent, and APT deletes it.
+dev_tools_apt_packages: []
+dev_tools_apt_absent: []
+
+# mise installs these tools for the user, as name: version. The names are in
+# the registry of mise (mise registry). The role writes the global config of
+# mise, so a tool that you delete from this map goes away on the next run.
+dev_tools_mise_tools: {}
+
+# VS Code and other editors watch each file of a project.
+dev_tools_inotify_max_user_watches: 524288

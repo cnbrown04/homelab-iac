@@ -1,0 +1,35 @@
+---
+# Run this play by hand. No pipeline reaches the VM.
+#
+# The first run after OpenTofu creates the VM: cloud-init gave iac-admin sudo
+# with no password, so sudo ignores the password from SOPS. The play sets the
+# password, then deletes the cloud-init rule.
+- name: Configure daedalus
+  hosts: dev_hosts
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
+  roles:
+    - role: common
+    - role: admin_user
+      tags: [admin_user]
+    - role: ssh_hardening
+      tags: [security]
+    - role: sysctl_hardening
+      tags: [security]
+    - role: unattended_upgrades
+      tags: [security]
+    - role: tailscale
+      tags: [tailscale]
+    # dev_tools puts the user in the docker group, so Docker comes first.
+    - role: docker
+      tags: [docker]
+    - role: dev_tools
+      tags: [dev_tools]
+  tasks:
+    # admin_user set the sudo password, so sudo asks for it from now on.
+    - name: Delete the sudo rule of cloud-init
+      ansible.builtin.file:
+        path: /etc/sudoers.d/90-cloud-init-users
+        state: absent
+      tags: [admin_user]

@@ -1,0 +1,70 @@
+---
+# The development VM on tartarus. To add or delete a tool, change the lists in
+# this file, then run ansible/playbooks/daedalus.yml.
+
+# The owner logs in as this user. Ansible logs in as iac-admin.
+dev_tools_user: caleb
+
+ssh_hardening_allow_users:
+  - iac-admin
+  - caleb
+
+# The defaults of ssh_hardening, with three changes for development. VS Code
+# Remote-SSH needs TCP forwarding. Agent forwarding lets git use the key of
+# the laptop. VS Code opens more than 4 sessions.
+ssh_hardening_options:
+  Port: "22"
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  ChallengeResponseAuthentication: "no"
+  PubkeyAuthentication: "yes"
+  PermitEmptyPasswords: "no"
+  AuthenticationMethods: "publickey"
+  MaxAuthTries: "3"
+  MaxSessions: "10"
+  LoginGraceTime: "30"
+  X11Forwarding: "no"
+  AllowAgentForwarding: "yes"
+  AllowTcpForwarding: "yes"
+  ClientAliveInterval: "300"
+  ClientAliveCountMax: "2"
+
+# The devices on the tailnet reach the VM at daedalus.vnet.buildwithcaleb.com.
+tailscale_login_server: https://vpn.buildwithcaleb.com
+tailscale_tags:
+  - tag:dev
+
+# The system packages. The docker role installs Docker.
+dev_tools_apt_packages:
+  - build-essential
+  - curl
+  - fd-find
+  - git
+  - htop
+  - jq
+  - libssl-dev
+  - pkg-config
+  - ripgrep
+  - tmux
+  - unzip
+  - wget
+  - zsh
+
+# APT deletes these packages. Put a package here when you delete it from the
+# list above.
+dev_tools_apt_absent: []
+
+# mise installs these tools for caleb. A tool that you delete here goes away
+# on the next run. "latest" installs the newest version one time. Run
+# "mise upgrade" on the VM to get a newer version.
+dev_tools_mise_tools:
+  bun: latest
+  claude: latest
+  gh: latest
+  go: latest
+  neovim: latest
+  node: lts
+  opencode: latest
+  rust: stable
+  uv: latest

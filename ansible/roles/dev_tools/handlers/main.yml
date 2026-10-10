@@ -1,0 +1,9 @@
+---
+# Delete the versions that no config uses, for example a tool that you
+# deleted from dev_tools_mise_tools. The handler runs after mise install.
+- name: Delete the mise tools that are no longer necessary
+  ansible.builtin.command:
+    cmd: mise prune --yes
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  changed_when: true

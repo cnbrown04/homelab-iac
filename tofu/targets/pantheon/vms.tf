@@ -100,6 +100,32 @@ locals {
       # macOS metadata of Samba (streams_xattr).
       virtiofs_mappings = [{ mapping = "lethe-shares", expose_acl = true }]
     }
+
+    # The development VM of the owner. Ansible installs the tools. See
+    # ansible/playbooks/daedalus.yml.
+    daedalus = {
+      node_name   = "tartarus"
+      vm_id       = 300
+      description = "Development, Ubuntu 26.04. OpenTofu manages this VM from homelab-iac."
+      tags        = ["dev", "ubuntu"]
+      cpu_type    = "host"
+      cpu_cores   = 8
+      memory_mb   = 16384
+      # The image has no guest agent. Ansible installs it.
+      agent_wait_for_ip = false
+      disks             = [{ interface = "scsi0", datastore_id = "local-lvm", size = 64, import_from = proxmox_download_file.ubuntu["tartarus"].id }]
+      network_devices   = [{ bridge = "vmbr0" }]
+      initialization = {
+        datastore_id = "local-lvm"
+        ipv4_address = "10.0.1.17/24"
+        ipv4_gateway = "10.0.1.1"
+        dns_servers  = ["10.0.1.1"]
+        user_account = {
+          username = "iac-admin"
+          keys     = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP88BOfNMfJoF99u1UYpf3CDUGl5nv+Ovbh0B8fyaqTH"]
+        }
+      }
+    }
   }
 }
 

@@ -1,0 +1,157 @@
+---
+- name: Check the development settings
+  ansible.builtin.assert:
+    that:
+      - dev_tools_user is match('^[a-z_][a-z0-9_-]*$')
+      - dev_tools_user != admin_user_name
+      - admin_user_ssh_keys_url is match('^https://')
+    fail_msg: >-
+      Set dev_tools_user to a user name that is not the admin user. The role
+      uses the SSH keys at admin_user_ssh_keys_url.
+
+- name: Install the QEMU guest agent
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+    state: present
+  register: dev_tools_guest_agent
+
+# The package has no [Install] section. udev starts the agent when the VM has
+# the virtio serial port. A check run does not install the package.
+- name: Start the QEMU guest agent
+  ansible.builtin.systemd_service:
+    name: qemu-guest-agent
+    state: started
+  when: not (ansible_check_mode and dev_tools_guest_agent is changed)
+
+- name: Install the development packages
+  ansible.builtin.apt:
+    name: "{{ dev_tools_apt_packages }}"
+    state: present
+  when: dev_tools_apt_packages | length > 0
+
+- name: Delete the packages that are no longer necessary
+  ansible.builtin.apt:
+    name: "{{ dev_tools_apt_absent }}"
+    state: absent
+  when: dev_tools_apt_absent | length > 0
+
+- name: Set the inotify limit for the editors
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_watches
+    value: "{{ dev_tools_inotify_max_user_watches }}"
+    sysctl_file: /etc/sysctl.d/90-dev-tools.conf
+    reload: true
+
+# The mise repository. The package updates with the other APT packages.
+- name: Download the mise APT signing key
+  ansible.builtin.get_url:
+    url: https://mise.jdx.dev/gpg-key.pub
+    dest: /etc/apt/keyrings/mise.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure the mise APT repository
+  ansible.builtin.deb822_repository:
+    name: mise
+    types: [deb]
+    uris: https://mise.jdx.dev/deb
+    suites: stable
+    components: [main]
+    signed_by: /etc/apt/keyrings/mise.asc
+    state: present
+  register: dev_tools_mise_repository
+
+# A check run does not add the repository, so APT cannot find the package.
+- name: Install mise
+  ansible.builtin.apt:
+    name: mise
+    state: present
+    update_cache: "{{ dev_tools_mise_repository is changed }}"
+  register: dev_tools_mise_package
+  when: not (ansible_check_mode and dev_tools_mise_repository is changed)
+
+# The docker group gives root access to the host. This user has sudo also, so
+# the group gives nothing more.
+- name: Create the development user
+  ansible.builtin.user:
+    name: "{{ dev_tools_user }}"
+    groups: [sudo, docker]
+    append: true
+    shell: "{{ dev_tools_shell }}"
+    password: "{{ admin_user_password_hash }}"
+    update_password: always
+  no_log: true
+
+# The same keys as the admin user, without the extra keys of the pipeline.
+- name: Read the SSH keys at the URL
+  ansible.builtin.set_fact:
+    dev_tools_ssh_keys: "{{ lookup('ansible.builtin.url', admin_user_ssh_keys_url, split_lines=False) }}"
+
+- name: Check that the URL gave at least one key
+  ansible.builtin.assert:
+    that:
+      - dev_tools_ssh_keys is search('^ssh-', multiline=True)
+    fail_msg: "The URL {{ admin_user_ssh_keys_url }} gave no SSH key. Ansible stops, so it does not delete your keys."
+
+- name: Set the SSH keys of the development user
+  ansible.posix.authorized_key:
+    user: "{{ dev_tools_user }}"
+    key: "{{ dev_tools_ssh_keys | trim }}"
+    exclusive: true
+    state: present
+
+- name: Create the config folder of mise
+  ansible.builtin.file:
+    path: "{{ dev_tools_home }}/.config/mise"
+    state: directory
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0755"
+
+- name: Write the global config of mise
+  ansible.builtin.template:
+    src: mise-config.toml.j2
+    dest: "{{ dev_tools_home }}/.config/mise/config.toml"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0644"
+  register: dev_tools_mise_config
+  notify: Delete the mise tools that are no longer necessary
+
+# The user can change the rest of .zshrc. Ansible changes only this block.
+- name: Activate mise in zsh
+  ansible.builtin.blockinfile:
+    path: "{{ dev_tools_home }}/.zshrc"
+    create: true
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0644"
+    marker: "# {mark} ANSIBLE dev_tools"
+    block: |
+      export PATH="$HOME/.local/bin:$PATH"
+      eval "$(mise activate zsh)"
+
+# A check run does not install mise.
+- name: Find the mise tools that are not installed
+  ansible.builtin.command:
+    cmd: mise ls --global --missing --json
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  register: dev_tools_mise_missing
+  changed_when: false
+  # The task only reads, so it also runs in check mode.
+  check_mode: false
+  when: not (ansible_check_mode and dev_tools_mise_package is changed)
+
+# A check run does not write the new config, so mise does not see a new tool.
+# Rust needs build-essential, so the APT packages come first.
+- name: Install the mise tools
+  ansible.builtin.command:
+    cmd: mise install --yes
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  changed_when: true
+  when: >-
+    dev_tools_mise_config is changed
+    or (dev_tools_mise_missing.stdout | default('{}') | from_json | length > 0)

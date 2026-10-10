@@ -11,3 +11,5 @@
   ansible.builtin.import_playbook: proxmox_nodes.yml
 - name: Configure the Samba server
   ansible.builtin.import_playbook: mnemosyne.yml
+- name: Configure the development VM
+  ansible.builtin.import_playbook: daedalus.yml

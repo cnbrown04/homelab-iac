@@ -129,6 +129,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
 | `mnemosyne` | Samba VM on `gaia` (VMID `200`), Debian 13. | `10.0.1.16` | MagicDNS |
+| `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 26.04. | `10.0.1.17` | MagicDNS |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
@@ -256,6 +257,22 @@ the cluster.
   client mounts a share with the option `posix`. Do not add `acl_xattr`.
 - Run its playbook by hand. No pipeline reaches it.
 
+### The development VM `daedalus`
+
+- The owner logs in as `caleb`, with zsh. Ansible logs in as `iac-admin`.
+  `caleb` has sudo with the password of `iac-admin`, and the group `docker`.
+- The role `dev_tools` installs the tools. Change the lists in
+  `host_vars/daedalus/main.yml`, then run the playbook.
+  - APT installs `dev_tools_apt_packages`. To delete a package, put it in
+    `dev_tools_apt_absent`.
+  - mise installs `dev_tools_mise_tools` for `caleb`. Ansible writes
+    `~/.config/mise/config.toml`, so do not change that file on the VM. A tool
+    that you delete from the map goes away on the next run.
+- SSH allows TCP forwarding and agent forwarding, for VS Code Remote-SSH and
+  git. VS Code installs its server at the first connection.
+- The VM has the tag `tag:dev` on the tailnet.
+- Run its playbook by hand. No pipeline reaches it.
+
 ### The services on `hermes`
 
 `*.buildwithcaleb.com` has a wildcard DNS record to `hermes`.
@@ -321,7 +338,7 @@ These decisions are closed. Ask the owner before you re-open one.
 tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne
+ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens
