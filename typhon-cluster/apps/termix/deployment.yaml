@@ -62,8 +62,11 @@ spec:
               value: --login-server=https://vpn.buildwithcaleb.com
             - name: TS_ENABLE_HEALTH_CHECK
               value: "true"
+            # The kubelet probes the pod IP. The restricted level does not
+            # allow a probe to a different host, so the endpoint is not on
+            # localhost only. It gives the health status, not the metrics.
             - name: TS_LOCAL_ADDR_PORT
-              value: 127.0.0.1:9002
+              value: 0.0.0.0:9002
             - name: TS_AUTHKEY
               valueFrom:
                 secretKeyRef:
@@ -75,7 +78,6 @@ spec:
               drop: [ALL]
           startupProbe:
             httpGet:
-              host: 127.0.0.1
               path: /healthz
               port: 9002
             periodSeconds: 2
