@@ -6,14 +6,16 @@
 #
 #   mise run login
 #
-# Set FORCE=1 to log in again now.
+# Set FORCE=1 to log in again now. With QUIET=1, the script prints nothing
+# when no login is necessary. The callback plugin opkssh_login of Ansible
+# runs this script before each run.
 set -euo pipefail
 
 key="${HOMELAB_SSH_KEY_FILE:-$HOME/.ssh/opkssh_homelab}"
 cert="${key}-cert.pub"
 
 if [[ "${FORCE:-0}" != 1 && -f "$cert" && -n "$(find "$cert" -mmin -1380)" ]]; then
-  echo "The opkssh key is less than 23 hours old. No login is necessary."
+  [[ "${QUIET:-0}" == 1 ]] || echo "The opkssh key is less than 23 hours old. No login is necessary."
   exit 0
 fi
 

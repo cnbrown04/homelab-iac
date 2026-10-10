@@ -74,27 +74,22 @@ run = "scripts/opkssh-login.sh"
 # Short commands for the checks. Each task makes no change. Put more flags of
 # ansible-playbook after --, for example: mise run check:hermes -- --tags pangolin
 [tasks."check:hermes"]
-depends = ["login"]
 description = "Check hermes with Ansible. The pipeline runs the same check."
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff --limit hermes"
 
 [tasks."check:proxmox"]
-depends = ["login"]
 description = "Check the Proxmox nodes with Ansible"
 run = "ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff"
 
 [tasks."check:mnemosyne"]
-depends = ["login"]
 description = "Check mnemosyne with Ansible"
 run = "ansible-playbook ansible/playbooks/mnemosyne.yml --check --diff"
 
 [tasks."check:daedalus"]
-depends = ["login"]
 description = "Check daedalus with Ansible"
 run = "ansible-playbook ansible/playbooks/daedalus.yml --check --diff"
 
 [tasks."check:all"]
-depends = ["login"]
 description = "Check each host with Ansible"
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff"
 

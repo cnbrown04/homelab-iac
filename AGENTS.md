@@ -136,7 +136,8 @@ Kubernetes cluster `typhon`.
 The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
 Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
 Ansible logs in to each host as `iac-admin`, with an opkssh key and sudo with
-no password. Run `mise run login` first. Each `check:*` task runs it.
+no password. Before each run, the callback plugin `opkssh_login` runs
+`scripts/opkssh-login.sh`, which logs in when the key is older than 23 hours.
 
 ### The `typhon` cluster
 
