@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kaneo
-          image: ghcr.io/usekaneo/kaneo:2.35.0
+          image: ghcr.io/usekaneo/kaneo:2.37.0
           env:
             # The API is at <client URL>/api.
             - name: KANEO_CLIENT_URL
