@@ -46,6 +46,9 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 - [ ] Add Wazuh, a security platform. It collects the security events of each host and shows the threats that it finds.
   - Put the Wazuh agent on each host with an Ansible role. Each agent sends its events to one Wazuh server.
   - Choose the host of the server first. The Wazuh indexer needs about 8 GiB of RAM, so a Talos worker or hermes is too small.
+- [ ] Get a YubiKey for the break-glass key of iac-admin. iac-admin logs in with opkssh, and Pocket ID runs on hermes. When Pocket ID is down, the break-glass key is the only way for Ansible to log in.
+  - Use a FIDO2 key (ed25519-sk), so each login needs a touch of the YubiKey.
+  - Keep a second YubiKey with a copy, or a second key in a safe place.
 - [ ] Research opkssh, so Termix logs in to the hosts with Pocket ID and short-lived SSH certificates.
   - Termix has an opkssh plugin and ships opkssh v0.16.0. Its config is `/app/data/plugin-data/opkssh/config.yml`, and the redirect URI is `/plugin-api/opkssh/callback`.
   - Each host needs the server part: `AuthorizedKeysCommand`, the files `/etc/opk/providers` and `/etc/opk/auth_id`, and the user `opksshuser`. Do it with an Ansible role, not the install script.

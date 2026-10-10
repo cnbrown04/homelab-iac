@@ -4,6 +4,9 @@
 
 # The owner logs in as this user. Ansible logs in as iac-admin.
 dev_tools_user: caleb
+owner_user_shell: /usr/bin/zsh
+docker_users:
+  - caleb
 
 ssh_hardening_allow_users:
   - iac-admin

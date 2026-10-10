@@ -1,0 +1,12 @@
+---
+# The account of the owner on each host, with sudo. The owner logs in with
+# this account. iac-admin is for Ansible and the pipelines only.
+owner_user_name: ""
+owner_user_shell: /bin/bash
+owner_user_groups:
+  - sudo
+# A URL that returns public SSH keys, one on each line. These keys replace
+# all other keys of the user. opkssh gives a second way in.
+owner_user_ssh_keys_url: ""
+# A SHA-512 crypt hash. The password is for sudo.
+owner_user_password_hash: ""

@@ -4,10 +4,9 @@
     that:
       - dev_tools_user is match('^[a-z_][a-z0-9_-]*$')
       - dev_tools_user != admin_user_name
-      - admin_user_ssh_keys_url is match('^https://')
     fail_msg: >-
       Set dev_tools_user to a user name that is not the admin user. The role
-      uses the SSH keys at admin_user_ssh_keys_url.
+      owner_user makes the user and its keys.
 
 - name: Install the QEMU guest agent
   ansible.builtin.apt:
@@ -70,36 +69,6 @@
     update_cache: "{{ dev_tools_mise_repository is changed }}"
   register: dev_tools_mise_package
   when: not (ansible_check_mode and dev_tools_mise_repository is changed)
-
-# The docker group gives root access to the host. This user has sudo also, so
-# the group gives nothing more.
-- name: Create the development user
-  ansible.builtin.user:
-    name: "{{ dev_tools_user }}"
-    groups: [sudo, docker]
-    append: true
-    shell: "{{ dev_tools_shell }}"
-    password: "{{ admin_user_password_hash }}"
-    update_password: always
-  no_log: true
-
-# The same keys as the admin user, without the extra keys of the pipeline.
-- name: Read the SSH keys at the URL
-  ansible.builtin.set_fact:
-    dev_tools_ssh_keys: "{{ lookup('ansible.builtin.url', admin_user_ssh_keys_url, split_lines=False) }}"
-
-- name: Check that the URL gave at least one key
-  ansible.builtin.assert:
-    that:
-      - dev_tools_ssh_keys is search('^ssh-', multiline=True)
-    fail_msg: "The URL {{ admin_user_ssh_keys_url }} gave no SSH key. Ansible stops, so it does not delete your keys."
-
-- name: Set the SSH keys of the development user
-  ansible.posix.authorized_key:
-    user: "{{ dev_tools_user }}"
-    key: "{{ dev_tools_ssh_keys | trim }}"
-    exclusive: true
-    state: present
 
 - name: Create the config folder of mise
   ansible.builtin.file:

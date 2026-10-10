@@ -1,8 +1,7 @@
 ---
-# The user that develops on the host. The role makes the user, with sudo and
-# Docker, and installs the tools for this user.
+# The user that develops on the host. The role owner_user makes the user, and
+# this role installs the tools for it.
 dev_tools_user: ""
-dev_tools_shell: /usr/bin/zsh
 # The user module makes the home folder here.
 dev_tools_home: "/home/{{ dev_tools_user }}"
 

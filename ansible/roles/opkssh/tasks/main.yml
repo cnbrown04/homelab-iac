@@ -1,0 +1,89 @@
+---
+- name: Check the opkssh settings
+  ansible.builtin.assert:
+    that:
+      - opkssh_issuer is match('^https://')
+      - opkssh_client_ids | length > 0
+      - opkssh_client_ids | select('match', '^[A-Za-z0-9._-]+$') | list | length == opkssh_client_ids | length
+      - opkssh_policy | length > 0
+      - ansible_facts['architecture'] in opkssh_architecture_map
+    fail_msg: "Set the issuer, at least one client ID, and at least one policy item."
+
+- name: Create the group of opkssh
+  ansible.builtin.group:
+    name: "{{ opkssh_user }}"
+    system: true
+
+- name: Create the user of opkssh
+  ansible.builtin.user:
+    name: "{{ opkssh_user }}"
+    group: "{{ opkssh_user }}"
+    system: true
+    create_home: false
+    home: /nonexistent
+    shell: /usr/sbin/nologin
+
+# sshd runs this file as root's command, so root owns it and no one else can
+# write it. The checksums file of the release checks the download.
+- name: Install opkssh
+  ansible.builtin.get_url:
+    url: "https://github.com/openpubkey/opkssh/releases/download/{{ opkssh_version }}/opkssh-linux-{{ opkssh_architecture_map[ansible_facts['architecture']] }}"
+    checksum: "sha256:https://github.com/openpubkey/opkssh/releases/download/{{ opkssh_version }}/checksums.txt"
+    dest: /usr/local/bin/opkssh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the config folder of opkssh
+  ansible.builtin.file:
+    path: /etc/opk
+    state: directory
+    owner: root
+    group: "{{ opkssh_user }}"
+    mode: "0750"
+
+- name: Write the providers of opkssh
+  ansible.builtin.template:
+    src: providers.j2
+    dest: /etc/opk/providers
+    owner: root
+    group: "{{ opkssh_user }}"
+    mode: "0640"
+
+- name: Write the policy of opkssh
+  ansible.builtin.template:
+    src: auth_id.j2
+    dest: /etc/opk/auth_id
+    owner: root
+    group: "{{ opkssh_user }}"
+    mode: "0640"
+
+- name: Create the log file of opkssh
+  ansible.builtin.file:
+    path: /var/log/opkssh.log
+    state: touch
+    owner: root
+    group: "{{ opkssh_user }}"
+    mode: "0660"
+    access_time: preserve
+    modification_time: preserve
+
+# Audit the policy before sshd uses it. A check run does not write the
+# files, so the audit runs in a real run only.
+- name: Audit the policy of opkssh
+  ansible.builtin.command:
+    cmd: /usr/local/bin/opkssh audit --skip-user-policy
+  changed_when: false
+  when: not ansible_check_mode
+
+# The handler of the role ssh_hardening checks the whole configuration, then
+# reloads sshd.
+- name: Let sshd ask opkssh for the keys of a login
+  ansible.builtin.template:
+    src: 60-opkssh.conf.j2
+    dest: /etc/ssh/sshd_config.d/60-opkssh.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: SSH configuration changed

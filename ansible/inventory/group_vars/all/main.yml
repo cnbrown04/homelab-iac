@@ -17,3 +17,18 @@ admin_user_name: iac-admin
 admin_user_ssh_keys_url: https://github.com/cnbrown04.keys
 # Public keys in addition to the keys at the URL. The pipeline key is here.
 admin_user_extra_ssh_keys: []
+
+# The owner logs in as this user, with sudo. iac-admin is for Ansible and the
+# pipelines only. secrets.sops.yml holds owner_user_password_hash.
+owner_user_name: caleb
+owner_user_ssh_keys_url: https://github.com/cnbrown04.keys
+
+# opkssh: a login with a 24-hour SSH certificate from Pocket ID. Members of
+# the Pocket ID group homelab_admin log in as the owner and as iac-admin.
+opkssh_issuer: https://auth.buildwithcaleb.com
+# The client ID of the Pocket ID client "opkssh". It is not a secret.
+opkssh_client_ids:
+  - opkssh
+opkssh_policy:
+  - {principal: caleb, identity: "oidc:groups:homelab_admin"}
+  - {principal: iac-admin, identity: "oidc:groups:homelab_admin"}

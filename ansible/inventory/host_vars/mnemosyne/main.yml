@@ -5,6 +5,7 @@
 
 # Only the admin user logs in with SSH.
 ssh_hardening_allow_users:
+  - caleb
   - iac-admin
 
 # The devices on the tailnet reach the shares at

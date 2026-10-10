@@ -109,7 +109,9 @@
     home: /nonexistent
     shell: /usr/sbin/nologin
     password: "!"
-  loop: "{{ samba_users }}"
+  # The role owner_user makes the owner a login account. Samba forces its own
+  # user for each file, so it needs only the account name.
+  loop: "{{ samba_users | reject('equalto', owner_user_name | default('')) | list }}"
   when: not samba_check_new
 
 - name: Start and enable Samba

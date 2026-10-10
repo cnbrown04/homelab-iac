@@ -16,7 +16,7 @@ proxmox_web_oidc_client_id: ""
 proxmox_web_oidc_client_secret: ""
 # Members of this OIDC group get the role Administrator. Proxmox names the
 # group <group>-<realm>.
-proxmox_web_oidc_admin_group: proxmox-admins
+proxmox_web_oidc_admin_group: homelab_admin
 # Preselect the OIDC realm on the login page. The other realms stay in the
 # list, so root@pam can still log in.
 proxmox_web_oidc_default: true

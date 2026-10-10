@@ -8,8 +8,12 @@
     - role: common
     - role: admin_user
       tags: [admin_user]
+    - role: owner_user
+      tags: [owner_user]
     - role: ssh_hardening
       tags: [security]
+    - role: opkssh
+      tags: [security, opkssh]
     - role: sysctl_hardening
       tags: [security]
     - role: unattended_upgrades

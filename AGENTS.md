@@ -301,7 +301,19 @@ the cluster.
 - Give the admin role of a new app to the Pocket ID group `homelab_admin`.
 - Make a separate group only when the app needs a different set of admins.
   Tell the owner the reason.
-- The groups `proxmox-admins` and `filebrowser-admins` are older. They stay.
+- The group `filebrowser-admins` is older. It stays.
+
+### The accounts on each host
+
+- `caleb` is the account of the owner, with sudo and a password. The role
+  `owner_user` makes it, with the key at `github.com/cnbrown04.keys`.
+- `iac-admin` is for Ansible and the pipelines only. The owner does not log
+  in with it.
+- opkssh lets the Pocket ID group `homelab_admin` log in as `caleb` and as
+  `iac-admin`, with a certificate that expires after 24 hours. The Pocket ID
+  client `opkssh` signs the login.
+- On `mnemosyne`, `caleb` is also the Samba user. The Samba role does not
+  change the account.
 
 ### The services on `hermes`
 
@@ -352,12 +364,14 @@ These decisions are closed. Ask the owner before you re-open one.
 10. **The baseline of a Proxmox node:** SSH with keys only (root keeps key
     login, for the cluster), the kernel settings of `sysctl_hardening`, and
     automatic Debian security updates only. No Fail2ban, CrowdSec, or UFW.
-    The `proxmox_web` role adds the web certificate, port 443, and SSO.
+    The `proxmox_web` role adds the web certificate, port 443, and SSO. The
+    owner logs in as `caleb`, with a key or with opkssh. The owner chose
+    opkssh on 10 October 2026.
 11. **Dockge is the Compose manager.** Ansible deploys each stack. Dockge does
     not.
 12. **The Proxmox web UI:** an nftables rule sends port 443 to 8006. ACME uses
     the Cloudflare DNS-01 challenge, with the account `caleb@auburn.edu`.
-    Members of the Pocket ID group `proxmox-admins` get the role
+    Members of the Pocket ID group `homelab_admin` get the role
     Administrator. `pocketid` is the default realm on the login page.
     `root@pam` stays as the fallback login. Run the role by hand: no pipeline
     reaches the nodes.

@@ -1,0 +1,22 @@
+---
+# opkssh lets a user log in with a short-lived SSH certificate from Pocket ID.
+# sshd asks opkssh for the keys of each login (AuthorizedKeysCommand).
+# renovate: datasource=github-releases depName=openpubkey/opkssh
+opkssh_version: v0.17.0
+
+opkssh_architecture_map:
+  x86_64: amd64
+  aarch64: arm64
+
+# The system user that runs the AuthorizedKeysCommand.
+opkssh_user: opksshuser
+
+# The OIDC issuer, and the client IDs that may sign a login. A certificate
+# expires 24 hours after the login.
+opkssh_issuer: ""
+opkssh_client_ids: []
+opkssh_expiration_policy: 24h
+
+# Each item gives one identity a login as one Linux user, for example
+# { principal: caleb, identity: "oidc:groups:homelab_admin" }.
+opkssh_policy: []

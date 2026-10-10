@@ -1,0 +1,5 @@
+# Ansible writes this file. See the role opkssh.
+# Linux-user identity issuer
+{% for item in opkssh_policy %}
+{{ item.principal }} {{ item.identity }} {{ opkssh_issuer }}
+{% endfor %}

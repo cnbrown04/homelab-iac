@@ -1,0 +1,5 @@
+# Ansible writes this file. See the role opkssh.
+# Issuer Client-ID expiration-policy
+{% for client_id in opkssh_client_ids %}
+{{ opkssh_issuer }} {{ client_id }} {{ opkssh_expiration_policy }}
+{% endfor %}
