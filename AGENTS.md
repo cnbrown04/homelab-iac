@@ -228,9 +228,9 @@ the cluster.
   - It shows `/lethe/shares` through NFS. Each user sees only the folder with
     the Pocket ID user name. The SQLite database is on `local-path`.
 - Termix is at `termix.buildwithcaleb.com`, with the Pangolin login in front
-  of its Pocket ID login. The owner sets OIDC in the admin UI of Termix. The
-  callback is `/users/auth/<id>/callback`. The SQLite database is on
-  `local-path`.
+  of its Pocket ID login. The owner sets OIDC in the admin UI of Termix, and
+  copies the callback URL from that page to Pocket ID. The SQLite database is
+  on `local-path`.
   - A Tailscale sidecar joins the tailnet as `termix`, with `tag:termix`. It
     runs in userspace mode, so the namespace stays `restricted`. The policy
     gives `tag:termix` TCP `22` on each node.
@@ -532,6 +532,8 @@ mise run plan:pantheon
   tag, make sure that the registry has it.
 - The level `restricted` refuses a probe with `host`. A sidecar that gives a
   health endpoint must listen on the pod IP.
+- tailscaled sets the mode of its state folder. Put the state in a folder in
+  the volume, not at the root, because the user does not own the root.
 - Do not use the Ubuntu 26.04 cloud image. Its initramfs (dracut) starts
   DHCP, so cloud-init cannot set the static IP. Use 24.04.
 - A change to `import_from` does not replace a VM. To make a VM again from a

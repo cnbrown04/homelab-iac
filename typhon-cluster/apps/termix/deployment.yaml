@@ -51,8 +51,10 @@ spec:
             # pod has no token for the API.
             - name: TS_KUBE_SECRET
               value: ""
+            # A folder in the volume. tailscaled sets the mode of the folder,
+            # and user 1000 does not own the root of the volume.
             - name: TS_STATE_DIR
-              value: /var/lib/tailscale
+              value: /var/lib/tailscale/state
             - name: TS_HOSTNAME
               value: termix
             # The key is for the first login only. Then the state logs in.
