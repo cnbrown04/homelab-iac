@@ -1,8 +1,7 @@
 name: Give Ansible access to the hosts
 description: >-
-  Write the SSH key for Ansible. The sudo password is in
-  ansible/inventory/group_vars/all/secrets.sops.yml, so Ansible reads it with
-  SOPS_AGE_KEY.
+  Write the SSH key for Ansible, and tell the inventory to use it. The admin
+  user has sudo with no password.
 inputs:
   ssh-key:
     description: The private SSH key of the pipeline.
@@ -20,3 +19,5 @@ runs:
         printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
         # The repository holds the host key, so SSH checks it.
         install -m 644 ansible/known_hosts ~/.ssh/known_hosts
+        # group_vars/all reads the key file from this variable.
+        echo "HOMELAB_SSH_KEY_FILE=$HOME/.ssh/id_ed25519" >> "$GITHUB_ENV"

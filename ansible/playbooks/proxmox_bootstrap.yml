@@ -4,7 +4,8 @@
 #   ansible-playbook playbooks/proxmox_bootstrap.yml -k \
 #     -e '{"ansible_user": "root", "ansible_become": false}'
 #
-# After this play, Ansible logs in as the admin user. See the README.
+# After this play, Ansible logs in as the admin user with opkssh. Run
+# mise run login first.
 - name: Create the admin user on the Proxmox hosts
   hosts: proxmox_nodes
   # The roles use the facts of min and network only. The hardware facts are
@@ -12,3 +13,7 @@
   gather_subset: [min, network]
   roles:
     - role: admin_user
+    # The admin user has no key, so opkssh is its only way in. opkssh uses
+    # the handler of ssh_hardening.
+    - role: ssh_hardening
+    - role: opkssh

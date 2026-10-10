@@ -9,14 +9,18 @@ common_base_packages:
   - sudo
   - python3-debian
 
-# Ansible logs in to each host as the admin user and uses sudo. The admin_user
-# role makes the user. secrets.sops.yml holds admin_user_password_hash. Use the
-# same password on each host, because -K gives one password to all hosts.
+# Ansible logs in to each host as the admin user, with sudo and no password.
+# The admin_user role makes the user. No person logs in with it.
 ansible_user: iac-admin
 admin_user_name: iac-admin
-admin_user_ssh_keys_url: https://github.com/cnbrown04.keys
-# Public keys in addition to the keys at the URL. The pipeline key is here.
+# The pipeline key of hermes is in host_vars/hermes.
 admin_user_extra_ssh_keys: []
+
+# Ansible logs in with the opkssh key of mise run login, and offers no other
+# key. The pipeline sets HOMELAB_SSH_KEY_FILE to its own key. Without
+# IdentitiesOnly, the agent offers its keys first and uses up MaxAuthTries.
+ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOMELAB_SSH_KEY_FILE', default='~/.ssh/opkssh_homelab') }}"
+ansible_ssh_common_args: -o IdentitiesOnly=yes
 
 # The owner logs in as this user, with sudo. iac-admin is for Ansible and the
 # pipelines only. secrets.sops.yml holds owner_user_password_hash.

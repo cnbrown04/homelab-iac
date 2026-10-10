@@ -43,6 +43,10 @@ cilium-cli = "0.20.1"
 # .github/workflows/typhon.yml.
 kubeconform = "0.8.0"
 
+# The SSH login of Ansible. scripts/opkssh-login.sh uses it. The hosts run
+# the same version. See ansible/roles/opkssh.
+"github:openpubkey/opkssh" = "0.17.0"
+
 [env]
 # Ansible reads ansible/ansible.cfg from each folder of the repository, so each
 # command runs from the root. The pipelines use the same file.
@@ -63,25 +67,34 @@ idiomatic_version_file_enable_tools = []
 # runner has no bz2, lzma, or readline for it.
 python.compile = false
 
+[tasks.login]
+description = "Log in with opkssh, when the key of Ansible is older than 23 hours"
+run = "scripts/opkssh-login.sh"
+
 # Short commands for the checks. Each task makes no change. Put more flags of
 # ansible-playbook after --, for example: mise run check:hermes -- --tags pangolin
 [tasks."check:hermes"]
+depends = ["login"]
 description = "Check hermes with Ansible. The pipeline runs the same check."
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff --limit hermes"
 
 [tasks."check:proxmox"]
+depends = ["login"]
 description = "Check the Proxmox nodes with Ansible"
 run = "ansible-playbook ansible/playbooks/proxmox_nodes.yml --check --diff"
 
 [tasks."check:mnemosyne"]
+depends = ["login"]
 description = "Check mnemosyne with Ansible"
 run = "ansible-playbook ansible/playbooks/mnemosyne.yml --check --diff"
 
 [tasks."check:daedalus"]
+depends = ["login"]
 description = "Check daedalus with Ansible"
 run = "ansible-playbook ansible/playbooks/daedalus.yml --check --diff"
 
 [tasks."check:all"]
+depends = ["login"]
 description = "Check each host with Ansible"
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff"
 

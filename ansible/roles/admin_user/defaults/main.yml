@@ -1,8 +1,8 @@
 ---
+# The account of Ansible and the pipelines. No person logs in with it. It
+# logs in with opkssh, or with a key in admin_user_extra_ssh_keys, and it has
+# sudo with no password. Its password is locked.
 admin_user_name: ""
-# A URL that returns public SSH keys, one on each line.
-admin_user_ssh_keys_url: ""
-# Public keys in addition to the keys at the URL, for example a pipeline key.
+# Public keys of the account, for example the key of a pipeline. These keys
+# replace all other keys in authorized_keys.
 admin_user_extra_ssh_keys: []
-# A SHA-512 crypt hash. The password is for sudo.
-admin_user_password_hash: ""

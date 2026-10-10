@@ -135,9 +135,8 @@ Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
 The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
 Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
-Ansible logs in to each host as `iac-admin`, with sudo and a password. The
-password is the same on each host. SOPS holds it as `ansible_become_password`,
-so a run needs no `-K`.
+Ansible logs in to each host as `iac-admin`, with an opkssh key and sudo with
+no password. Run `mise run login` first. Each `check:*` task runs it.
 
 ### The `typhon` cluster
 
@@ -283,7 +282,7 @@ the cluster.
 ### The development VM `daedalus`
 
 - The owner logs in as `caleb`, with zsh. Ansible logs in as `iac-admin`.
-  `caleb` has sudo with the password of `iac-admin`, and the group `docker`.
+  `caleb` has the group `docker`.
 - The role `dev_tools` installs the tools. Change the lists in
   `host_vars/daedalus/main.yml`, then run the playbook.
   - APT installs `dev_tools_apt_packages`. To delete a package, put it in
@@ -308,7 +307,8 @@ the cluster.
 - `caleb` is the account of the owner, with sudo and a password. The role
   `owner_user` makes it, with the key at `github.com/cnbrown04.keys`.
 - `iac-admin` is for Ansible and the pipelines only. The owner does not log
-  in with it.
+  in with it. It has sudo with no password, and its password is locked. It
+  has no key, except the pipeline key on `hermes`.
 - opkssh lets the Pocket ID group `homelab_admin` log in as `caleb` and as
   `iac-admin`, with a certificate that expires after 24 hours. The Pocket ID
   client `opkssh` signs the login.
@@ -403,7 +403,9 @@ add `<name>` to `hermes_compose_stacks`, join the network `pangolin`, publish
 no port, and add a resource to `pangolin_blueprint_resources`.
 
 To add a host: a new VPS runs `scripts/vps-harden.sh`, then the play with
-`-e ansible_user=caleb` one time. A new Proxmox node runs
+`-e ansible_user=caleb` one time. Give that run the key of `caleb` with
+`-e ansible_ssh_private_key_file=<file>`, because opkssh is not on the VPS
+yet. A new Proxmox node runs
 `playbooks/proxmox_bootstrap.yml` as root, then `playbooks/proxmox_nodes.yml`.
 Add the node to `hosts.yml` first, and to the group `pantheon` for the
 cluster.
@@ -413,8 +415,8 @@ change a version by hand.
 
 ### Working with the owner
 
-- The agent can run a playbook with `--check`, because SOPS holds the sudo
-  password. The agent runs a playbook without `--check` only when the owner
+- The agent can run a playbook with `--check`, after `mise run login`. The
+  agent runs a playbook without `--check` only when the owner
   asks for it. For a command as root outside Ansible, give the owner the
   exact command, and ask for the output.
 - Give numbered steps with complete commands. After a change of plan, give the
@@ -485,7 +487,7 @@ mise run plan:pantheon
   | File | Content |
   | --- | --- |
   | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens |
-  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The password of `iac-admin` for sudo, and its hash |
+  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb` |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |
@@ -577,8 +579,8 @@ mise run plan:pantheon
   DHCP, so cloud-init cannot set the static IP. Use 24.04.
 - A change to `import_from` does not replace a VM. To make a VM again from a
   new image, run `apply -replace` on the VM.
-- cloud-init gives `iac-admin` an SSH key and no password. The console login
-  works only after the first run of Ansible.
+- cloud-init gives `iac-admin` an SSH key and no password. Ansible deletes
+  the key at the first run. Log in to the console as `caleb`.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
   512. The host looks at byte 4096 and finds no partition. Do not wipe the
