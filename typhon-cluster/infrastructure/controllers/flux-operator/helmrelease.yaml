@@ -1,0 +1,36 @@
+# The Flux Operator. It manages the Flux controllers through the FluxInstance
+# in infrastructure/configs/flux/. It also serves the Flux Web UI at
+# flux.buildwithcaleb.com, with the Pocket ID login.
+#
+# Do not delete this release. The chart holds the CRD of the FluxInstance, and
+# the operator uninstalls Flux when the FluxInstance goes away.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flux-operator
+spec:
+  interval: 30m
+  releaseName: flux-operator
+  chart:
+    spec:
+      chart: flux-operator
+      version: 0.61.0
+      sourceRef:
+        kind: HelmRepository
+        name: flux-operator
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  values:
+    web:
+      # The secret flux-web-config holds the Web Config API, with the OIDC
+      # client of Pocket ID.
+      configSecretName: flux-web-config
+      httpRoute:
+        enabled: true
+        parentRefs:
+          - name: main
+            namespace: gateway
+        hostnames:
+          - flux.buildwithcaleb.com

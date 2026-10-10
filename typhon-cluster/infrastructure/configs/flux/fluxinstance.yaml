@@ -1,0 +1,32 @@
+# The Flux controllers, managed by the Flux Operator. The owner installed
+# Flux v2.9.5 with flux install. The operator took over those controllers,
+# with the same components and the same NetworkPolicies.
+#
+# No spec.sync: typhon-cluster/flux/sync.yaml holds the source and the
+# entry point of Flux.
+#
+# The operator installs the newest 2.9 patch on its own. Change the minor
+# version here by hand.
+#
+# Caution: when the FluxInstance goes away, the operator uninstalls Flux. So
+# Flux never prunes this object. To delete it, use kubectl.
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  distribution:
+    version: "2.9.x"
+    registry: ghcr.io/fluxcd
+  components:
+    - source-controller
+    - kustomize-controller
+    - helm-controller
+    - notification-controller
+  cluster:
+    type: kubernetes
+    multitenant: false
+    networkPolicy: true
+    domain: cluster.local

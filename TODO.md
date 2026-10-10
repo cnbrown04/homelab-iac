@@ -49,7 +49,7 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 
 
 ### Cluster
-- [ ] Find a web page to manage Flux in typhon, with the Pocket ID login. Compare these:
+- [x] Find a web page to manage Flux in typhon, with the Pocket ID login. The owner chose the Flux Web UI of the Flux Operator on 10 October 2026. Compare these:
   - Capacitor (gimlet-io/capacitor, Apache-2.0): a general UI for Flux. The last change was in February 2026, so check that it is maintained, and check the runtime of its backend.
   - The Flux Web UI of the Flux Operator (controlplaneio-fluxcd/flux-operator, Go, AGPL-3.0): active. typhon does not use the Flux Operator now, so this needs a move to the operator first.
   - Weave GitOps: now a community project. Check that it still gets releases.

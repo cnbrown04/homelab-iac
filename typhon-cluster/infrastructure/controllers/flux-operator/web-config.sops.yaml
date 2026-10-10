@@ -1,0 +1,34 @@
+# The Web Config API of the Flux Web UI, with the Pocket ID client "Flux". The
+# callback URL is https://flux.buildwithcaleb.com/oauth2/callback. Set the
+# client ID and the client secret with sops edit.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: flux-web-config
+type: Opaque
+stringData:
+    config.yaml: ENC[AES256_GCM,data:enpMbXgfFClszqrpA5MI5+zTgRr1ws9q2j/0WgcqhT1QLAJRJhuh+nPlu1LXzY47y+ql1uARsctWdOIzGhbKcEqagBjfZDIqvaLetlHczG0VlQFZI2jeoJyJrPhlSiaUYbrmUtIpQWliHv+/AictKfhpLWwBceTmTyj8uuS/bU4Eb/GU0gC54ODiQT8fI+1yoFYReoBfCBjT89G+mUB+N2TqJizUnyFqsNbM1syY+WNF/Q4ZIKJqsSltafQKoJkq2cY8PGcsDPXm1GHhdu1IerqggFx4mC+S7xmv2sJ0AUbpWgSX+SF6UAuLtetLeqm6drc6DZLW+aMGuwzG34ScF2tU6SbohEhDGhtT6kgfa06U7JesoI5dFJ3s6t72laaZGu8+Nr2Aog2wNsGU1gWaojA/1bB9sJVxjEGQPds3VoL/8Ni1l277eX5qnK7IY/ugPekQ4+9mKZwawxVBG39snsfsEdv+XKu40cAIQ7e/R6EPy+vmR61RWmvCwmpUYV1lz2UR7h6TmMMB5UCgQwJL9o+TiszsSsuX8ZZ17RvmroKHvysVKcRUPNmRCCEEdvgziJE9Sot1vh0JvcuQrLG/1y7K70Ozwg==,iv:DFpPhOInYZtglqbDi7613AR9VfeEjCW+ibeUPey/S+s=,tag:of/7hUXqgOw+oLg4fkrmXQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB2SWRzck5FbVVSUkVtQkhl
+            TVdRemFxU2kyTllSWktDODk5WnpYcnFjeWxRCm1TeU9uRlFRVWMzNDAvWHEzYnBX
+            cUJuU2U2YlBnb0ZmejFmRjJoc3BRL3MKLS0tIFFVSEtyRVc1czA5TFBVcHdMdG1I
+            SmhrK0NuTE8yVmJwRDRQcHlVTmxabGcKeoA/DmmJYYkrt43vP9KPmvLBTLuojMmB
+            kn+wle8bxsrr27AEJzOPR9J+B+Uuh+x6h9UY6p67ccJUraO1qRB76A==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBFMEtPamJ0MG4xNFJMeVcy
+            bWxrSGNnbU9rTWJPZ0hhZ2IyRTl1VVgyR1NVClB0di85a1UrU24zSElXc3ROMGJP
+            STJieXovVnVtdWtJU1lvTlRrMnhwV28KLS0tIDNTN3VZdzdSUTBNejFUeWJMWXIr
+            NjdCc3J1RENRRExYdlAvOUxhU05aK2sKi3CL6VBW6vLhsLcIcdSqvq/BuWIKLVEp
+            BaT5Lb9qc6cY1xmhQKB9g0LswhDB4dQAUgxTvc42+APmI530dwQlxQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-10T20:05:17Z"
+    mac: ENC[AES256_GCM,data:02YjFhppMJSxttKJLqbERi3HAwiyrRzJaQqiMUGg2YvZ+2xRaz+h0Dsu1LfZjb06/mdOVLMKy2pyYTdZiFK2NdPucLZqjQ0B1FCTmidEBBEbDI5OEyGaMpbSdl6u7ML4Fb40EXj/34TIqTQ47FHQ6+1j7caPzxPUU26jg39w1BM=,iv:3pIopl7CKO1cRRmeR6aVZVMp1Bnl5Njej0WQWXiU1MM=,tag:Xg6PzR0NX/yq4qigS9bzCw==,type:str]
+    version: 3.13.3

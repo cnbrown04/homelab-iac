@@ -1,0 +1,18 @@
+# The NetworkPolicy of the chart allows port 9080 from each namespace. The
+# Gateway sends traffic with the Cilium identity "ingress", not from a
+# namespace, so that policy drops it. This policy lets the Gateway in.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: flux-operator-web-gateway
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: flux-operator
+  ingress:
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "9080"
+              protocol: TCP

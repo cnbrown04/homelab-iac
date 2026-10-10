@@ -187,6 +187,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # The Flux Web UI logs in with Pocket ID, but it controls the cluster.
+    # Keep SSO on. The web UI skips its own login page (autoLogin).
+    flux:
+      name: Flux
+      mode: http
+      full-domain: flux.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     # Termix logs in with Pocket ID, but it opens SSH to the hosts. Keep SSO
     # on, also because the first user to register gets the admin role.
     termix:

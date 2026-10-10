@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - cilium
   - csi-driver-nfs
+  - flux-operator
   - local-path-provisioner
   - intel-gpu-plugin
   - metrics-server

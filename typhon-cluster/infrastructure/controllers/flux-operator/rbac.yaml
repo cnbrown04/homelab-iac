@@ -1,0 +1,16 @@
+# The web UI uses the email and the groups of the Pocket ID user as a
+# Kubernetes user and groups. Members of the Pocket ID group homelab_admin get
+# the predefined role flux-web-admin of the chart: they can see each Flux
+# resource, and reconcile, suspend, and resume it.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: flux-web-admins
+subjects:
+  - kind: Group
+    name: homelab_admin
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: flux-web-admin
+  apiGroup: rbac.authorization.k8s.io

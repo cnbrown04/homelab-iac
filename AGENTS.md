@@ -239,6 +239,20 @@ the cluster.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
+- The Flux Operator manages the Flux controllers through the FluxInstance
+  `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
+  `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The
+  operator installs the newest 2.9 patch on its own.
+  - Do not delete the FluxInstance or the HelmRelease `flux-operator`. When
+    the FluxInstance goes away, the operator uninstalls Flux. The
+    FluxInstance has `kustomize.toolkit.fluxcd.io/prune: disabled`.
+  - The Flux Web UI is at `flux.buildwithcaleb.com`, with the Pangolin login
+    in front of its Pocket ID login. The secret `flux-web-config` holds its
+    OIDC client. Members of the Pocket ID group `homelab_admin` get the role
+    `flux-web-admin`.
+- A NetworkPolicy with `namespaceSelector: {}` does not let the Gateway in.
+  The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
+  with `fromEntities: [ingress]`.
 - The PlanetScale Postgres of the apps is at `us-east-5.pg.psdb.cloud:5432`,
   with one database for each app. Each `DATABASE_URL` uses
   `sslmode=verify-full`.
@@ -277,6 +291,13 @@ the cluster.
   git. VS Code installs its server at the first connection.
 - The VM has the tag `tag:dev` on the tailnet.
 - Run its playbook by hand. No pipeline reaches it.
+
+### The admin group of Pocket ID
+
+- Give the admin role of a new app to the Pocket ID group `homelab_admin`.
+- Make a separate group only when the app needs a different set of admins.
+  Tell the owner the reason.
+- The groups `proxmox-admins` and `filebrowser-admins` are older. They stay.
 
 ### The services on `hermes`
 
