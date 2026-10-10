@@ -8,6 +8,7 @@
     "tag:proxmox": [],
     "tag:nas": [],
     "tag:dev": [],
+    "tag:termix": [],
   },
 
   // Headscale approves these routes when a node with the tag advertises them.
@@ -32,6 +33,13 @@
       "src": ["tag:github-actions"],
       "dst": ["tag:proxmox"],
       "ip": ["tcp:8006"],
+    },
+
+    // Termix in typhon opens SSH to the nodes of the tailnet.
+    {
+      "src": ["tag:termix"],
+      "dst": ["*"],
+      "ip": ["tcp:22"],
     },
   ],
 }
