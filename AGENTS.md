@@ -232,10 +232,14 @@ the cluster.
   copies the callback URL from that page to Pocket ID. The SQLite database is
   on `local-path`.
   - A Tailscale sidecar joins the tailnet as `termix`, with `tag:termix`. It
-    runs in userspace mode, so the namespace stays `restricted`. The policy
-    gives `tag:termix` TCP `22` on each node.
-  - A host on the tailnet needs the SOCKS5 proxy `127.0.0.1:1055` in its
-    settings in Termix. A host on the LAN does not.
+    runs in kernel mode, as root with `NET_ADMIN`, so the namespace is
+    `privileged`. Each container of the pod reaches the tailnet with no proxy.
+    The policy gives `tag:termix` TCP `22`, `3389`, and `5900` on each node.
+  - The SOCKS5 proxy `127.0.0.1:1055` stays for the hosts that still use it.
+    A new host does not need it.
+  - guacd 1.6.0 runs in the pod on `127.0.0.1:4822`, for RDP and VNC.
+    `GUACD_HOST` and `GUACD_PORT` set it, and they win over the setting in
+    the UI.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.

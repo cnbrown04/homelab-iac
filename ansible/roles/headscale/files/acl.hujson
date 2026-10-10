@@ -35,11 +35,11 @@
       "ip": ["tcp:8006"],
     },
 
-    // Termix in typhon opens SSH to the nodes of the tailnet.
+    // Termix in typhon opens SSH, RDP, and VNC to the nodes of the tailnet.
     {
       "src": ["tag:termix"],
       "dst": ["*"],
-      "ip": ["tcp:22"],
+      "ip": ["tcp:22", "tcp:3389", "tcp:5900"],
     },
   ],
 }

@@ -2,9 +2,12 @@
 # Pangolin login stays in front of it, because it opens SSH to the hosts.
 #
 # A Tailscale sidecar joins the tailnet as the node termix, with tag:termix.
-# It runs in userspace mode and gives a SOCKS5 proxy on localhost:1055. A
-# host on the tailnet needs this proxy in its settings in Termix. A host on
-# the LAN does not.
+# It runs in kernel mode, so each container of the pod reaches the tailnet
+# with no proxy: SSH from Termix, and RDP and VNC from guacd. The SOCKS5 proxy
+# on localhost:1055 stays for the hosts that still have it in their settings.
+#
+# guacd, the Guacamole proxy, runs in the pod for the remote desktop plugin.
+# It listens on localhost only. GUACD_HOST tells Termix where it is.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,7 +47,7 @@ spec:
           restartPolicy: Always
           env:
             - name: TS_USERSPACE
-              value: "true"
+              value: "false"
             - name: TS_SOCKS5_SERVER
               value: localhost:1055
             # Keep the state on the volume, not in a Kubernetes secret. The
@@ -64,8 +67,7 @@ spec:
               value: --login-server=https://vpn.buildwithcaleb.com
             - name: TS_ENABLE_HEALTH_CHECK
               value: "true"
-            # The kubelet probes the pod IP. The restricted level does not
-            # allow a probe to a different host, so the endpoint is not on
+            # The kubelet probes the pod IP, so the endpoint is not on
             # localhost only. It gives the health status, not the metrics.
             - name: TS_LOCAL_ADDR_PORT
               value: 0.0.0.0:9002
@@ -74,10 +76,14 @@ spec:
                 secretKeyRef:
                   name: tailscale
                   key: TS_AUTHKEY
+          # Kernel mode makes the device tailscale0 and its routes. It needs
+          # root and NET_ADMIN, so the namespace is privileged.
           securityContext:
-            allowPrivilegeEscalation: false
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
             capabilities:
-              drop: [ALL]
+              add: [NET_ADMIN]
           startupProbe:
             httpGet:
               path: /healthz
@@ -101,6 +107,10 @@ spec:
           env:
             - name: PORT
               value: "8080"
+            - name: GUACD_HOST
+              value: 127.0.0.1
+            - name: GUACD_PORT
+              value: "4822"
           ports:
             - name: http
               containerPort: 8080
@@ -121,6 +131,22 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
+        - name: guacd
+          image: docker.io/guacamole/guacd:1.6.0
+          # The image listens on 0.0.0.0. Termix is in the same pod, so
+          # localhost is enough.
+          command: ["/opt/guacamole/sbin/guacd"]
+          args: ["-b", "127.0.0.1", "-l", "4822", "-L", "info", "-f"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 512Mi
       volumes:
         - name: data
           persistentVolumeClaim:

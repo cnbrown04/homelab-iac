@@ -1,8 +1,9 @@
-# The Tailscale sidecar runs in userspace mode, with no capability, so the
-# namespace stays restricted.
+# The Tailscale sidecar runs in kernel mode, as root with NET_ADMIN, so the
+# namespace allows privileged pods. Termix and guacd run as user 1000 with no
+# capabilities.
 apiVersion: v1
 kind: Namespace
 metadata:
   name: termix
   labels:
-    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce: privileged
