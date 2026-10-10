@@ -11,7 +11,7 @@
 These notes come from the measurements of 7 and 8 October 2026. A check of
 hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 - [ ] Push the speed changes, then compare the times in GitHub. Before: the job check of ansible took 110 s, and the plan of pantheon took 136 s.
-- [ ] Apply proxmox_nodes.yml. It deletes the key "WSL Ubuntu" (SHA256:wgY56...) from iac-admin on the 5 Proxmox nodes. The owner chose to delete it on 8 October 2026.
+- [x] Apply proxmox_nodes.yml. It deletes the key "WSL Ubuntu" (SHA256:wgY56...) from iac-admin on the 5 Proxmox nodes. The owner chose to delete it on 8 October 2026.
 - [ ] ansible-core deprecates third-party strategy plugins, with no removal date. Read the changelog of each ansible-core bump. If Mitogen stops, delete strategy_plugins and strategy from ansible/ansible.cfg.
 - [x] Short commands for the checks: mise run check:hermes, check:proxmox, check:mnemosyne, check:all, lint:ansible, plan:atlas, plan:pantheon.
 - [x] The cache of mise in the pipelines uses only the tools of the job (.github/actions/mise-install). A bump of a different tool does not empty it.
@@ -49,10 +49,10 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 - [ ] Get a YubiKey for the break-glass key of iac-admin. iac-admin logs in with opkssh, and Pocket ID runs on hermes. When Pocket ID is down, the break-glass key is the only way for Ansible to log in.
   - Use a FIDO2 key (ed25519-sk), so each login needs a touch of the YubiKey.
   - Keep a second YubiKey with a copy, or a second key in a safe place.
-- [ ] Research opkssh, so Termix logs in to the hosts with Pocket ID and short-lived SSH certificates.
-  - Termix has an opkssh plugin and ships opkssh v0.16.0. Its config is `/app/data/plugin-data/opkssh/config.yml`, and the redirect URI is `/plugin-api/opkssh/callback`.
-  - Each host needs the server part: `AuthorizedKeysCommand`, the files `/etc/opk/providers` and `/etc/opk/auth_id`, and the user `opksshuser`. Do it with an Ansible role, not the install script.
-  - Choose the hosts and the Linux user of each host. The Proxmox nodes touch decision 10.
+- [ ] Let Termix log in to the hosts as caleb with opkssh. Each host already has opkssh.
+  - Add the callback URL of Termix, https://termix.buildwithcaleb.com/plugin-api/opkssh/callback, to the Pocket ID client opkssh.
+  - Write the provider in /app/data/plugin-data/opkssh/config.yml in the Termix pod, with the scopes openid email profile groups. Leave redirect_uris out.
+  - Termix ships opkssh v0.16.0, and the hosts run v0.17.0. Test one host before the others.
 
 
 ### Cluster
@@ -72,7 +72,7 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 
 
 ### Service Checklist
-- [ ] Termix (SSO BACKED)
+- [x] Termix (SSO BACKED)
 - [x] Glance Dashboard
 - [x] Jellyfin
 - [x] Arr-stack (SSO BACKED)
