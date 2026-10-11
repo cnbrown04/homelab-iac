@@ -59,3 +59,22 @@
     name: crowdsec-firewall-bouncer
     enabled: true
     state: started
+
+# The file has the IP of the owner, so the task log hides it.
+- name: Write the allowlist of CrowdSec
+  ansible.builtin.template:
+    src: homelab-allowlist.yaml.j2
+    dest: /etc/crowdsec/parsers/s02-enrich/homelab-allowlist.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  when: crowdsec_allowlist_ips | length > 0
+  no_log: true
+  notify: Reload CrowdSec
+
+- name: Delete the allowlist of CrowdSec
+  ansible.builtin.file:
+    path: /etc/crowdsec/parsers/s02-enrich/homelab-allowlist.yaml
+    state: absent
+  when: crowdsec_allowlist_ips | length == 0
+  notify: Reload CrowdSec

@@ -2,3 +2,7 @@
 crowdsec_packages:
   - crowdsec
   - crowdsec-firewall-bouncer-iptables
+
+# CrowdSec makes no ban for these IPs or ranges. A ban that exists already
+# stays until it expires, or until cscli decisions delete removes it.
+crowdsec_allowlist_ips: []

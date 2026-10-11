@@ -237,6 +237,10 @@ the cluster.
     The policy gives `tag:termix` TCP `22`, `3389`, and `5900` on each node.
   - The SOCKS5 proxy `127.0.0.1:1055` stays for the hosts that still use it.
     A new host does not need it.
+  - Each host in Termix logs in as `caleb` with the auth type OPKSSH. The
+    config of the plugin is `typhon-cluster/apps/termix/opkssh-config.yml`.
+    An init container copies it to the data volume at each start. `OPKSSH_VERSION` keeps the plugin on the version of the
+    hosts.
   - guacd 1.6.0 runs in the pod on `127.0.0.1:4822`, for RDP and VNC.
     `GUACD_HOST` and `GUACD_PORT` set it, and they win over the setting in
     the UI.
@@ -490,7 +494,7 @@ mise run plan:pantheon
   | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens |
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb` |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
-  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys |
+  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
   | `typhon-cluster/talos/talsecret.sops.yaml` | The secrets of Talos. The owner key only. |

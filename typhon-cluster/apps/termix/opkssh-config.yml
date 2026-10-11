@@ -1,0 +1,13 @@
+---
+# The opkssh config of the Termix plugin. The init container opkssh-config
+# copies it to /app/data/plugin-data/opkssh/config.yml at each start. The client "opkssh" in Pocket ID is
+# a public client, so this file holds no secret. Termix passes its own
+# callback URL with --remote-redirect-uri, so redirect_uris stays out.
+# No default_provider: the plugin needs the web chooser of opkssh, and shows
+# it in the sign-in dialog.
+providers:
+  - alias: Cerberus
+    issuer: https://auth.buildwithcaleb.com
+    client_id: opkssh
+    # The policy on each host checks the group, so the token needs groups.
+    scopes: openid email profile groups

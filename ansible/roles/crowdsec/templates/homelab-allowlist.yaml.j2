@@ -1,0 +1,19 @@
+# Ansible writes this file. See the role crowdsec.
+{% set single = crowdsec_allowlist_ips | select('match', '^[0-9a-fA-F:.]+$') | list %}
+{% set ranges = crowdsec_allowlist_ips | reject('match', '^[0-9a-fA-F:.]+$') | list %}
+name: homelab/allowlist
+description: "The IPs of the owner. CrowdSec makes no ban for them."
+whitelist:
+  reason: "an IP of the owner"
+{% if single %}
+  ip:
+{% for ip in single %}
+    - "{{ ip }}"
+{% endfor %}
+{% endif %}
+{% if ranges %}
+  cidr:
+{% for cidr in ranges %}
+    - "{{ cidr }}"
+{% endfor %}
+{% endif %}

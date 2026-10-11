@@ -9,6 +9,16 @@ ssh_hardening_allow_users:
   - caleb
   - iac-admin
 
+# The home IP of the owner, in secrets.sops.yml as hermes_home_ip. The
+# computers at home and Termix in typhon use it. Fail2ban and CrowdSec do not
+# ban it. The IP can change. Then set the new IP with sops set.
+fail2ban_ignore_ip:
+  - 127.0.0.1/8
+  - "::1"
+  - "{{ hermes_home_ip }}"
+crowdsec_allowlist_ips:
+  - "{{ hermes_home_ip }}"
+
 # caleb runs docker with no sudo.
 docker_users:
   - caleb

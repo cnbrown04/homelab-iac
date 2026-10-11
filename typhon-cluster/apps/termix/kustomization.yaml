@@ -8,3 +8,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
+configMapGenerator:
+  - name: termix-opkssh
+    files:
+      - config.yml=opkssh-config.yml
