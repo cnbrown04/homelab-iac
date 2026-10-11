@@ -16,11 +16,18 @@ admin_user_name: iac-admin
 # The pipeline key of hermes is in host_vars/hermes.
 admin_user_extra_ssh_keys: []
 
-# Ansible logs in with the opkssh key of mise run login, and offers no other
-# key. The pipeline sets HOMELAB_SSH_KEY_FILE to its own key. Without
-# IdentitiesOnly, the agent offers its keys first and uses up MaxAuthTries.
+# Ansible logs in with the opkssh key of mise run login. The pipeline sets
+# HOMELAB_SSH_KEY_FILE to its own key. Without IdentitiesOnly, the agent
+# offers its keys first and uses up MaxAuthTries.
+#
+# A new VM has no opkssh before its first run. cloud-init gives iac-admin the
+# key in cloud-init-key.pub, so SSH offers it second. SSH gets the private
+# key from the agent, for example 1Password. The first run deletes the key on
+# the VM. Without an agent, SSH skips the key.
 ansible_ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOMELAB_SSH_KEY_FILE', default='~/.ssh/opkssh_homelab') }}"
-ansible_ssh_common_args: -o IdentitiesOnly=yes
+ansible_ssh_common_args: >-
+  -o IdentitiesOnly=yes
+  -o IdentityFile={{ inventory_dir }}/../cloud-init-key.pub
 
 # The owner logs in as this user, with sudo. iac-admin is for Ansible and the
 # pipelines only. secrets.sops.yml holds owner_user_password_hash.

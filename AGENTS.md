@@ -618,6 +618,9 @@ mise run plan:pantheon
   new image, run `apply -replace` on the VM.
 - cloud-init gives `iac-admin` an SSH key and no password. Ansible deletes
   the key at the first run. Log in to the console as `caleb`.
+- The first run on a new VM uses the cloud-init key, because opkssh is not
+  on the VM yet. `ansible/cloud-init-key.pub` holds the public key. SSH gets
+  the private key from the 1Password agent.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
   512. The host looks at byte 4096 and finds no partition. Do not wipe the
