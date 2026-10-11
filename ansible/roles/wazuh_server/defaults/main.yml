@@ -1,0 +1,21 @@
+---
+# The version of each part of Wazuh. The agents use the same version, and an
+# agent must not be newer than the manager. See the role wazuh_agent.
+wazuh_server_version: 4.14.8
+# The installation assistant of this version, and its SHA-256.
+wazuh_server_install_script_url: https://packages.wazuh.com/4.14/wazuh-install.sh
+wazuh_server_install_script_checksum: sha256:9adb693c474317644358fef74e629b0fab782bcb9c1a411e967a8348e3830bc1
+# The folder of the assistant. It writes wazuh-install-files.tar here, with
+# the passwords of the indexer users and of the API.
+wazuh_server_install_dir: /root/wazuh
+
+# The JVM heap of the indexer: half of the RAM of the VM.
+wazuh_server_indexer_heap: 4g
+
+# The packages that the assistant installs. APT holds them, so an unattended
+# upgrade does not change the version.
+wazuh_server_packages:
+  - wazuh-indexer
+  - wazuh-manager
+  - wazuh-dashboard
+  - filebeat

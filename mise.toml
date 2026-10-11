@@ -89,6 +89,10 @@ run = "ansible-playbook ansible/playbooks/mnemosyne.yml --check --diff"
 description = "Check daedalus with Ansible"
 run = "ansible-playbook ansible/playbooks/daedalus.yml --check --diff"
 
+[tasks."check:argus"]
+description = "Check argus with Ansible"
+run = "ansible-playbook ansible/playbooks/argus.yml --check --diff"
+
 [tasks."check:all"]
 description = "Check each host with Ansible"
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff"
@@ -107,3 +111,8 @@ run = "source scripts/tofu-env.sh atlas && tofu -chdir=tofu/targets/atlas plan"
 description = "Plan the OpenTofu target pantheon"
 shell = "bash -c"
 run = "source scripts/tofu-env.sh pantheon && tofu -chdir=tofu/targets/pantheon plan"
+
+[tasks."plan:planetscale"]
+description = "Plan the OpenTofu target planetscale"
+shell = "bash -c"
+run = "source scripts/tofu-env.sh planetscale && tofu -chdir=tofu/targets/planetscale plan"

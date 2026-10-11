@@ -4,7 +4,7 @@ description: >-
   secrets/tofu.sops.yaml, and join the tailnet.
 inputs:
   target:
-    description: The OpenTofu target, atlas or pantheon.
+    description: The OpenTofu target, atlas, pantheon, or planetscale.
     required: true
   sops-age-key:
     description: The age private key. It decrypts secrets/tofu.sops.yaml.
@@ -32,13 +32,15 @@ runs:
       run: |
         # shellcheck source=/dev/null
         source scripts/tofu-env.sh "$TARGET"
-        for name in AWS_ENDPOINT_URL_S3 AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY \
-            TF_VAR_state_encryption_passphrase PROXMOX_VE_API_TOKEN; do
+        # tofu-env.sh gives the names of the variables of the target.
+        for name in $TOFU_ENV_NAMES; do
           echo "::add-mask::${!name}"
           echo "$name=${!name}" >> "$GITHUB_ENV"
         done
 
+    # The Proxmox API is on the tailnet. PlanetScale is public.
     - name: Join the tailnet
+      if: inputs.target != 'planetscale'
       uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
       with:
         authkey: ${{ inputs.headscale-authkey }}

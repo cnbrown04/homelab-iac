@@ -6,7 +6,7 @@ on:
   workflow_call:
     inputs:
       target:
-        description: The OpenTofu target, atlas or pantheon.
+        description: The OpenTofu target, atlas, pantheon, or planetscale.
         type: string
         required: true
       apply:

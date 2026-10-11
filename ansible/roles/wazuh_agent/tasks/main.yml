@@ -1,0 +1,82 @@
+---
+- name: Check the Wazuh agent settings
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] | lower in ["debian", "ubuntu"]
+      - wazuh_enrollment_password | default('') | length > 0
+    fail_msg: "The host must run Debian or Ubuntu. Set wazuh_enrollment_password in SOPS."
+
+- name: Create the APT key directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download the Wazuh APT signing key
+  ansible.builtin.get_url:
+    url: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+    dest: /etc/apt/keyrings/wazuh.asc
+    checksum: "{{ wazuh_agent_apt_key_checksum }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure the Wazuh APT repository
+  ansible.builtin.deb822_repository:
+    name: wazuh
+    types: [deb]
+    uris: https://packages.wazuh.com/4.x/apt/
+    suites: stable
+    components: [main]
+    signed_by: /etc/apt/keyrings/wazuh.asc
+    state: present
+  register: wazuh_agent_repository
+
+# The package writes the manager address and the enrollment password from
+# these variables at the first install. The tasks below keep them current.
+# APT holds the package, so a change of the version must allow the hold.
+- name: Install the Wazuh agent
+  ansible.builtin.apt:
+    name: "wazuh-agent={{ wazuh_agent_version }}-1"
+    state: present
+    update_cache: "{{ wazuh_agent_repository is changed }}"
+    allow_change_held_packages: true
+  environment:
+    WAZUH_MANAGER: "{{ wazuh_agent_manager_address }}"
+    WAZUH_REGISTRATION_PASSWORD: "{{ wazuh_enrollment_password }}"
+  no_log: true
+  when: not (ansible_check_mode and wazuh_agent_repository is changed)
+
+# A check run does not install the package, so its files do not exist yet.
+- name: Configure the Wazuh agent
+  when: not (ansible_check_mode and wazuh_agent_repository is changed)
+  block:
+    - name: Hold the Wazuh agent
+      ansible.builtin.dpkg_selections:
+        name: wazuh-agent
+        selection: hold
+
+    - name: Set the address of the manager
+      ansible.builtin.replace:
+        path: /var/ossec/etc/ossec.conf
+        regexp: "<address>[^<]*</address>"
+        replace: "<address>{{ wazuh_agent_manager_address }}</address>"
+      notify: Restart the Wazuh agent
+
+    - name: Write the enrollment password
+      ansible.builtin.copy:
+        content: "{{ wazuh_enrollment_password }}\n"
+        dest: /var/ossec/etc/authd.pass
+        owner: root
+        group: wazuh
+        mode: "0640"
+      no_log: true
+      notify: Restart the Wazuh agent
+
+    - name: Start and enable the Wazuh agent
+      ansible.builtin.systemd_service:
+        name: wazuh-agent
+        enabled: true
+        state: started

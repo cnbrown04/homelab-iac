@@ -13,3 +13,5 @@
   ansible.builtin.import_playbook: mnemosyne.yml
 - name: Configure the development VM
   ansible.builtin.import_playbook: daedalus.yml
+- name: Configure the SIEM server
+  ansible.builtin.import_playbook: argus.yml

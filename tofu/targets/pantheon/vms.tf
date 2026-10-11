@@ -126,6 +126,33 @@ locals {
         }
       }
     }
+
+    # The SIEM: the Wazuh manager, indexer, and dashboard on one VM. Wazuh
+    # asks for 4 vCPU and 8 GiB for 1 to 25 agents. Ansible installs it. See
+    # ansible/playbooks/argus.yml.
+    argus = {
+      node_name   = "tartarus"
+      vm_id       = 400
+      description = "Wazuh, the SIEM, Ubuntu 24.04. OpenTofu manages this VM from homelab-iac."
+      tags        = ["siem", "ubuntu"]
+      cpu_type    = "host"
+      cpu_cores   = 4
+      memory_mb   = 8192
+      # The image has no guest agent. Ansible installs it.
+      agent_wait_for_ip = false
+      disks             = [{ interface = "scsi0", datastore_id = "local-lvm", size = 100, import_from = proxmox_download_file.ubuntu["tartarus"].id }]
+      network_devices   = [{ bridge = "vmbr0" }]
+      initialization = {
+        datastore_id = "local-lvm"
+        ipv4_address = "10.0.1.18/24"
+        ipv4_gateway = "10.0.1.1"
+        dns_servers  = ["10.0.1.1"]
+        user_account = {
+          username = "iac-admin"
+          keys     = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP88BOfNMfJoF99u1UYpf3CDUGl5nv+Ovbh0B8fyaqTH"]
+        }
+      }
+    }
   }
 }
 

@@ -130,6 +130,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
 | `mnemosyne` | Samba VM on `gaia` (VMID `200`), Debian 13. | `10.0.1.16` | MagicDNS |
 | `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
+| `argus` | SIEM VM on `tartarus` (VMID `400`), Ubuntu 24.04. Runs Wazuh. | `10.0.1.18` | MagicDNS |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
@@ -264,6 +265,12 @@ the cluster.
 - The PlanetScale Postgres of the apps is at `us-east-5.pg.psdb.cloud:5432`,
   with one database for each app. Each `DATABASE_URL` uses
   `sslmode=verify-full`.
+  - OpenTofu manages it in `tofu/targets/planetscale/`. To add a database, add
+    one entry to `local.apps` in `databases.tf`. OpenTofu makes a role and a
+    database with the same name.
+  - After the apply, run `tofu -chdir=tofu/targets/planetscale output -json
+    app_passwords`, and put the password in the SOPS file of the app. The
+    state keeps the password only after the create.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site
@@ -298,6 +305,28 @@ the cluster.
 - SSH allows TCP forwarding and agent forwarding, for VS Code Remote-SSH and
   git. VS Code installs its server at the first connection.
 - The VM has the tag `tag:dev` on the tailnet.
+- Run its playbook by hand. No pipeline reaches it.
+
+### The SIEM server `argus`
+
+- `argus` runs Wazuh 4.14: the manager, the indexer, and the dashboard on one
+  VM, with 4 vCPU and 8 GiB. The RackNerd VPS `iris` is too small for it.
+- The role `wazuh_server` runs the installation assistant of Wazuh one time.
+  The assistant makes the certificates and the passwords. Ansible then sets
+  the heap of the indexer and the enrollment password.
+- The passwords of the indexer users and of the API are in
+  `/root/wazuh/wazuh-install-files.tar` on `argus`. The user `admin` logs in
+  to the dashboard.
+- APT holds each Wazuh package, so an unattended upgrade does not change the
+  version. To upgrade, change `wazuh_server_version` and
+  `wazuh_agent_version` together. Upgrade the server first, because an agent
+  must not be newer than the manager.
+- The role `wazuh_agent` puts the agent on the Proxmox nodes, `mnemosyne`, and
+  `daedalus`. Each agent sends its events to `10.0.1.18` on TCP `1514`, and
+  enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus` has no
+  agent, because the manager watches its own host. Talos nodes get no agent.
+- The dashboard is at `https://argus.vnet.buildwithcaleb.com`, on the tailnet
+  only, with a self-signed certificate. The VM has the tag `tag:siem`.
 - Run its playbook by hand. No pipeline reaches it.
 
 ### The admin group of Pocket ID
@@ -349,9 +378,10 @@ the cluster.
 These decisions are closed. Ask the owner before you re-open one.
 
 1. **Use OpenTofu, not Terraform.**
-2. **Each tool does one job.** OpenTofu manages Proxmox guests. Ansible
-   configures hosts. Do not create a VM with Ansible. Do not manage a VPS with
-   OpenTofu.
+2. **Each tool does one job.** OpenTofu manages Proxmox guests and the
+   PlanetScale Postgres. Ansible configures hosts. Do not create a VM with
+   Ansible. Do not manage a VPS with OpenTofu. The owner gave PlanetScale to
+   OpenTofu on 11 October 2026.
 3. **Use GitHub-hosted runners only.** A job joins the tailnet as an ephemeral
    node with `tag:github-actions`. Headscale is the control server, on
    `hermes`, out of the homelab. Use the public DERP relays of Tailscale.
@@ -386,11 +416,12 @@ These decisions are closed. Ask the owner before you re-open one.
 ```text
 tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
+tofu/targets/planetscale/   # the PlanetScale Postgres; databases are data in databases.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus
+ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
-secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens
+secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens, PlanetScale service token
 scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
 scripts/vps-harden.sh       # the first bootstrap of a new VPS
 .github/workflows/          # ansible-hermes, tofu, tofu-target, typhon, lint, tailnet-check
@@ -456,7 +487,8 @@ mise run plan:pantheon
   change. A run by hand with `force` applies also with no change, because a
   check does not run `command` tasks.
 - `tofu.yml`: lint, then a plan of each target. On a push to `main`, a plan
-  with changes waits for approval in the environment `atlas` or `pantheon`.
+  with changes waits for approval in the environment `atlas`, `pantheon`, or
+  `planetscale`. The job of `planetscale` does not join the tailnet.
   Then the job applies the saved plan, and a new plan must show no change. A
   plan with no change needs no approval. The plan of a pull request does not
   lock the state, because no job applies it.
@@ -491,8 +523,8 @@ mise run plan:pantheon
 
   | File | Content |
   | --- | --- |
-  | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens |
-  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb` |
+  | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens, the PlanetScale service token |
+  | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb`, the enrollment password of Wazuh |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |

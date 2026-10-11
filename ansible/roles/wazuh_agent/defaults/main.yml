@@ -1,0 +1,9 @@
+---
+# The Wazuh manager on argus. Each agent sends its events to it on TCP 1514,
+# and enrolls on TCP 1515.
+wazuh_agent_manager_address: 10.0.1.18
+# Keep this version the same as wazuh_server_version of the role wazuh_server. An
+# agent must not be newer than the manager.
+wazuh_agent_version: 4.14.8
+# The SHA-256 of https://packages.wazuh.com/key/GPG-KEY-WAZUH.
+wazuh_agent_apt_key_checksum: sha256:a378ca8dfa6b72122df288f64a0cde54f1cbfa3db9b43e6865cb73def35b5b17

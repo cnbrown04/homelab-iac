@@ -9,6 +9,7 @@
     "tag:nas": [],
     "tag:dev": [],
     "tag:termix": [],
+    "tag:siem": [],
   },
 
   // Headscale approves these routes when a node with the tag advertises them.

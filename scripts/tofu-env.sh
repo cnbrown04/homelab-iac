@@ -3,7 +3,10 @@
 # secrets/tofu.sops.yaml, and SOPS decrypts them in memory only.
 #
 #   source scripts/tofu-env.sh atlas
-#   cd tofu/targets/atlas && tofu plan
+#   tofu -chdir=tofu/targets/atlas plan
+#
+# The targets atlas and pantheon get the token of the API of Proxmox. The
+# target planetscale gets the service token of PlanetScale.
 #
 # See AGENTS.md, "Secrets".
 
@@ -14,9 +17,9 @@ fi
 
 tofu_env_target="${1:-}"
 case "$tofu_env_target" in
-  atlas | pantheon) ;;
+  atlas | pantheon | planetscale) ;;
   *)
-    echo "Give a target: atlas or pantheon." >&2
+    echo "Give a target: atlas, pantheon, or planetscale." >&2
     return 1
     ;;
 esac
@@ -35,13 +38,19 @@ names = {
     "AWS_ACCESS_KEY_ID": "r2_access_key_id",
     "AWS_SECRET_ACCESS_KEY": "r2_secret_access_key",
     "TF_VAR_state_encryption_passphrase": "state_encryption_passphrase",
-    "PROXMOX_VE_API_TOKEN": target + "_api_token",
 }
+if target == "planetscale":
+    names["PLANETSCALE_SERVICE_TOKEN_ID"] = "planetscale_service_token_id"
+    names["PLANETSCALE_SERVICE_TOKEN"] = "planetscale_service_token"
+else:
+    names["PROXMOX_VE_API_TOKEN"] = target + "_api_token"
 missing = [key for key in names.values() if not data.get(key)]
 if missing:
     sys.exit("secrets/tofu.sops.yaml has no value for: " + ", ".join(missing))
 for variable, key in names.items():
     print("export %s=%s" % (variable, shlex.quote(data[key])))
+# The pipeline reads this list, and masks each value.
+print("export TOFU_ENV_NAMES=%s" % shlex.quote(" ".join(names)))
 ' "$tofu_env_target"
 )" || return 1
 

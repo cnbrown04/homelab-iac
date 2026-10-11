@@ -22,6 +22,8 @@
       tags: [proxmox_network]
     - role: tailscale
       tags: [tailscale]
+    - role: wazuh_agent
+      tags: [wazuh_agent]
     - role: proxmox_web
       tags: [proxmox_web]
     - role: zfs_nfs

@@ -30,6 +30,8 @@
       tags: [docker]
     - role: dev_tools
       tags: [dev_tools]
+    - role: wazuh_agent
+      tags: [wazuh_agent]
   tasks:
     # admin_user set the sudo password, so sudo asks for it from now on.
     - name: Delete the sudo rule of cloud-init

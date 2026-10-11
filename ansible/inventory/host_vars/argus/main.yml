@@ -1,0 +1,13 @@
+---
+# The SIEM VM on tartarus. It runs the Wazuh manager, indexer, and dashboard.
+# The agents on the other hosts send their events to it.
+
+ssh_hardening_allow_users:
+  - caleb
+  - iac-admin
+
+# The devices on the tailnet reach the dashboard at
+# https://argus.vnet.buildwithcaleb.com.
+tailscale_login_server: https://vpn.buildwithcaleb.com
+tailscale_tags:
+  - tag:siem

@@ -44,8 +44,10 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 
 ### Security
 - [ ] Add Wazuh, a security platform. It collects the security events of each host and shows the threats that it finds.
-  - Put the Wazuh agent on each host with an Ansible role. Each agent sends its events to one Wazuh server.
-  - Choose the host of the server first. The Wazuh indexer needs about 8 GiB of RAM, so a Talos worker or hermes is too small.
+  - The server is the VM argus on tartarus (VMID 400, 10.0.1.18), with 8 GiB. The RackNerd VPS iris is too small.
+  - The role wazuh_agent puts the agent on the Proxmox nodes, mnemosyne, and daedalus. Talos nodes get no agent.
+- [ ] Send the events of hermes to Wazuh. hermes is not on the tailnet. One way: a Newt site on argus, with a TCP resource for ports 1514 and 1515.
+- [ ] Log in to the Wazuh dashboard with Pocket ID (OIDC). Give the admin role to the group homelab_admin.
 - [ ] Get a YubiKey for the break-glass key of iac-admin. iac-admin logs in with opkssh, and Pocket ID runs on hermes. When Pocket ID is down, the break-glass key is the only way for Ansible to log in.
   - Use a FIDO2 key (ed25519-sk), so each login needs a touch of the YubiKey.
   - Keep a second YubiKey with a copy, or a second key in a safe place.
@@ -64,11 +66,20 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 
 
 ### Databases
-- [ ] Manage the PlanetScale Postgres in code, not by hand. Today the owner makes each database by hand with psql.
-  - The provider planetscale/planetscale (1.12.0) has postgres_branch, postgres_branch_role (one role for each app, not the default role), postgres_backup_policy, and postgres_bouncer.
-  - The databases and the extensions inside the branch need a second tool: the OpenTofu provider of PostgreSQL, or the Ansible collection community.postgresql (5.0.0).
-  - Decision 2 in AGENTS.md says that OpenTofu manages Proxmox guests only. Choose the tool first, and change the decision if OpenTofu gets the job.
-  - Put the password of each role in SOPS, and give each app its own role.
+- [ ] Manage the PlanetScale Postgres in code, not by hand. The target tofu/targets/planetscale exists (11 October 2026).
+  - Put the service token in secrets/tofu.sops.yaml, and make the GitHub environment planetscale.
+  - Write the slugs of the organization and the database in databases.tf.
+  - Import the existing databases and roles with import blocks, then delete the blocks.
+  - Make a backup policy with planetscale_postgres_backup_policy, or import the current policy.
+
+
+### Configuration
+- [ ] Put the config of each container and service in git. Find each config that the owner changed by hand in a UI, and move it to Ansible, OpenTofu, or Flux.
+
+
+### Research
+- [ ] Find a documentation site for the homelab. Compare the options, and look at the language of each backend (AGENTS.md, section 5).
+- [ ] Learn NUT (Network UPS Tools). Find out how each node shuts down cleanly when the UPS battery is low.
 
 
 ### Service Checklist
