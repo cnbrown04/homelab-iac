@@ -127,7 +127,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `hyperion` | Proxmox VE, cluster `pantheon` | `10.0.1.101` | `100.64.0.2` |
 | `tartarus` | Proxmox VE, cluster `pantheon` | `10.0.1.113` | `100.64.0.4` |
 | `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
-| `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | none |
+| `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | `tag:hermes`, Wazuh only |
 | `mnemosyne` | Samba VM on `gaia` (VMID `200`), Debian 13. | `10.0.1.16` | MagicDNS |
 | `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
 | `argus` | SIEM VM on `tartarus` (VMID `400`), Ubuntu 24.04. Runs Wazuh. | `10.0.1.18` | MagicDNS |
@@ -321,10 +321,17 @@ the cluster.
   version. To upgrade, change `wazuh_server_version` and
   `wazuh_agent_version` together. Upgrade the server first, because an agent
   must not be newer than the manager.
-- The role `wazuh_agent` puts the agent on the Proxmox nodes, `mnemosyne`, and
-  `daedalus`. Each agent sends its events to `10.0.1.18` on TCP `1514`, and
-  enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus` has no
-  agent, because the manager watches its own host. Talos nodes get no agent.
+- The role `wazuh_agent` puts the agent on the Proxmox nodes, `mnemosyne`,
+  `daedalus`, and `hermes`. Each agent sends its events to `10.0.1.18` on TCP
+  `1514`, and enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus`
+  has no agent, because the manager watches its own host. Talos nodes get no
+  agent.
+- `hermes` joins the tailnet as `tag:hermes` only for Wazuh. Its agent uses
+  the tailnet address of `argus`, `100.64.0.112`. The policy gives
+  `tag:hermes` TCP `1514` and `1515` on `tag:siem`, and nothing more.
+  - `playbooks/hermes_tailnet.yml` runs after `headscale.yml`, because
+    Headscale must have the tag in its policy before it makes the join key.
+    The pipeline of `hermes` applies it.
 - The dashboard is at `wazuh.buildwithcaleb.com`, with the Pangolin login in
   front of its Pocket ID login. The VM has the tag `tag:siem`, and the
   tailnet also reaches it at `https://argus.vnet.buildwithcaleb.com`.
@@ -433,7 +440,7 @@ tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 tofu/targets/asphodel/      # the PlanetScale Postgres asphodel; databases are data in databases.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus
+ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens, PlanetScale service token

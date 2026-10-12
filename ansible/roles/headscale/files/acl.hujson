@@ -10,6 +10,7 @@
     "tag:dev": [],
     "tag:termix": [],
     "tag:siem": [],
+    "tag:hermes": [],
   },
 
   // Headscale approves these routes when a node with the tag advertises them.
@@ -41,6 +42,14 @@
       "src": ["tag:termix"],
       "dst": ["*"],
       "ip": ["tcp:22", "tcp:3389", "tcp:5900"],
+    },
+
+    // The Wazuh agent on hermes sends its events to argus, and enrolls there.
+    // hermes is public, so it gets these two ports and nothing more.
+    {
+      "src": ["tag:hermes"],
+      "dst": ["tag:siem"],
+      "ip": ["tcp:1514", "tcp:1515"],
     },
   ],
 }

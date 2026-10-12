@@ -3,6 +3,8 @@
   ansible.builtin.import_playbook: hermes.yml
 - name: Configure Headscale on hermes
   ansible.builtin.import_playbook: headscale.yml
+- name: Join hermes to the tailnet and send its events to Wazuh
+  ansible.builtin.import_playbook: hermes_tailnet.yml
 - name: Apply the Pangolin resources on hermes
   ansible.builtin.import_playbook: pangolin_resources.yml
 - name: Deploy Hermes application stacks

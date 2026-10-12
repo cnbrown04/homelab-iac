@@ -23,6 +23,17 @@ crowdsec_allowlist_ips:
 docker_users:
   - caleb
 
+# hermes joins the tailnet only to reach Wazuh on argus. The policy gives
+# tag:hermes TCP 1514 and 1515 on tag:siem, and nothing more. See
+# playbooks/hermes_tailnet.yml.
+tailscale_login_server: https://vpn.buildwithcaleb.com
+tailscale_tags:
+  - tag:hermes
+
+# The tailnet address of argus. Public DNS sends *.vnet.buildwithcaleb.com to
+# hermes, so the agent cannot use the MagicDNS name.
+wazuh_agent_manager_address: 100.64.0.112
+
 # The firewall. Docker publishes the ports of Gerbil (UDP 51820, UDP 21820,
 # and UDP 443) with its own iptables rules, so they are not here. The headscale
 # role adds the rule for the Pangolin network.

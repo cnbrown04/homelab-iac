@@ -1,0 +1,14 @@
+---
+# hermes joins the tailnet as tag:hermes, then the Wazuh agent sends its events
+# to argus. This play comes after headscale.yml, because Headscale must have
+# the policy with tag:hermes before it makes the join key.
+- name: Join hermes to the tailnet and send its events to Wazuh
+  hosts: hermes
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
+  roles:
+    - role: tailscale
+      tags: [tailscale]
+    - role: wazuh_agent
+      tags: [wazuh_agent]
