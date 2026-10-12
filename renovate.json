@@ -51,6 +51,28 @@
   "dependencyDashboard": true,
   "packageRules": [
     {
+      "description": "Put each patch update in one pull request, so the owner merges the safe updates together. A rule below this one can give an update a different group.",
+      "matchUpdateTypes": [
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "groupName": "safe updates",
+      "groupSlug": "safe-updates"
+    },
+    {
+      "description": "A minor update of version 1.0 or later is also safe. Before 1.0, a minor update can break the API, so it keeps its own pull request. A minor update of Python is a new release of the language, so it also keeps its own pull request.",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "matchDepNames": [
+        "!python"
+      ],
+      "groupName": "safe updates",
+      "groupSlug": "safe-updates"
+    },
+    {
       "description": "Pangolin Enterprise Edition tags have the form ee-<version>",
       "matchDatasources": [
         "docker"

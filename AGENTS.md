@@ -578,6 +578,10 @@ mise run plan:pantheon
 - Each job installs its tools with `.github/actions/mise-install`. Its cache
   key uses only the versions of those tools, so a bump of a different tool
   does not empty the cache.
+- Renovate puts each patch update, and each minor update of version 1.0 or
+  later, in one pull request with the branch `renovate/safe-updates`. A
+  major update, a minor update before 1.0, a minor update of Python, Talos,
+  and `ansible-core` with Mitogen keep their own pull requests.
 - mise does not compile Python. Renovate waits 7 days for a new Python, so a
   precompiled build exists. It waits 3 days for each other bump of code that
   the pipelines run with the secrets.
