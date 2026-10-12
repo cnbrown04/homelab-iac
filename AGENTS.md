@@ -400,7 +400,6 @@ the cluster.
   Tell the owner the reason.
 - The group `opencloud_users` gives the role `user` of OpenCloud to the users
   who are not admins. OpenCloud refuses a user with no role.
-- The group `filebrowser-admins` has no app now. The owner can delete it.
 
 ### The accounts on each host
 
