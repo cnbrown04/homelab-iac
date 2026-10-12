@@ -56,6 +56,11 @@ pangolin_typhon_target: 100.89.128.4
 # address of the hassio network gateway reaches Home Assistant on port 80.
 pangolin_home_assistant_site: home-assistant
 pangolin_home_assistant_target: 172.30.32.1
+# The Newt site on argus. Newt runs on the VM, so the target is the loopback
+# address. The dashboard of Wazuh has a self-signed certificate. Traefik does
+# not check it (serversTransport in traefik_config.yml).
+pangolin_argus_site: argus
+pangolin_argus_target: 127.0.0.1
 
 # Pangolin resources. Headscale is not here: a Pangolin resource sends each
 # request through the Pangolin app, and Headscale must not depend on it.
@@ -254,6 +259,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_home_assistant_target }}"
           port: 8000
+    # Wazuh logs in with Pocket ID, but it shows the security events of each
+    # host. Keep SSO on, like Termix.
+    wazuh:
+      name: Wazuh
+      mode: http
+      full-domain: wazuh.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_argus_site }}"
+          method: https
+          hostname: "{{ pangolin_argus_target }}"
+          port: 443
     # Headplane has no Pangolin login. It logs in with Pocket ID itself.
     headplane:
       name: Headplane

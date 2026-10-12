@@ -325,8 +325,23 @@ the cluster.
   `daedalus`. Each agent sends its events to `10.0.1.18` on TCP `1514`, and
   enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus` has no
   agent, because the manager watches its own host. Talos nodes get no agent.
-- The dashboard is at `https://argus.vnet.buildwithcaleb.com`, on the tailnet
-  only, with a self-signed certificate. The VM has the tag `tag:siem`.
+- The dashboard is at `wazuh.buildwithcaleb.com`, with the Pangolin login in
+  front of its Pocket ID login. The VM has the tag `tag:siem`, and the
+  tailnet also reaches it at `https://argus.vnet.buildwithcaleb.com`.
+  - The role `newt` runs Newt on `argus` as the Pangolin site `argus`. The
+    target is `https://127.0.0.1:443`. Traefik does not check the self-signed
+    certificate. Newt does not accept Pangolin clients.
+  - Members of the Pocket ID group `homelab_admin` get the role `all_access`.
+    The owner made the Pocket ID client by hand, with PKCE off. Its callback
+    URL is `https://wazuh.buildwithcaleb.com/auth/openid/login`.
+  - The indexer reads its security settings from an index. After a change to
+    `config.yml` or `roles_mapping.yml`, a handler loads the file with
+    `securityadmin.sh` and the admin certificate.
+  - Each user of the dashboard calls the API of the manager as `wazuh-wui`
+    (`run_as: false`). Only admins log in, so a role for each user gives
+    nothing.
+  - The user `admin` still logs in with its password, for when Pocket ID is
+    down.
 - Run its playbook by hand. No pipeline reaches it.
 
 ### The admin group of Pocket ID

@@ -1,0 +1,30 @@
+# Ansible writes this file.
+[Unit]
+Description=Newt, the site of Pangolin
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+EnvironmentFile=/etc/newt/newt.env
+ExecStart=/usr/local/bin/newt
+Restart=always
+RestartSec=5
+# Newt runs WireGuard in user space, so it needs no privilege.
+DynamicUser=true
+StateDirectory=newt
+Environment=HOME=/var/lib/newt
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

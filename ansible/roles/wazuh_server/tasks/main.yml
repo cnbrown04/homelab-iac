@@ -4,7 +4,11 @@
     that:
       - ansible_facts['distribution'] | lower == "ubuntu"
       - wazuh_enrollment_password | default('') | length > 0
-    fail_msg: "The host must run Ubuntu. Set wazuh_enrollment_password in SOPS."
+      - wazuh_server_oidc_client_id | length > 0
+      - wazuh_server_oidc_client_secret | default('') | length > 0
+    fail_msg: >-
+      The host must run Ubuntu. Set wazuh_enrollment_password and
+      wazuh_server_oidc_client_secret in SOPS, and wazuh_server_oidc_client_id.
 
 - name: Create the folder of the installation assistant
   ansible.builtin.file:
@@ -76,6 +80,56 @@
         regexp: "<use_password>no</use_password>"
         replace: "<use_password>yes</use_password>"
       notify: Restart the Wazuh manager
+
+    # The indexer accepts a Pocket ID token. The handler loads each changed
+    # file into the indexer.
+    - name: Write the authentication settings of the indexer
+      ansible.builtin.template:
+        src: opensearch-security-config.yml.j2
+        dest: /etc/wazuh-indexer/opensearch-security/config.yml
+        owner: wazuh-indexer
+        group: wazuh-indexer
+        mode: "0640"
+      notify: Load the authentication settings
+
+    - name: Give all_access to the admin group of Pocket ID
+      ansible.builtin.lineinfile:
+        path: /etc/wazuh-indexer/opensearch-security/roles_mapping.yml
+        insertafter: '^  - "admin"$'
+        line: '  - "{{ wazuh_server_oidc_admin_group }}"'
+      notify: Load the role mapping
+
+    - name: Set the login of the dashboard
+      ansible.builtin.lineinfile:
+        path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+        regexp: "^{{ item.key | regex_escape }}:"
+        line: "{{ item.key }}: {{ item.value }}"
+      loop: "{{ wazuh_server_dashboard_settings | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      no_log: true
+      notify: Restart the Wazuh dashboard
+      vars:
+        wazuh_server_dashboard_settings:
+          opensearch_security.auth.multiple_auth_enabled: "true"
+          opensearch_security.auth.type: '["basicauth","openid"]'
+          opensearch_security.openid.connect_url: >-
+            "{{ wazuh_server_oidc_issuer }}/.well-known/openid-configuration"
+          opensearch_security.openid.client_id: '"{{ wazuh_server_oidc_client_id }}"'
+          opensearch_security.openid.client_secret: '"{{ wazuh_server_oidc_client_secret }}"'
+          opensearch_security.openid.scope: '"openid profile email groups"'
+          opensearch_security.openid.base_redirect_url: '"{{ wazuh_server_public_url }}"'
+          opensearch_security.ui.openid.login.buttonname: '"Log in with Pocket ID"'
+
+    # Each user of the dashboard calls the API of the manager as wazuh-wui.
+    # Only the admin group can log in, so a per-user role in the API gives
+    # nothing.
+    - name: Call the API as the user of the dashboard
+      ansible.builtin.replace:
+        path: /usr/share/wazuh-dashboard/data/wazuh/config/wazuh.yml
+        regexp: "^(\\s+)run_as: true$"
+        replace: "\\1run_as: false"
+      notify: Restart the Wazuh dashboard
 
     - name: Start and enable the Wazuh services
       ansible.builtin.systemd_service:

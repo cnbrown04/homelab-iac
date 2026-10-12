@@ -19,3 +19,14 @@ wazuh_server_packages:
   - wazuh-manager
   - wazuh-dashboard
   - filebeat
+
+# The public URL of the dashboard. Pangolin sends it to the Newt site on
+# argus. The login with Pocket ID returns to this URL.
+wazuh_server_public_url: https://wazuh.buildwithcaleb.com
+# The Pocket ID client of the dashboard. Its callback URL is
+# <wazuh_server_public_url>/auth/openid/login. secrets.sops.yml holds
+# wazuh_server_oidc_client_secret.
+wazuh_server_oidc_issuer: https://auth.buildwithcaleb.com
+wazuh_server_oidc_client_id: ""
+# The members of this Pocket ID group get the role all_access.
+wazuh_server_oidc_admin_group: homelab_admin

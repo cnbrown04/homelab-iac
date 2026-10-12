@@ -657,7 +657,7 @@ pages:
             cache: 1m
             sites:
               - title: Wazuh
-                url: https://argus.vnet.buildwithcaleb.com
+                url: https://wazuh.buildwithcaleb.com
                 check-url: https://10.0.1.18
                 allow-insecure: true
                 icon: di:wazuh
@@ -711,7 +711,7 @@ pages:
                   - title: Dockge
                     url: https://dockge.buildwithcaleb.com
                   - title: Wazuh
-                    url: https://argus.vnet.buildwithcaleb.com
+                    url: https://wazuh.buildwithcaleb.com
                   - title: Pocket ID
                     url: https://auth.buildwithcaleb.com
                   - title: GitHub

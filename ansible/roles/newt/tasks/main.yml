@@ -1,0 +1,55 @@
+---
+- name: Check the Newt settings
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['architecture'] == "x86_64"
+      - newt_id | length > 0
+      - newt_secret | default('') | length > 0
+    fail_msg: "The host must be x86_64. Set newt_id, and newt_secret in SOPS."
+
+- name: Install Newt
+  ansible.builtin.get_url:
+    url: "https://github.com/fosrl/newt/releases/download/{{ newt_version }}/newt_linux_amd64"
+    dest: /usr/local/bin/newt
+    checksum: "{{ newt_checksum }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart Newt
+
+- name: Create the settings folder of Newt
+  ansible.builtin.file:
+    path: /etc/newt
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+# systemd reads the file as root, so the service user does not need access.
+- name: Write the settings of Newt
+  ansible.builtin.template:
+    src: newt.env.j2
+    dest: /etc/newt/newt.env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart Newt
+
+- name: Write the service of Newt
+  ansible.builtin.template:
+    src: newt.service.j2
+    dest: /etc/systemd/system/newt.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Newt
+
+# A check run does not write the service file, so the unit does not exist.
+- name: Start and enable Newt
+  ansible.builtin.systemd_service:
+    name: newt
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: not ansible_check_mode

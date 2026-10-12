@@ -11,3 +11,11 @@ ssh_hardening_allow_users:
 tailscale_login_server: https://vpn.buildwithcaleb.com
 tailscale_tags:
   - tag:siem
+
+# The Pocket ID client of the dashboard. Its callback URL is
+# https://wazuh.buildwithcaleb.com/auth/openid/login. secrets.sops.yml holds
+# wazuh_server_oidc_client_secret.
+wazuh_server_oidc_client_id: 770d7265-0ee4-4e40-a29f-4c6c52c209aa
+
+# The Newt site argus in Pangolin. secrets.sops.yml holds newt_secret.
+newt_id: lfw3ixjucmolhjv

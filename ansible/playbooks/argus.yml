@@ -28,6 +28,9 @@
     # The manager watches its own host, so argus gets no agent.
     - role: wazuh_server
       tags: [wazuh_server]
+    # Pangolin sends wazuh.buildwithcaleb.com through Newt to the dashboard.
+    - role: newt
+      tags: [newt]
   tasks:
     - name: Delete the sudo rule of cloud-init
       ansible.builtin.file:

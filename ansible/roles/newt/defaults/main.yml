@@ -1,0 +1,10 @@
+---
+# Newt connects the host to Pangolin on hermes as a site. Pangolin sends the
+# requests of a resource through the tunnel, so the host publishes no port.
+newt_version: 1.18.1
+# The SHA-256 of the asset newt_linux_amd64 of the release.
+newt_checksum: sha256:26deaf4478375b1f7380c4b8be18c8266ab4c476c6d5715972d629a512915832
+newt_endpoint: https://pangolin.buildwithcaleb.com
+# The ID of the site, from the Pangolin dashboard. secrets.sops.yml holds
+# newt_secret.
+newt_id: ""

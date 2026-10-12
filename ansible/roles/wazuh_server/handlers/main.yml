@@ -8,3 +8,36 @@
   ansible.builtin.systemd_service:
     name: wazuh-manager
     state: restarted
+
+# The super admin certificate of the installation assistant loads one file
+# into the security index of the indexer.
+- name: Load the authentication settings
+  ansible.builtin.command:
+    cmd: >-
+      bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh
+      -f /etc/wazuh-indexer/opensearch-security/config.yml -t config
+      -icl -nhnv -h 127.0.0.1
+      -cacert /etc/wazuh-indexer/certs/root-ca.pem
+      -cert /etc/wazuh-indexer/certs/admin.pem
+      -key /etc/wazuh-indexer/certs/admin-key.pem
+  environment:
+    JAVA_HOME: /usr/share/wazuh-indexer/jdk
+  changed_when: true
+
+- name: Load the role mapping
+  ansible.builtin.command:
+    cmd: >-
+      bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh
+      -f /etc/wazuh-indexer/opensearch-security/roles_mapping.yml -t rolesmapping
+      -icl -nhnv -h 127.0.0.1
+      -cacert /etc/wazuh-indexer/certs/root-ca.pem
+      -cert /etc/wazuh-indexer/certs/admin.pem
+      -key /etc/wazuh-indexer/certs/admin-key.pem
+  environment:
+    JAVA_HOME: /usr/share/wazuh-indexer/jdk
+  changed_when: true
+
+- name: Restart the Wazuh dashboard
+  ansible.builtin.systemd_service:
+    name: wazuh-dashboard
+    state: restarted
