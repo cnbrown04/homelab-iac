@@ -71,17 +71,17 @@ locals {
       initialization = merge(local.typhon_network, { ipv4_address = "10.0.20.24/24" })
     })
 
-    # The SMB server. It shares /lethe/shares of gaia through virtiofs, so it
-    # must run on gaia. Ansible creates the directory mapping and configures
-    # the VM. See ansible/playbooks/mnemosyne.yml.
+    # The file server. Samba and OpenCloud share /lethe/shares of gaia through
+    # virtiofs, so it must run on gaia. Ansible creates the directory mapping
+    # and configures the VM. See ansible/playbooks/mnemosyne.yml.
     mnemosyne = {
       node_name   = "gaia"
       vm_id       = 200
-      description = "Samba, the shares in /lethe/shares. OpenTofu manages this VM from homelab-iac."
-      tags        = ["samba", "debian"]
+      description = "Samba and OpenCloud, the shares in /lethe/shares. OpenTofu manages this VM from homelab-iac."
+      tags        = ["samba", "opencloud", "debian"]
       cpu_type    = "host"
       cpu_cores   = 2
-      memory_mb   = 2048
+      memory_mb   = 4096
       # The image has no guest agent. Ansible installs it.
       agent_wait_for_ip = false
       disks             = [{ interface = "scsi0", datastore_id = "local-lvm", size = 16, import_from = proxmox_download_file.debian["gaia"].id }]

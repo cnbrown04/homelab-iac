@@ -35,9 +35,9 @@
    max log size = 1000
    logging = file
 
-   # FileBrowser changes the same files through NFS on gaia. Samba does not
-   # see a change on the host through virtiofs, so it cannot break a lease.
-   # With a lease, a client keeps an old copy of a file or a folder list.
+   # OpenCloud changes the same files. Samba does not see a change that
+   # another process makes, so it cannot break a lease. With a lease, a
+   # client keeps an old copy of a file or a folder list.
    oplocks = no
    level2 oplocks = no
    smb2 leases = no
@@ -54,9 +54,13 @@
    fruit:wipe_intentionally_left_blank_rfork = yes
    fruit:delete_empty_adfiles = yes
 
+   # OpenCloud keeps its metadata, its temporary files, and its trash in these
+   # folders in each share. A client must not see or change them.
+   veto files = /.oc-nodes/.oc-tmp/.Trash/
+
 {% for user in samba_users %}
 [{{ user }}]
-   path = {{ samba_share_root }}/{{ user }}
+   path = {{ samba_user_root }}/{{ user }}
    valid users = {{ user }}
    read only = no
    force user = {{ samba_file_owner }}

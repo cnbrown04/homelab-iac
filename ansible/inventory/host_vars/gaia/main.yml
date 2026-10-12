@@ -9,9 +9,9 @@ proxmox_network_vlan_interfaces:
 zfs_nfs_pool: lethe
 zfs_nfs_datasets:
   - name: lethe/k8s
-  # The SMB shares of mnemosyne, one folder for each user. User 3000 owns each
-  # file: Samba forces it, and FileBrowser runs as it. Samba keeps the macOS
-  # metadata in extended attributes.
+  # The shares of mnemosyne, one folder for each user. User 3000 owns each
+  # file: Samba forces it, and OpenCloud runs as it. Samba keeps the macOS
+  # metadata in extended attributes, and OpenCloud keeps its IDs there.
   - name: lethe/shares
     properties:
       xattr: sa
@@ -29,13 +29,11 @@ zfs_nfs_exports:
   - path: /lethe/data/media
     clients: 10.0.20.0/24
     options: rw,sync,no_subtree_check,no_root_squash,crossmnt
-  # FileBrowser in typhon. mnemosyne uses virtiofs, not NFS.
-  - path: /lethe/shares
-    clients: 10.0.20.0/24
-    options: rw,sync,no_subtree_check,no_root_squash
 
 # mnemosyne mounts /lethe/shares with virtiofs. The user of the OpenTofu token
-# for pantheon attaches the mapping to the VM.
+# for pantheon attaches the mapping to the VM. Do not export the folder with
+# NFS: OpenCloud on mnemosyne sees only the changes that go through
+# mnemosyne.
 proxmox_dir_mapping_folders:
   - mapping: lethe-shares
     path: /lethe/shares

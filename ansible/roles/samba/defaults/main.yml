@@ -1,12 +1,15 @@
 ---
 # The folder that holds the shares. The host mounts it with virtiofs from the
-# directory mapping samba_virtiofs_tag. Each user gets the share
-# <samba_share_root>/<name>.
+# directory mapping samba_virtiofs_tag.
 samba_share_root: /srv/shares
 samba_virtiofs_tag: ""
+# Each user gets the share <samba_user_root>/<name>. OpenCloud makes the
+# folder at the first login of the user, and it refuses a folder that exists
+# already. So this role does not make the folder.
+samba_user_root: "{{ samba_share_root }}/users"
 
-# The owner of each file in the shares. Samba forces this user and group, so
-# FileBrowser in typhon can read each file. The IDs must be the same on gaia.
+# The owner of each file in the shares. Samba forces this user and group, and
+# OpenCloud runs as it. The IDs must be the same on gaia.
 samba_file_owner: shares
 samba_file_owner_id: 3000
 

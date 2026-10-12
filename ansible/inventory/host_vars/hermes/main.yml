@@ -72,6 +72,10 @@ pangolin_home_assistant_target: 172.30.32.1
 # not check it (serversTransport in traefik_config.yml).
 pangolin_argus_site: argus
 pangolin_argus_target: 127.0.0.1
+# The Newt site on mnemosyne. OpenCloud publishes port 9200 on the loopback
+# address only.
+pangolin_mnemosyne_site: mnemosyne
+pangolin_mnemosyne_target: 127.0.0.1
 
 # Pangolin resources. Headscale is not here: a Pangolin resource sends each
 # request through the Pangolin app, and Headscale must not depend on it.
@@ -204,19 +208,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # FileBrowser has its own login through Pocket ID. Its WebDAV clients
-    # cannot pass the Pangolin login, so SSO is off.
-    filebrowser:
-      name: FileBrowser
+    # OpenCloud logs in with Pocket ID. Its desktop and mobile apps cannot
+    # pass the Pangolin login, so SSO is off.
+    opencloud:
+      name: OpenCloud
       mode: http
       full-domain: files.buildwithcaleb.com
       auth:
         sso-enabled: false
       targets:
-        - site: "{{ pangolin_typhon_site }}"
+        - site: "{{ pangolin_mnemosyne_site }}"
           method: http
-          hostname: "{{ pangolin_typhon_target }}"
-          port: 80
+          hostname: "{{ pangolin_mnemosyne_target }}"
+          port: 9200
     # The Flux Web UI logs in with Pocket ID, but it controls the cluster.
     # Keep SSO on. The web UI skips its own login page (autoLogin).
     flux:

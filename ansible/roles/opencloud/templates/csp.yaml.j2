@@ -1,0 +1,8 @@
+# Ansible writes this file. See the role opencloud.
+# OpenCloud adds these entries to its default policy. The web app gets the
+# tokens and the profile pictures from Pocket ID.
+directives:
+  connect-src:
+    - '{{ opencloud_oidc_issuer }}/'
+  img-src:
+    - '{{ opencloud_oidc_issuer }}/'

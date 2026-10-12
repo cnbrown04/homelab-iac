@@ -1,0 +1,7 @@
+---
+# A check run does not install Docker or the stack.
+- name: Restart OpenCloud
+  community.docker.docker_compose_v2:
+    project_src: "{{ opencloud_stack_root }}/opencloud"
+    state: restarted
+  when: not ansible_check_mode

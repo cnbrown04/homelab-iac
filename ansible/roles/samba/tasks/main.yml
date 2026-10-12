@@ -79,16 +79,6 @@
     opts: defaults,nofail
     state: mounted
 
-- name: Create the folder of each user
-  ansible.builtin.file:
-    path: "{{ samba_share_root }}/{{ item }}"
-    state: directory
-    owner: "{{ samba_file_owner }}"
-    group: "{{ samba_file_owner }}"
-    mode: "0770"
-  loop: "{{ samba_users }}"
-  when: not samba_check_new
-
 - name: Write the Samba configuration
   ansible.builtin.template:
     src: smb.conf.j2
@@ -123,10 +113,11 @@
   when: not samba_check_new
 
 # smbclient logs in with the password from SOPS. A failed login means that the
-# user is new or that the password changed.
+# user is new or that the password changed. The test uses IPC$, because the
+# share of a user does not exist before the first login to OpenCloud.
 - name: Test the password of each user
   ansible.builtin.command:
-    argv: [smbclient, "//127.0.0.1/{{ item }}", "--user={{ item }}", --command=exit]
+    argv: [smbclient, "//127.0.0.1/IPC$", "--user={{ item }}", --command=exit]
   environment:
     PASSWD: "{{ samba_user_passwords[item] }}"
   register: samba_login

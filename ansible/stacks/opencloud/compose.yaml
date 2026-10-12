@@ -1,0 +1,61 @@
+name: opencloud
+services:
+  opencloud:
+    image: docker.io/opencloudeu/opencloud:7.2.4
+    container_name: opencloud
+    restart: unless-stopped
+    # User 3000 owns each file in the shares. Samba forces the same user.
+    user: "${OC_UID}:${OC_GID}"
+    # init writes the secrets to /etc/opencloud/opencloud.yaml at the first
+    # start. It does not change a file that exists.
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["opencloud init --insecure no || true; exec opencloud server"]
+    # Ansible writes .env. It holds the URLs and the client ID.
+    env_file: .env
+    environment:
+      # Newt sends the requests from Pangolin, and Pangolin has the
+      # certificate.
+      PROXY_TLS: "false"
+      PROXY_HTTP_ADDR: 0.0.0.0:9200
+      # Pocket ID logs the users in, so the built-in IdP does not run.
+      OC_EXCLUDE_RUN_SERVICES: idp
+      PROXY_OIDC_REWRITE_WELLKNOWN: "true"
+      PROXY_OIDC_ACCESS_TOKEN_VERIFY_METHOD: none
+      PROXY_USER_OIDC_CLAIM: preferred_username
+      PROXY_USER_CS3_CLAIM: username
+      PROXY_AUTOPROVISION_ACCOUNTS: "true"
+      PROXY_AUTOPROVISION_CLAIM_USERNAME: preferred_username
+      PROXY_AUTOPROVISION_CLAIM_EMAIL: email
+      PROXY_AUTOPROVISION_CLAIM_DISPLAYNAME: name
+      PROXY_AUTOPROVISION_CLAIM_GROUPS: groups
+      GRAPH_USERNAME_MATCH: none
+      # proxy.yaml maps the Pocket ID groups to the roles.
+      PROXY_ROLE_ASSIGNMENT_DRIVER: oidc
+      PROXY_ROLE_ASSIGNMENT_OIDC_CLAIM: groups
+      GRAPH_ASSIGN_DEFAULT_USER_ROLE: "false"
+      # The role comes from the claim groups, so each app asks for the scope
+      # groups. The web app takes a string, and WebFinger takes a list with
+      # commas.
+      WEB_OIDC_SCOPE: openid profile email groups
+      WEBFINGER_DESKTOP_OIDC_CLIENT_SCOPES: openid,profile,email,offline_access,groups
+      WEBFINGER_ANDROID_OIDC_CLIENT_SCOPES: openid,profile,email,offline_access,groups
+      WEBFINGER_IOS_OIDC_CLIENT_SCOPES: openid,profile,email,offline_access,groups
+      PROXY_CSP_CONFIG_FILE_LOCATION: /etc/opencloud/csp.yaml
+      FRONTEND_CHECK_FOR_UPDATES: "false"
+      # The files stay in plain folders in the shares. Each user has the
+      # folder users/<name>. OpenCloud keeps its own data in .oc-nodes,
+      # .oc-tmp, and .Trash in each folder, and in indexes and uploads.
+      STORAGE_USERS_DRIVER: posix
+      STORAGE_USERS_ID_CACHE_STORE: nats-js-kv
+      STORAGE_USERS_POSIX_ROOT: /srv/shares
+      STORAGE_USERS_POSIX_PERSONAL_SPACE_PATH_TEMPLATE: "users/{{.User.Username}}"
+      # The collaborative mode. inotify tells OpenCloud about each change of
+      # Samba, because Samba writes through the same kernel.
+      STORAGE_USERS_POSIX_WATCH_FS: "true"
+    # Newt on the host sends the requests. Nothing else reaches the port.
+    ports:
+      - 127.0.0.1:9200:9200
+    volumes:
+      - ./config:/etc/opencloud
+      - ./data:/var/lib/opencloud
+      - ${OC_SHARE_ROOT}:/srv/shares

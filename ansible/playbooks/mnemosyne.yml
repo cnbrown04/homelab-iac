@@ -27,6 +27,14 @@
       tags: [tailscale]
     - role: samba
       tags: [samba]
+    - role: docker
+      tags: [docker]
+    # OpenCloud uses the same folders as Samba. See the role opencloud.
+    - role: opencloud
+      tags: [opencloud]
+    # Pangolin sends files.buildwithcaleb.com through Newt to OpenCloud.
+    - role: newt
+      tags: [newt]
     - role: wazuh_agent
       tags: [wazuh_agent]
   tasks:

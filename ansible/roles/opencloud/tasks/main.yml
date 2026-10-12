@@ -1,0 +1,63 @@
+---
+- name: Check the OpenCloud settings
+  ansible.builtin.assert:
+    that:
+      - opencloud_url is match('^https://[^/]+$')
+      - opencloud_oidc_issuer is match('^https://[^/]+$')
+      - opencloud_oidc_client_id | length > 0
+      - opencloud_role_mapping | length > 0
+    fail_msg: "Set the public URL and the issuer with no path, the client ID, and the role mapping."
+
+# The watcher of the collaborative mode needs one watch for each folder.
+- name: Give inotify enough watches for the shares
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_watches
+    value: "{{ opencloud_inotify_max_user_watches }}"
+    sysctl_file: /etc/sysctl.d/90-opencloud.conf
+    state: present
+
+# init writes opencloud.yaml in config, so the user of the container owns
+# the folder. data holds the accounts, the search index, and the thumbnails.
+- name: Create the folders of OpenCloud
+  ansible.builtin.file:
+    path: "{{ opencloud_stack_root }}/opencloud/{{ item }}"
+    state: directory
+    owner: "{{ opencloud_user_id }}"
+    group: "{{ opencloud_group_id }}"
+    mode: "0750"
+  loop: [config, data]
+
+# OpenCloud reads the files from the folder config. They are not single-file
+# bind mounts, so the container sees the new file after a restart.
+- name: Write the role mapping and the CSP of OpenCloud
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ opencloud_stack_root }}/opencloud/config/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: [proxy.yaml, csp.yaml]
+  notify: Restart OpenCloud
+
+# A check run on a new host does not install Docker. Then the deploy skips.
+- name: Find Docker
+  ansible.builtin.stat:
+    path: /usr/bin/docker
+  register: opencloud_docker
+
+- name: Deploy the OpenCloud Compose stack
+  when: opencloud_docker.stat.exists or not ansible_check_mode
+  ansible.builtin.include_role:
+    name: compose_stack
+  vars:
+    compose_stack_name: opencloud
+    compose_stack_source: "{{ playbook_dir }}/../stacks/opencloud"
+    compose_stack_root: "{{ opencloud_stack_root }}"
+    compose_stack_environment:
+      OC_UID: "{{ opencloud_user_id }}"
+      OC_GID: "{{ opencloud_group_id }}"
+      OC_SHARE_ROOT: "{{ opencloud_share_root }}"
+      OC_URL: "{{ opencloud_url }}"
+      OC_OIDC_ISSUER: "{{ opencloud_oidc_issuer }}"
+      # One client for the web, desktop, and mobile apps.
+      OC_OIDC_CLIENT_ID: "{{ opencloud_oidc_client_id }}"

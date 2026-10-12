@@ -1,0 +1,12 @@
+# Ansible writes this file. See the role opencloud.
+# A user gets the role of the first entry that matches one of the Pocket ID
+# groups of the user. Only this file can set the mapping.
+role_assignment:
+  driver: oidc
+  oidc_role_mapper:
+    role_claim: groups
+    role_mapping:
+{% for mapping in opencloud_role_mapping %}
+      - role_name: {{ mapping.role_name }}
+        claim_value: {{ mapping.claim_value }}
+{% endfor %}

@@ -606,10 +606,6 @@ pages:
             title: Tools
             cache: 1m
             sites:
-              - title: FileBrowser
-                url: https://files.buildwithcaleb.com
-                check-url: http://filebrowser.filebrowser.svc.cluster.local:8080/health
-                icon: di:filebrowser-quantum
               - title: Flux
                 url: https://flux.buildwithcaleb.com
                 check-url: http://flux-operator.flux-system.svc.cluster.local:9080/
@@ -650,6 +646,18 @@ pages:
                 check-url: https://10.0.1.124:8006
                 allow-insecure: true
                 icon: di:proxmox
+
+          # The file server mnemosyne on gaia, outside the cluster. OpenCloud
+          # listens on the loopback address only, so the check goes through
+          # Pangolin.
+          - type: monitor
+            title: Files
+            cache: 1m
+            sites:
+              - title: OpenCloud
+                url: https://files.buildwithcaleb.com
+                check-url: https://files.buildwithcaleb.com/status.php
+                icon: sh:opencloud
 
           # The SIEM VM on tartarus, outside the cluster.
           - type: monitor
@@ -734,7 +742,7 @@ pages:
               - qbittorrent/qBittorrent
               - qdm12/gluetun
               - Jackett/Jackett
-              - gtsteffaniak/filebrowser
+              - opencloud-eu/opencloud
               - Termix-SSH/Termix
               - siderolabs/talos
               - fosrl/pangolin

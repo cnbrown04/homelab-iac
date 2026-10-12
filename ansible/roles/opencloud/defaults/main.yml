@@ -1,0 +1,28 @@
+---
+# OpenCloud runs in Docker next to Samba, on the same virtiofs mount. Samba
+# and OpenCloud write through the same kernel, so inotify tells OpenCloud
+# about each change of Samba.
+opencloud_stack_root: /opt/stacks
+# The public URL, with no path.
+opencloud_url: ""
+opencloud_oidc_issuer: ""
+# The client ID of the one Pocket ID client of OpenCloud. The web app uses
+# it, and WebFinger gives it to the desktop and mobile apps.
+opencloud_oidc_client_id: opencloud
+
+# The folder of the shares, and the owner of each file. Samba forces the same
+# user.
+opencloud_share_root: /srv/shares
+opencloud_user_id: 3000
+opencloud_group_id: 3000
+
+# The Pocket ID groups that give an OpenCloud role. The first match wins. A
+# user in no group of the list cannot log in.
+opencloud_role_mapping:
+  - role_name: admin
+    claim_value: homelab_admin
+  - role_name: user
+    claim_value: opencloud_users
+
+# inotify uses one watch for each folder in the shares.
+opencloud_inotify_max_user_watches: 524288

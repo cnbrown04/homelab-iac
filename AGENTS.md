@@ -128,7 +128,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `tartarus` | Proxmox VE, cluster `pantheon` | `10.0.1.113` | `100.64.0.4` |
 | `theia` | Proxmox VE, cluster `pantheon` | `10.0.1.131` | `100.64.0.1` |
 | `hermes` | Public VPS, Ubuntu 24.04. The owner has a noVNC console in vPanel. | `192.255.220.7` (public) | `tag:hermes`, Wazuh only |
-| `mnemosyne` | Samba VM on `gaia` (VMID `200`), Debian 13. | `10.0.1.16` | MagicDNS |
+| `mnemosyne` | File server VM on `gaia` (VMID `200`), Debian 13. Runs Samba and OpenCloud. | `10.0.1.16` | MagicDNS |
 | `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
 | `argus` | SIEM VM on `tartarus` (VMID `400`), Ubuntu 24.04. Runs Wazuh. | `10.0.1.18` | MagicDNS |
 
@@ -223,11 +223,6 @@ the cluster.
   by their service names. Its SQLite database and `settings.json` are on
   `local-path`. To restore: put the old config folder in
   `/lethe/k8s/seerr/migrate/`, then delete the pod and the claim `config`.
-- FileBrowser Quantum is at `files.buildwithcaleb.com`, with no Pangolin
-  login. It logs in with OIDC through Pocket ID. The owner made its Pocket ID
-  client by hand. The group `filebrowser-admins` gets the admin role.
-  - It shows `/lethe/shares` through NFS. Each user sees only the folder with
-    the Pocket ID user name. The SQLite database is on `local-path`.
 - Termix is at `termix.buildwithcaleb.com`, with the Pangolin login in front
   of its Pocket ID login. The owner sets OIDC in the admin UI of Termix, and
   copies the callback URL from that page to Pocket ID. The SQLite database is
@@ -277,18 +272,45 @@ the cluster.
   `{{ pangolin_typhon_site }}`, the hostname `{{ pangolin_typhon_target }}`,
   and the port `80`.
 
-### The Samba server `mnemosyne`
+### The file server `mnemosyne`
 
 - Samba comes from trixie-backports. An APT pin keeps the Samba packages on
   backports, and unattended-upgrades upgrades them.
-- `mnemosyne` mounts `/lethe/shares` of `gaia` with virtiofs, through the
-  directory mapping `lethe-shares`. So the VM must stay on `gaia`.
-- Each user in `samba_users` gets one share, `/lethe/shares/<name>`. Use the
-  Pocket ID user name, so FileBrowser shows the same folder.
-- User 3000 (`shares`) owns each file. Samba forces this user, and FileBrowser
+- `mnemosyne` mounts `/lethe/shares` of `gaia` with virtiofs at
+  `/srv/shares`, through the directory mapping `lethe-shares`. So the VM must
+  stay on `gaia`.
+- Each user has the folder `/lethe/shares/users/<name>`. Samba shares it as
+  `<name>`, and OpenCloud shows it. Use the Pocket ID user name.
+- User 3000 (`shares`) owns each file. Samba forces this user, and OpenCloud
   runs as it.
 - The shares use the SMB3 POSIX extensions, for development work. A Linux
   client mounts a share with the option `posix`. Do not add `acl_xattr`.
+- OpenCloud is at `files.buildwithcaleb.com`, with no Pangolin login. It runs
+  in Docker on `mnemosyne` (the role `opencloud`). Newt sends the requests
+  from the Pangolin site `mnemosyne` to `127.0.0.1:9200`.
+  - It uses the PosixFS driver in collaborative mode. inotify tells it about
+    each change of Samba, because Samba writes through the same kernel.
+  - inotify does not see a change on `gaia` or through NFS. So do not export
+    `/lethe/shares` with NFS, and change the files only through Samba or
+    OpenCloud. OpenCloud reads the other changes at its next start.
+  - OpenCloud makes the folder of a user at the first login. It refuses a
+    folder that exists already, and the user then gets no files. So the role
+    `samba` does not make the folder. A new user logs in to OpenCloud before
+    the first use of the share.
+  - OpenCloud keeps its IDs in the extended attributes of each file, and
+    `.oc-nodes`, `.oc-tmp`, and `.Trash` in each folder of a user. Samba hides
+    these folders with `veto files`. Do not delete the attributes.
+  - The web, desktop, and mobile apps use one Pocket ID client: a public
+    client with PKCE and the custom client ID `opencloud`. WebFinger gives
+    the ID to the apps (`OC_OIDC_CLIENT_ID`). The owner made the client by
+    hand. A desktop app older than 4.0 does not read WebFinger, so it does
+    not work.
+  - The role comes from the claim `groups`: `homelab_admin` gets `admin`, and
+    `opencloud_users` gets `user`. A user in neither group cannot log in.
+  - `opencloud init` wrote the secrets of OpenCloud to
+    `/opt/stacks/opencloud/config/opencloud.yaml` at the first start. The
+    accounts, the search index, and the thumbnails are in
+    `/opt/stacks/opencloud/data`.
 - Run its playbook by hand. No pipeline reaches it.
 
 ### The development VM `daedalus`
@@ -376,7 +398,9 @@ the cluster.
 - Give the admin role of a new app to the Pocket ID group `homelab_admin`.
 - Make a separate group only when the app needs a different set of admins.
   Tell the owner the reason.
-- The group `filebrowser-admins` is older. It stays.
+- The group `opencloud_users` gives the role `user` of OpenCloud to the users
+  who are not admins. OpenCloud refuses a user with no role.
+- The group `filebrowser-admins` has no app now. The owner can delete it.
 
 ### The accounts on each host
 
@@ -577,7 +601,7 @@ mise run plan:pantheon
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb`, the enrollment password of Wazuh |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
-  | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |
+  | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user, the secret of the Newt site `mnemosyne` |
   | `ansible/inventory/host_vars/daedalus/secrets.sops.yml` | The logins of Claude Code and opencode for `caleb` |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
   | `typhon-cluster/talos/talsecret.sops.yaml` | The secrets of Talos. The owner key only. |
@@ -651,9 +675,9 @@ mise run plan:pantheon
 - The delete of a file in storage needs `Datastore.Allocate`. `tofu@pve`
   has the role `PVEDatastoreAdmin` on `/storage/local` only, so a new image
   can replace the old file. The owner chose this on 10 October 2026.
-- Samba on `mnemosyne` does not see a change that `gaia` or NFS makes through
-  virtiofs. So `smb.conf` turns off oplocks and leases. With a lease, a
-  client shows an old folder list.
+- Samba on `mnemosyne` does not see a change that another process makes, for
+  example OpenCloud. So `smb.conf` turns off oplocks and leases. With a
+  lease, a client shows an old folder list.
 - Do not put `sslrootcert=system` in the `DATABASE_URL` of an app. The `pg`
   driver of Node.js reads it as a file path and fails. Only libpq (`psql`,
   `pg_dump`) needs it, so the backup job sets `PGSSLROOTCERT=system`.

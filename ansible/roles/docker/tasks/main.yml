@@ -41,18 +41,22 @@
     state: present
   register: docker_repository
 
-# The index needs a refresh only after a change to the Docker repository.
+# The index needs a refresh only after a change to the Docker repository. A
+# check run on a new host does not add the repository, so APT does not find
+# the packages. Then the install and the start skip.
 - name: Install Docker Engine and the Compose plugin
   ansible.builtin.apt:
     name: "{{ docker_packages }}"
     state: present
     update_cache: "{{ docker_repository is changed }}"
+  when: not (ansible_check_mode and docker_repository is changed)
 
 - name: Start and enable Docker
   ansible.builtin.systemd_service:
     name: docker
     enabled: true
     state: started
+  when: not (ansible_check_mode and docker_repository is changed)
 
 # A check run does not install Docker, so the group does not exist yet. A new
 # group takes effect at the next login of the user.

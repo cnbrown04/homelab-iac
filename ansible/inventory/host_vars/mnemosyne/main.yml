@@ -1,7 +1,7 @@
 ---
-# The SMB server. It shares the dataset lethe/shares of gaia, through the
-# directory mapping lethe-shares. FileBrowser in typhon shows the same folders
-# at files.buildwithcaleb.com.
+# The file server. It shares the dataset lethe/shares of gaia, through the
+# directory mapping lethe-shares. Samba and OpenCloud use the same folders.
+# OpenCloud is at files.buildwithcaleb.com.
 
 # Only the admin user logs in with SSH.
 ssh_hardening_allow_users:
@@ -15,7 +15,21 @@ tailscale_tags:
   - tag:nas
 
 samba_virtiofs_tag: lethe-shares
-# One share for each user. Use the Pocket ID user name, so FileBrowser shows
-# the same folder. secrets.sops.yml holds samba_user_passwords.
+# One share for each user. Use the Pocket ID user name: the share is the
+# folder users/<name>, and OpenCloud makes it at the first login of the user.
+# secrets.sops.yml holds samba_user_passwords.
 samba_users:
   - caleb
+
+# The web, desktop, and mobile apps of OpenCloud use one Pocket ID client: a
+# public client with PKCE and the custom client ID opencloud. Its callback
+# URLs are https://files.buildwithcaleb.com/,
+# https://files.buildwithcaleb.com/oidc-callback.html,
+# https://files.buildwithcaleb.com/oidc-silent-redirect.html,
+# http://127.0.0.1, http://localhost, oc://android.opencloud.eu, and
+# oc://ios.opencloud.eu.
+opencloud_url: https://files.buildwithcaleb.com
+opencloud_oidc_issuer: https://auth.buildwithcaleb.com
+
+# The Newt site mnemosyne in Pangolin. secrets.sops.yml holds newt_secret.
+newt_id: 55nffwaowymropt
