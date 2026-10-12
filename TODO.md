@@ -69,7 +69,7 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 - [ ] Manage the PlanetScale Postgres in code, not by hand. The target tofu/targets/asphodel exists (11 October 2026).
   - [x] Put the service token in secrets/tofu.sops.yaml, and make the GitHub environment asphodel.
   - [x] Write the slugs of the organization and the database in databases.tf.
-  - [x] Import the branch main. Delete the import block after the first apply.
+  - [x] Import the branch main.
   - Import the databases that the owner made by hand, if one exists.
   - Make a backup policy with planetscale_postgres_backup_policy, or import the current policy.
 
