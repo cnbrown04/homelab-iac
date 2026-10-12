@@ -344,6 +344,12 @@ the cluster.
   - Each run imports the opencode logins from `opencode auth export` on the
     desktop. The import adds a missing login and skips a login that exists.
     After a new login on the desktop, put the export in SOPS again.
+- `mise run login` on `daedalus` uses the device flow of opkssh. It prints a
+  link and a QR code, and you approve the login on any device, for example
+  the phone with Termix. The release of opkssh has no device flow yet, so
+  the role `dev_tools` builds opkssh from the commit in
+  `dev_tools_opkssh_source_ref`. `.zshrc` sets `OPKSSH_BIN` and
+  `OPKSSH_DEVICE_FLOW` for `scripts/opkssh-login.sh`.
 - SSH allows TCP forwarding and agent forwarding, for VS Code Remote-SSH and
   git. VS Code installs its server at the first connection.
 - The VM has the tag `tag:dev` on the tailnet.
@@ -716,6 +722,10 @@ mise run plan:pantheon
   `authkey` input of the action.
 - Renovate closed its open pull requests after the history rewrite of
   28 September 2026. Check that it opens them again.
+
+- When a release of opkssh has the device flow (it came after v0.17.0):
+  delete `dev_tools_opkssh_source_ref` from `host_vars/daedalus/main.yml`.
+  Then set `OPKSSH_DEVICE_FLOW=1` on `daedalus` with no source build.
 
 ### Do not
 

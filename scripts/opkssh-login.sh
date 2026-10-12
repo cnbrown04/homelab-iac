@@ -9,6 +9,10 @@
 # Set FORCE=1 to log in again now. With QUIET=1, the script prints nothing
 # when no login is necessary. The callback plugin opkssh_login of Ansible
 # runs this script before each run.
+#
+# With OPKSSH_DEVICE_FLOW=1, the script uses the device flow: it prints a link
+# and a QR code, and you log in on any device. OPKSSH_BIN sets the opkssh
+# binary. The role dev_tools sets both on daedalus.
 set -euo pipefail
 
 key="${HOMELAB_SSH_KEY_FILE:-$HOME/.ssh/opkssh_homelab}"
@@ -19,5 +23,13 @@ if [[ "${FORCE:-0}" != 1 && -f "$cert" && -n "$(find "$cert" -mmin -1380)" ]]; t
   exit 0
 fi
 
+opkssh_bin="${OPKSSH_BIN:-opkssh}"
+args=(--config-path scripts/opkssh-client.yml --private-key-file "$key")
+
+if [[ "${OPKSSH_DEVICE_FLOW:-0}" == 1 ]]; then
+  echo "Open the link, or scan the QR code, on any device, and log in to Pocket ID."
+  exec "$opkssh_bin" login pocketid-device "${args[@]}"
+fi
+
 echo "Log in to Pocket ID in the browser."
-opkssh login --config-path scripts/opkssh-client.yml --private-key-file "$key"
+exec "$opkssh_bin" login "${args[@]}"

@@ -81,6 +81,11 @@ dev_tools_mise_tools:
   "npm:vscode-langservers-extracted": latest
   rust-analyzer: latest
 
+# The merge commit of the device flow of opkssh (pull request 521). The
+# release v0.17.0 does not have it. Delete this line when a release of opkssh
+# has the device flow, and set OPKSSH_DEVICE_FLOW on the host some other way.
+dev_tools_opkssh_source_ref: 74edb0a5eeb0429b7257f4473947309f43bb09b2
+
 # Claude Code and opencode use their own installers, so they stay on the
 # newest version. Each run of the playbook also updates them.
 dev_tools_claude_code: true

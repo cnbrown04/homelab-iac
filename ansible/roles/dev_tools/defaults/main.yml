@@ -15,6 +15,12 @@ dev_tools_apt_absent: []
 # mise, so a tool that you delete from this map goes away on the next run.
 dev_tools_mise_tools: {}
 
+# A commit of opkssh to build from source, for the device flow of
+# scripts/opkssh-login.sh. Empty: no build. The shell of the user then points
+# the login script at the build. See tasks/opkssh.yml.
+dev_tools_opkssh_source_ref: ""
+dev_tools_opkssh_dir: "{{ dev_tools_home }}/.local/share/opkssh-source"
+
 # VS Code and other editors watch each file of a project.
 dev_tools_inotify_max_user_watches: 524288
 

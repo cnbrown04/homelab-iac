@@ -1,0 +1,23 @@
+---
+# The release of opkssh in mise.toml has no device flow. This build from
+# source has it, so a login works from a browser on a different device, for
+# example a phone with an SSH session in Termix. The file ref holds the
+# commit of the build, so a run builds again only after a change of the
+# commit. A check run does not run the build.
+- name: Build opkssh from source for the device flow
+  ansible.builtin.shell:
+    cmd: |
+      set -euo pipefail
+      dest={{ dev_tools_opkssh_dir | quote }}
+      ref={{ dev_tools_opkssh_source_ref | quote }}
+      [ "$(cat "$dest/ref" 2>/dev/null)" = "$ref" ] && exit 0
+      mkdir -p "$dest/bin"
+      GOBIN="$dest/bin" mise exec go -- go install "github.com/openpubkey/opkssh@$ref"
+      echo "$ref" > "$dest/ref"
+      echo built
+    executable: /bin/bash
+    chdir: "{{ dev_tools_home }}"
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  register: dev_tools_opkssh_build
+  changed_when: "'built' in dev_tools_opkssh_build.stdout"
