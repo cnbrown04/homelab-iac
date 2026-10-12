@@ -310,13 +310,18 @@ the cluster.
     file on the VM.
   - The role installs the terminfo entry of Ghostty, so SSH from Ghostty works.
   - The neovim and tmux configs of the owner are in
-    `roles/dev_tools/files/dotfiles/`. Ansible copies them on each run. The
-    first start of neovim installs the plugins.
+    `roles/dev_tools/files/dotfiles/`. Run `mise run sync:dotfiles` to copy
+    them from the desktop. Ansible copies them to the VM on each run, and
+    starts neovim one time with no UI when a plugin of the lock file is
+    missing. That start installs the plugins and the binary of fff.nvim.
   - Claude Code reads `CLAUDE_CODE_OAUTH_TOKEN` from
     `~/.config/dev_tools/claude.zsh`. The token comes from
     `claude setup-token` on the desktop, and is valid for one year.
-  - The role imports the opencode login from `opencode auth export` on the
-    desktop, only when opencode on the VM has no login.
+  - Ansible sets the keys of `dev_tools_claude_config` in `~/.claude.json`,
+    for example the theme `auto`. Claude Code keeps the other keys.
+  - Each run imports the opencode logins from `opencode auth export` on the
+    desktop. The import adds a missing login and skips a login that exists.
+    After a new login on the desktop, put the export in SOPS again.
 - SSH allows TCP forwarding and agent forwarding, for VS Code Remote-SSH and
   git. VS Code installs its server at the first connection.
 - The VM has the tag `tag:dev` on the tailnet.

@@ -51,16 +51,17 @@
   changed_when: (dev_tools_opencode_update.stdout.split(' -> ') | unique | length) > 1
   when: dev_tools_opencode
 
-- name: Create the folder of the token
+# The folder holds the logins of the agents.
+- name: Create the folder of the logins
   ansible.builtin.file:
     path: "{{ dev_tools_home }}/.config/dev_tools"
     state: directory
     owner: "{{ dev_tools_user }}"
     group: "{{ dev_tools_user }}"
     mode: "0700"
-  when:
-    - dev_tools_claude_code
-    - dev_tools_claude_oauth_token | length > 0
+  when: >-
+    (dev_tools_claude_code and dev_tools_claude_oauth_token | length > 0)
+    or (dev_tools_opencode and dev_tools_opencode_auth | length > 0)
 
 # zsh reads this file, so each shell and each tmux pane has the token.
 - name: Write the token of Claude Code
@@ -77,61 +78,58 @@
     - dev_tools_claude_code
     - dev_tools_claude_oauth_token | length > 0
 
-# With the token, Claude Code still shows the first-start screens until this
-# flag is set. Claude Code writes the file later, so Ansible writes it one time.
-- name: Skip the first-start screens of Claude Code
+# Claude Code keeps its settings and its state in ~/.claude.json, and changes
+# the file itself. Ansible sets only the keys in dev_tools_claude_config.
+- name: Read the global config of Claude Code
+  ansible.builtin.slurp:
+    src: "{{ dev_tools_home }}/.claude.json"
+  register: dev_tools_claude_json
+  failed_when: false
+  no_log: true
+  when: dev_tools_claude_code
+
+- name: Set the keys in the global config of Claude Code
   ansible.builtin.copy:
-    content: '{"hasCompletedOnboarding": true}'
+    content: "{{ dev_tools_claude_json_new | to_nice_json }}\n"
     dest: "{{ dev_tools_home }}/.claude.json"
     owner: "{{ dev_tools_user }}"
     group: "{{ dev_tools_user }}"
     mode: "0600"
-    force: false
+  vars:
+    dev_tools_claude_json_old: >-
+      {{ (dev_tools_claude_json.content | b64decode | from_json)
+         if dev_tools_claude_json.content is defined else {} }}
+    dev_tools_claude_json_new: "{{ dev_tools_claude_json_old | combine(dev_tools_claude_config) }}"
+  no_log: true
   when:
     - dev_tools_claude_code
-    - dev_tools_claude_oauth_token | length > 0
+    - dev_tools_claude_json_old != dev_tools_claude_json_new
 
-# --standalone runs opencode without its background service.
-- name: Read the logins of opencode
-  ansible.builtin.command:
-    cmd: "{{ dev_tools_home }}/.opencode/bin/opencode auth list --standalone"
-  become: true
-  become_user: "{{ dev_tools_user }}"
-  register: dev_tools_opencode_logins
-  changed_when: false
-  # The task only reads, so it also runs in check mode.
-  check_mode: false
+- name: Write the logins of opencode
+  ansible.builtin.copy:
+    content: "{{ dev_tools_opencode_auth }}"
+    dest: "{{ dev_tools_home }}/.config/dev_tools/opencode-auth.json"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0600"
+  no_log: true
   when:
     - dev_tools_opencode
     - dev_tools_opencode_auth | length > 0
-    - not ansible_check_mode
 
-# A login that already works stays. The copy from the desktop can be older.
+# The import adds each login that opencode does not have, and skips each login
+# that it has. So a login that opencode on the host refreshed stays.
+# --standalone runs opencode without its background service.
 - name: Import the logins of opencode
+  ansible.builtin.command:
+    cmd: >-
+      {{ dev_tools_home }}/.opencode/bin/opencode auth import --standalone
+      {{ dev_tools_home }}/.config/dev_tools/opencode-auth.json
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  register: dev_tools_opencode_import
+  # opencode writes the result to stderr, for example "Imported 1 credential".
+  changed_when: "'Imported 0 ' not in dev_tools_opencode_import.stderr"
   when:
-    - dev_tools_opencode_logins is not skipped
-    - "'stored' not in dev_tools_opencode_logins.stdout"
-  block:
-    - name: Write the logins to a file for the import
-      ansible.builtin.copy:
-        content: "{{ dev_tools_opencode_auth }}"
-        dest: "{{ dev_tools_home }}/.cache/opencode-auth-import.json"
-        owner: "{{ dev_tools_user }}"
-        group: "{{ dev_tools_user }}"
-        mode: "0600"
-      no_log: true
-
-    - name: Import the logins
-      ansible.builtin.command:
-        cmd: >-
-          {{ dev_tools_home }}/.opencode/bin/opencode auth import --standalone
-          {{ dev_tools_home }}/.cache/opencode-auth-import.json
-      become: true
-      become_user: "{{ dev_tools_user }}"
-      changed_when: true
-      no_log: true
-  always:
-    - name: Delete the file of the import
-      ansible.builtin.file:
-        path: "{{ dev_tools_home }}/.cache/opencode-auth-import.json"
-        state: absent
+    - dev_tools_opencode
+    - dev_tools_opencode_auth | length > 0

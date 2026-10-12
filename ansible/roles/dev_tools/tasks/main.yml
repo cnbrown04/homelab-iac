@@ -134,6 +134,38 @@
     dev_tools_mise_config is changed
     or (dev_tools_mise_missing.stdout | default('{}') | from_json | length > 0)
 
+# vim.pack installs each missing plugin when neovim starts, and fff.nvim then
+# downloads its binary. Ansible starts neovim one time with no UI, so the
+# first real start does not wait. The list comes from the lock file in the role.
+- name: Install the neovim plugins
+  ansible.builtin.shell:
+    cmd: |
+      set -euo pipefail
+      pack="$HOME/.local/share/nvim/site/pack/core/opt"
+      missing() {
+        for plugin in {{ dev_tools_nvim_plugins | map('quote') | join(' ') }}; do
+          [ -d "$pack/$plugin" ] || echo "$plugin"
+        done
+      }
+      [ -z "$(missing)" ] && exit 0
+      mise exec -- nvim --headless +qa
+      if [ -n "$(missing)" ]; then
+        echo "Neovim did not install: $(missing | xargs)" >&2
+        exit 1
+      fi
+      echo installed
+    executable: /bin/bash
+    chdir: "{{ dev_tools_home }}"
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  vars:
+    dev_tools_nvim_plugins: >-
+      {{ (lookup('ansible.builtin.file', 'dotfiles/nvim-pack-lock.json') | from_json).plugins
+         | list }}
+  register: dev_tools_nvim_plugins_install
+  changed_when: "'installed' in dev_tools_nvim_plugins_install.stdout"
+  when: dev_tools_nvim_config
+
 - name: Install Claude Code and opencode
   ansible.builtin.include_tasks: agents.yml
   when: dev_tools_claude_code or dev_tools_opencode

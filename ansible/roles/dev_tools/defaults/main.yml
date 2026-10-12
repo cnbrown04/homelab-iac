@@ -45,9 +45,16 @@ dev_tools_ghostty_terminfo: false
 # Claude Code reads it from CLAUDE_CODE_OAUTH_TOKEN.
 dev_tools_claude_oauth_token: ""
 # The output of "opencode auth export" on the desktop, as one JSON string. The
-# export is a JSON list, and "sops set" cannot set a list. The role imports it
-# only when opencode on the host has no login.
+# export is a JSON list, and "sops set" cannot set a list. Each run imports
+# the logins that opencode on the host does not have.
 dev_tools_opencode_auth: ""
+
+# The keys that Ansible sets in ~/.claude.json. Claude Code keeps the other
+# keys. The theme "auto" follows the colors of the terminal. Without
+# hasCompletedOnboarding, Claude Code shows the first-start screens.
+dev_tools_claude_config:
+  hasCompletedOnboarding: true
+  theme: auto
 
 # The neovim and tmux configs of the owner, from files/dotfiles. Ansible copies
 # each file on each run, so change the file in the role, not on the host.
