@@ -3,8 +3,8 @@
 # block.
 locals {
   # The slugs from the PlanetScale dashboard.
-  organization = "CHANGE-ME"
-  database     = "CHANGE-ME"
+  organization = "calebnbrown2004"
+  database     = "asphodel"
   branch       = "main"
   host         = "us-east-5.pg.psdb.cloud"
 
@@ -12,6 +12,13 @@ locals {
   # role.
   apps = {
   }
+}
+
+# The branch main existed before OpenTofu. Delete this block after the first
+# apply.
+import {
+  to = planetscale_postgres_branch.main
+  id = jsonencode({ organization = "calebnbrown2004", database = "asphodel", id = "aa1ynskb0hfx" })
 }
 
 resource "planetscale_postgres_branch" "main" {

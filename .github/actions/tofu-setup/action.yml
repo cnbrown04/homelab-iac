@@ -4,7 +4,7 @@ description: >-
   secrets/tofu.sops.yaml, and join the tailnet.
 inputs:
   target:
-    description: The OpenTofu target, atlas, pantheon, or planetscale.
+    description: The OpenTofu target, atlas, pantheon, or asphodel.
     required: true
   sops-age-key:
     description: The age private key. It decrypts secrets/tofu.sops.yaml.
@@ -40,7 +40,7 @@ runs:
 
     # The Proxmox API is on the tailnet. PlanetScale is public.
     - name: Join the tailnet
-      if: inputs.target != 'planetscale'
+      if: inputs.target != 'asphodel'
       uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
       with:
         authkey: ${{ inputs.headscale-authkey }}

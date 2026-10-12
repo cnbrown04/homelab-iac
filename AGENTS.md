@@ -263,12 +263,12 @@ the cluster.
   The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
   with `fromEntities: [ingress]`.
 - The PlanetScale Postgres of the apps is at `us-east-5.pg.psdb.cloud:5432`,
-  with one database for each app. Each `DATABASE_URL` uses
-  `sslmode=verify-full`.
-  - OpenTofu manages it in `tofu/targets/planetscale/`. To add a database, add
+  in the database `asphodel`, with one Postgres database for each app. Each
+  `DATABASE_URL` uses `sslmode=verify-full`.
+  - OpenTofu manages it in `tofu/targets/asphodel/`. To add a database, add
     one entry to `local.apps` in `databases.tf`. OpenTofu makes a role and a
     database with the same name.
-  - After the apply, run `tofu -chdir=tofu/targets/planetscale output -json
+  - After the apply, run `tofu -chdir=tofu/targets/asphodel output -json
     app_passwords`, and put the password in the SOPS file of the app. The
     state keeps the password only after the create.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
@@ -431,7 +431,7 @@ These decisions are closed. Ask the owner before you re-open one.
 ```text
 tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
-tofu/targets/planetscale/   # the PlanetScale Postgres; databases are data in databases.tf
+tofu/targets/asphodel/      # the PlanetScale Postgres asphodel; databases are data in databases.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
 ansible/playbooks/          # site, hermes, headscale, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus
 ansible/roles/              # one job each
@@ -503,7 +503,7 @@ mise run plan:pantheon
   check does not run `command` tasks.
 - `tofu.yml`: lint, then a plan of each target. On a push to `main`, a plan
   with changes waits for approval in the environment `atlas`, `pantheon`, or
-  `planetscale`. The job of `planetscale` does not join the tailnet.
+  `asphodel`. The job of `asphodel` does not join the tailnet.
   Then the job applies the saved plan, and a new plan must show no change. A
   plan with no change needs no approval. The plan of a pull request does not
   lock the state, because no job applies it.

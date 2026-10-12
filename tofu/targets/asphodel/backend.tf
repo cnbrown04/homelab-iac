@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket                      = "homelab-iac-state"
-    key                         = "planetscale/terraform.tfstate"
+    key                         = "asphodel/terraform.tfstate"
     region                      = "auto"
     use_lockfile                = true
     use_path_style              = true

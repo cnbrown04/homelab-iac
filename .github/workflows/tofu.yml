@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [atlas, pantheon, planetscale]
+        target: [atlas, pantheon, asphodel]
     uses: ./.github/workflows/tofu-target.yml
     with:
       target: ${{ matrix.target }}

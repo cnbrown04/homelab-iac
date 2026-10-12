@@ -6,7 +6,7 @@
 #   tofu -chdir=tofu/targets/atlas plan
 #
 # The targets atlas and pantheon get the token of the API of Proxmox. The
-# target planetscale gets the service token of PlanetScale.
+# target asphodel gets the service token of PlanetScale.
 #
 # See AGENTS.md, "Secrets".
 
@@ -17,9 +17,9 @@ fi
 
 tofu_env_target="${1:-}"
 case "$tofu_env_target" in
-  atlas | pantheon | planetscale) ;;
+  atlas | pantheon | asphodel) ;;
   *)
-    echo "Give a target: atlas, pantheon, or planetscale." >&2
+    echo "Give a target: atlas, pantheon, or asphodel." >&2
     return 1
     ;;
 esac
@@ -39,7 +39,7 @@ names = {
     "AWS_SECRET_ACCESS_KEY": "r2_secret_access_key",
     "TF_VAR_state_encryption_passphrase": "state_encryption_passphrase",
 }
-if target == "planetscale":
+if target == "asphodel":
     names["PLANETSCALE_SERVICE_TOKEN_ID"] = "planetscale_service_token_id"
     names["PLANETSCALE_SERVICE_TOKEN"] = "planetscale_service_token"
 else:
