@@ -1,0 +1,56 @@
+---
+- name: Create the config folders
+  ansible.builtin.file:
+    path: "{{ dev_tools_home }}/.config/{{ item }}"
+    state: directory
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0755"
+  loop:
+    - nvim
+    - tmux
+  when: (item == 'nvim' and dev_tools_nvim_config) or (item == 'tmux' and dev_tools_tmux_config)
+
+# A copy of a folder does not delete a file that is only on the host.
+- name: Copy the neovim config
+  ansible.builtin.copy:
+    src: dotfiles/nvim/
+    dest: "{{ dev_tools_home }}/.config/nvim/"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0644"
+    directory_mode: "0755"
+  when: dev_tools_nvim_config
+
+# vim.pack writes the lock file when it updates a plugin, so Ansible writes it
+# one time only. The first start of neovim installs the plugins from it.
+- name: Copy the plugin lock file of neovim
+  ansible.builtin.copy:
+    src: dotfiles/nvim-pack-lock.json
+    dest: "{{ dev_tools_home }}/.config/nvim/nvim-pack-lock.json"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0644"
+    force: false
+  when: dev_tools_nvim_config
+
+- name: Copy the tmux config
+  ansible.builtin.copy:
+    src: dotfiles/tmux/
+    dest: "{{ dev_tools_home }}/.config/tmux/"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0644"
+    directory_mode: "0755"
+  when: dev_tools_tmux_config
+
+# tmux.conf runs TPM from this folder.
+- name: Clone the tmux plugin manager
+  ansible.builtin.git:
+    repo: https://github.com/tmux-plugins/tpm.git
+    dest: "{{ dev_tools_home }}/.config/tmux/.tmux/plugins/tpm"
+    version: master
+    update: false
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  when: dev_tools_tmux_config

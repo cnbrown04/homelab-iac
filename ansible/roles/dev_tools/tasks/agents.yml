@@ -1,0 +1,137 @@
+---
+# The installers put each tool in the home folder of the user. Each tool then
+# updates itself, and the tasks below update it on each run of the role.
+- name: Install Claude Code
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -fsSL https://claude.ai/install.sh | bash
+    executable: /bin/bash
+    creates: "{{ dev_tools_home }}/.local/bin/claude"
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  when: dev_tools_claude_code
+
+# The v2 installer. The mise registry and https://opencode.ai/install give v1.
+# The role writes PATH in ~/.zshrc, so the installer must not change it.
+- name: Install opencode
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path
+    executable: /bin/bash
+    creates: "{{ dev_tools_home }}/.opencode/bin/opencode"
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  when: dev_tools_opencode
+
+- name: Update Claude Code
+  ansible.builtin.shell:
+    cmd: |
+      set -euo pipefail
+      before=$(~/.local/bin/claude --version)
+      ~/.local/bin/claude update </dev/null >/dev/null
+      after=$(~/.local/bin/claude --version)
+      echo "$before -> $after"
+    executable: /bin/bash
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  register: dev_tools_claude_update
+  changed_when: (dev_tools_claude_update.stdout.split(' -> ') | unique | length) > 1
+  when: dev_tools_claude_code
+
+- name: Update opencode
+  ansible.builtin.shell:
+    cmd: |
+      set -euo pipefail
+      before=$(~/.opencode/bin/opencode --version)
+      ~/.opencode/bin/opencode upgrade --method curl </dev/null >/dev/null
+      after=$(~/.opencode/bin/opencode --version)
+      echo "$before -> $after"
+    executable: /bin/bash
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  register: dev_tools_opencode_update
+  changed_when: (dev_tools_opencode_update.stdout.split(' -> ') | unique | length) > 1
+  when: dev_tools_opencode
+
+- name: Create the folder of the token
+  ansible.builtin.file:
+    path: "{{ dev_tools_home }}/.config/dev_tools"
+    state: directory
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0700"
+  when:
+    - dev_tools_claude_code
+    - dev_tools_claude_oauth_token | length > 0
+
+# zsh reads this file, so each shell and each tmux pane has the token.
+- name: Write the token of Claude Code
+  ansible.builtin.copy:
+    content: |
+      # Ansible writes this file. See the role dev_tools.
+      export CLAUDE_CODE_OAUTH_TOKEN={{ dev_tools_claude_oauth_token | quote }}
+    dest: "{{ dev_tools_home }}/.config/dev_tools/claude.zsh"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0600"
+  no_log: true
+  when:
+    - dev_tools_claude_code
+    - dev_tools_claude_oauth_token | length > 0
+
+# With the token, Claude Code still shows the first-start screens until this
+# flag is set. Claude Code writes the file later, so Ansible writes it one time.
+- name: Skip the first-start screens of Claude Code
+  ansible.builtin.copy:
+    content: '{"hasCompletedOnboarding": true}'
+    dest: "{{ dev_tools_home }}/.claude.json"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0600"
+    force: false
+  when:
+    - dev_tools_claude_code
+    - dev_tools_claude_oauth_token | length > 0
+
+# --standalone runs opencode without its background service.
+- name: Read the logins of opencode
+  ansible.builtin.command:
+    cmd: "{{ dev_tools_home }}/.opencode/bin/opencode auth list --standalone"
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  register: dev_tools_opencode_logins
+  changed_when: false
+  # The task only reads, so it also runs in check mode.
+  check_mode: false
+  when:
+    - dev_tools_opencode
+    - dev_tools_opencode_auth | length > 0
+    - not ansible_check_mode
+
+# A login that already works stays. The copy from the desktop can be older.
+- name: Import the logins of opencode
+  when:
+    - dev_tools_opencode_logins is not skipped
+    - "'stored' not in dev_tools_opencode_logins.stdout"
+  block:
+    - name: Write the logins to a file for the import
+      ansible.builtin.copy:
+        content: "{{ dev_tools_opencode_auth }}"
+        dest: "{{ dev_tools_home }}/.cache/opencode-auth-import.json"
+        owner: "{{ dev_tools_user }}"
+        group: "{{ dev_tools_user }}"
+        mode: "0600"
+      no_log: true
+
+    - name: Import the logins
+      ansible.builtin.command:
+        cmd: >-
+          {{ dev_tools_home }}/.opencode/bin/opencode auth import --standalone
+          {{ dev_tools_home }}/.cache/opencode-auth-import.json
+      become: true
+      become_user: "{{ dev_tools_user }}"
+      changed_when: true
+      no_log: true
+  always:
+    - name: Delete the file of the import
+      ansible.builtin.file:
+        path: "{{ dev_tools_home }}/.cache/opencode-auth-import.json"
+        state: absent

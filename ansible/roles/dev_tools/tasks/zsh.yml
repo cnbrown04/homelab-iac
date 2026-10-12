@@ -1,0 +1,29 @@
+---
+# Zap clones a missing plugin at the first start of zsh. Ansible clones them
+# first, so the first login does not wait. "zap update" updates them later.
+- name: Clone the Zap plugin manager
+  ansible.builtin.git:
+    repo: https://github.com/zap-zsh/zap.git
+    dest: "{{ dev_tools_home }}/.local/share/zap"
+    version: "{{ dev_tools_zap_version }}"
+    update: false
+  become: true
+  become_user: "{{ dev_tools_user }}"
+
+- name: Clone the zsh plugins
+  ansible.builtin.git:
+    repo: "https://github.com/{{ item }}.git"
+    dest: "{{ dev_tools_home }}/.local/share/zap/plugins/{{ item | basename }}"
+    version: "{{ dev_tools_zsh_plugin_branch }}"
+    update: false
+  become: true
+  become_user: "{{ dev_tools_user }}"
+  loop: "{{ dev_tools_zsh_plugins }}"
+
+- name: Write the zsh config
+  ansible.builtin.template:
+    src: zshrc.j2
+    dest: "{{ dev_tools_home }}/.zshrc"
+    owner: "{{ dev_tools_user }}"
+    group: "{{ dev_tools_user }}"
+    mode: "0644"

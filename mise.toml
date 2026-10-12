@@ -97,6 +97,28 @@ run = "ansible-playbook ansible/playbooks/argus.yml --check --diff"
 description = "Check each host with Ansible"
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff"
 
+# Destroy a VM of pantheon and make it again, for example:
+# mise run rebuild -- daedalus
+[tasks.rebuild]
+description = "Destroy a VM and make it again with OpenTofu and Ansible"
+run = "scripts/vm-rebuild.sh"
+
+# Copy the neovim and tmux configs of this desktop into the role dev_tools.
+# Then run ansible/playbooks/daedalus.yml to send them to the VM.
+[tasks."sync:dotfiles"]
+description = "Copy the neovim and tmux configs of this desktop into the role dev_tools"
+shell = "bash -c"
+run = """
+set -euo pipefail
+dest=ansible/roles/dev_tools/files/dotfiles
+rm -rf "$dest/nvim" "$dest/tmux"
+mkdir -p "$dest/nvim" "$dest/tmux"
+cp -r ~/.config/nvim/init.lua ~/.config/nvim/lua ~/.config/nvim/lsp "$dest/nvim/"
+cp ~/.config/nvim/nvim-pack-lock.json "$dest/"
+cp ~/.config/tmux/tmux.conf ~/.config/tmux/tmux.theme.inc.conf "$dest/tmux/"
+git status --short "$dest"
+"""
+
 [tasks."lint:ansible"]
 description = "Lint the Ansible content, as the pipeline does"
 dir = "{{config_root}}/ansible"

@@ -47,6 +47,7 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
   - The server is the VM argus on tartarus (VMID 400, 10.0.1.18), with 8 GiB. The RackNerd VPS iris is too small.
   - The role wazuh_agent puts the agent on the Proxmox nodes, mnemosyne, and daedalus. Talos nodes get no agent.
 - [x] Send the events of hermes to Wazuh. hermes joins the tailnet as tag:hermes, with TCP 1514 and 1515 on tag:siem only (11 October 2026).
+- [ ] Look at the Wazuh scans of each agent (SCA, rootcheck, and vulnerabilities). Fix each finding in Ansible, or write down why it stays.
 - [x] Log in to the Wazuh dashboard with Pocket ID (OIDC). Give the admin role to the group homelab_admin. It is public at wazuh.buildwithcaleb.com, through the Newt site argus.
 - [ ] Get a YubiKey for the break-glass key of iac-admin. iac-admin logs in with opkssh, and Pocket ID runs on hermes. When Pocket ID is down, the break-glass key is the only way for Ansible to log in.
   - Use a FIDO2 key (ed25519-sk), so each login needs a touch of the YubiKey.

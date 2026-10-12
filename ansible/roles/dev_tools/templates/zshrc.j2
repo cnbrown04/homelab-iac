@@ -1,0 +1,46 @@
+# Ansible writes this file. See the role dev_tools. A change on the host goes
+# away on the next run, so change templates/zshrc.j2.
+
+# History
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE
+
+# The Zap plugin manager. Update the plugins with "zap update".
+[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh" ] && source "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh"
+
+{% for plugin in dev_tools_zsh_plugins %}
+plug "{{ plugin }}"
+{% endfor %}
+
+autoload -Uz compinit
+compinit
+
+# Keys: Home, End, Delete, and a word to the left or right.
+bindkey -e
+bindkey '^[[H'  beginning-of-line
+bindkey '^[[1~' beginning-of-line
+bindkey '^[OH'  beginning-of-line
+bindkey '^[[F'  end-of-line
+bindkey '^[[4~' end-of-line
+bindkey '^[OF'  end-of-line
+bindkey '^[[3~' delete-char
+bindkey '^[[1;5C' forward-word
+bindkey '^[[1;5D' backward-word
+bindkey '^[[1;3C' forward-word
+bindkey '^[[1;3D' backward-word
+
+export EDITOR=nvim VISUAL=nvim
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias vim=nvim
+
+# Claude Code is in ~/.local/bin, and opencode is in ~/.opencode/bin.
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+[ -f ~/.config/dev_tools/claude.zsh ] && source ~/.config/dev_tools/claude.zsh
+
+# mise first, because it gives zoxide and starship.
+eval "$(mise activate zsh)"
+eval "$(zoxide init zsh)"
+eval "$(starship init zsh)"

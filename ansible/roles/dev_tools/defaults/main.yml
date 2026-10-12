@@ -17,3 +17,39 @@ dev_tools_mise_tools: {}
 
 # VS Code and other editors watch each file of a project.
 dev_tools_inotify_max_user_watches: 524288
+
+# Claude Code and opencode install with their own installers, not with mise.
+# Each one updates itself, and each run of the role updates it to the newest
+# version. The mise registry gives opencode v1 only.
+dev_tools_claude_code: false
+dev_tools_opencode: false
+
+# Ansible writes ~/.zshrc of the user from templates/zshrc.j2. The Zap plugin
+# manager loads these plugins, as owner/repository. Run "zap update" on the
+# host to update them.
+dev_tools_zsh: false
+dev_tools_zap_version: release-v1
+dev_tools_zsh_plugins:
+  - zsh-users/zsh-autosuggestions
+  - zap-zsh/supercharge
+  - zsh-users/zsh-syntax-highlighting
+# The branch that Ansible clones. Each plugin above uses it.
+dev_tools_zsh_plugin_branch: master
+
+# The terminfo entry of Ghostty. Without it, SSH from Ghostty gives a terminal
+# that the host does not know, and keys like Backspace act strangely.
+dev_tools_ghostty_terminfo: false
+
+# The logins of the agents. secrets.sops.yml of the host holds them.
+# The token from "claude setup-token" on the desktop. It is valid for one year.
+# Claude Code reads it from CLAUDE_CODE_OAUTH_TOKEN.
+dev_tools_claude_oauth_token: ""
+# The output of "opencode auth export" on the desktop, as one JSON string. The
+# export is a JSON list, and "sops set" cannot set a list. The role imports it
+# only when opencode on the host has no login.
+dev_tools_opencode_auth: ""
+
+# The neovim and tmux configs of the owner, from files/dotfiles. Ansible copies
+# each file on each run, so change the file in the role, not on the host.
+dev_tools_nvim_config: false
+dev_tools_tmux_config: false

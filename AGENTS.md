@@ -302,6 +302,21 @@ the cluster.
   - mise installs `dev_tools_mise_tools` for `caleb`. Ansible writes
     `~/.config/mise/config.toml`, so do not change that file on the VM. A tool
     that you delete from the map goes away on the next run.
+  - Claude Code and opencode use their own installers, not mise, so they stay
+    on the newest version. Each run also updates them. The mise registry gives
+    opencode v1 only. opencode v2 comes from `https://opencode.ai/v2/install`.
+  - Ansible writes `~/.zshrc` of `caleb`: zsh with Zap, starship, and zoxide,
+    the same as the desktop of the owner. Change `templates/zshrc.j2`, not the
+    file on the VM.
+  - The role installs the terminfo entry of Ghostty, so SSH from Ghostty works.
+  - The neovim and tmux configs of the owner are in
+    `roles/dev_tools/files/dotfiles/`. Ansible copies them on each run. The
+    first start of neovim installs the plugins.
+  - Claude Code reads `CLAUDE_CODE_OAUTH_TOKEN` from
+    `~/.config/dev_tools/claude.zsh`. The token comes from
+    `claude setup-token` on the desktop, and is valid for one year.
+  - The role imports the opencode login from `opencode auth export` on the
+    desktop, only when opencode on the VM has no login.
 - SSH allows TCP forwarding and agent forwarding, for VS Code Remote-SSH and
   git. VS Code installs its server at the first connection.
 - The VM has the tag `tag:dev` on the tailnet.
@@ -440,12 +455,13 @@ tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 tofu/targets/asphodel/      # the PlanetScale Postgres asphodel; databases are data in databases.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus
+ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus, vm_retire
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens, PlanetScale service token
 scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
 scripts/vps-harden.sh       # the first bootstrap of a new VPS
+scripts/vm-rebuild.sh       # destroys a VM of pantheon and makes it again
 .github/workflows/          # ansible-hermes, tofu, tofu-target, typhon, lint, tailnet-check
 typhon-cluster/talos/       # talconfig.yaml, talsecret.sops.yaml; clusterconfig/ is ignored
 typhon-cluster/flux/        # the entry point of Flux; the order of the Kustomizations
@@ -455,6 +471,13 @@ typhon-cluster/apps/        # one folder for each app
 
 To add a guest, add one entry to `vms.tf` or `containers.tf`. Do not write a
 new resource block.
+
+To make a VM of `pantheon` again, run `mise run rebuild -- <host>`. The VM
+needs an entry in `vms.tf` and a playbook `<host>.yml`. The script plans the
+replacement and asks for the name of the VM. Then it deletes the node in
+Headscale and the agent in Wazuh (`playbooks/vm_retire.yml`), applies the
+plan, trusts the new host key, and runs the playbook. It deletes the disk of
+the VM.
 
 To add a service on `hermes`: put its Compose file in `ansible/stacks/<name>/`,
 add `<name>` to `hermes_compose_stacks`, join the network `pangolin`, publish
@@ -550,6 +573,7 @@ mise run plan:pantheon
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user |
+  | `ansible/inventory/host_vars/daedalus/secrets.sops.yml` | The logins of Claude Code and opencode for `caleb` |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
   | `typhon-cluster/talos/talsecret.sops.yaml` | The secrets of Talos. The owner key only. |
 
@@ -637,7 +661,8 @@ mise run plan:pantheon
 - Do not use the Ubuntu 26.04 cloud image. Its initramfs (dracut) starts
   DHCP, so cloud-init cannot set the static IP. Use 24.04.
 - A change to `import_from` does not replace a VM. To make a VM again from a
-  new image, run `apply -replace` on the VM.
+  new image, run `mise run rebuild -- <host>`. The address for `-replace` is
+  `module.vm["<host>"].proxmox_virtual_environment_vm.this`, not the module.
 - cloud-init gives `iac-admin` an SSH key and no password. Ansible deletes
   the key at the first run. Log in to the console as `caleb`.
 - The first run on a new VM uses the cloud-init key, because opkssh is not

@@ -100,6 +100,15 @@
     block: |
       export PATH="$HOME/.local/bin:$PATH"
       eval "$(mise activate zsh)"
+  when: not dev_tools_zsh
+
+- name: Set up zsh
+  ansible.builtin.include_tasks: zsh.yml
+  when: dev_tools_zsh
+
+- name: Copy the neovim and tmux configs
+  ansible.builtin.include_tasks: dotfiles.yml
+  when: dev_tools_nvim_config or dev_tools_tmux_config
 
 # A check run does not install mise.
 - name: Find the mise tools that are not installed
@@ -124,3 +133,26 @@
   when: >-
     dev_tools_mise_config is changed
     or (dev_tools_mise_missing.stdout | default('{}') | from_json | length > 0)
+
+- name: Install Claude Code and opencode
+  ansible.builtin.include_tasks: agents.yml
+  when: dev_tools_claude_code or dev_tools_opencode
+
+# tic compiles the entry in /etc/terminfo, which ncurses reads first.
+- name: Copy the terminfo entry of Ghostty
+  ansible.builtin.copy:
+    src: xterm-ghostty.terminfo
+    dest: /usr/local/share/xterm-ghostty.terminfo
+    owner: root
+    group: root
+    mode: "0644"
+  register: dev_tools_ghostty_source
+  when: dev_tools_ghostty_terminfo
+
+- name: Compile the terminfo entry of Ghostty
+  ansible.builtin.command:
+    cmd: tic -x -o /etc/terminfo /usr/local/share/xterm-ghostty.terminfo
+  changed_when: true
+  when:
+    - dev_tools_ghostty_terminfo
+    - dev_tools_ghostty_source is changed

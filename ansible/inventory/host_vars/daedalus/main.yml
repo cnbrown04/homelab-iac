@@ -63,11 +63,33 @@ dev_tools_apt_absent: []
 # "mise upgrade" on the VM to get a newer version.
 dev_tools_mise_tools:
   bun: latest
-  claude: latest
+  fzf: latest
   gh: latest
   go: latest
+  lazygit: latest
   neovim: latest
   node: lts
-  opencode: latest
   rust: stable
+  starship: latest
   uv: latest
+  zoxide: latest
+  # The language servers of the neovim config.
+  lua-language-server: latest
+  "npm:pyright": latest
+  "npm:typescript": latest
+  "npm:typescript-language-server": latest
+  "npm:vscode-langservers-extracted": latest
+  rust-analyzer: latest
+
+# Claude Code and opencode use their own installers, so they stay on the
+# newest version. Each run of the playbook also updates them.
+dev_tools_claude_code: true
+dev_tools_opencode: true
+
+# The shell of the desktop of the owner: zsh with Zap, starship, and zoxide.
+dev_tools_zsh: true
+dev_tools_ghostty_terminfo: true
+
+# The neovim and tmux configs of the desktop, from roles/dev_tools/files/dotfiles.
+dev_tools_nvim_config: true
+dev_tools_tmux_config: true

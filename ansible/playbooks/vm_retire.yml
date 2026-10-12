@@ -1,0 +1,64 @@
+---
+# Delete the records of a VM in Headscale and Wazuh before OpenTofu replaces
+# the VM. The new VM then gets the same names. scripts/vm-rebuild.sh runs it.
+#
+#   ansible-playbook ansible/playbooks/vm_retire.yml -e vm=daedalus
+- name: Delete the tailnet node of the VM
+  hosts: hermes
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check the name of the VM
+      ansible.builtin.assert:
+        that:
+          - vm is defined
+          - vm in groups['all']
+          - vm not in groups['service_hosts']
+          - vm not in groups['proxmox_nodes']
+        fail_msg: "Give the inventory name of a VM: -e vm=<host>"
+
+    - name: Read the nodes of Headscale
+      ansible.builtin.command:
+        cmd: headscale nodes list -o json
+      register: vm_retire_nodes
+      changed_when: false
+      # The task only reads, so it also runs in check mode.
+      check_mode: false
+
+    - name: Delete the node of the VM
+      ansible.builtin.command:
+        cmd: "headscale nodes delete --identifier {{ item.id }} --force"
+      changed_when: true
+      loop: >-
+        {{ vm_retire_nodes.stdout | from_json
+           | selectattr('given_name', 'equalto', vm) | list }}
+      loop_control:
+        label: "{{ item.id }} {{ item.given_name }}"
+
+# argus has no agent, because the manager watches its own host.
+- name: Delete the Wazuh agent of the VM
+  hosts: siem_servers
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Read the agents of Wazuh
+      ansible.builtin.command:
+        cmd: /var/ossec/bin/agent_control -j -l
+      register: vm_retire_agents
+      changed_when: false
+      check_mode: false
+      when: vm not in groups['siem_servers']
+
+    # -j gives JSON and asks no question.
+    - name: Delete the agent of the VM
+      ansible.builtin.command:
+        cmd: "/var/ossec/bin/manage_agents -j -r {{ item.id }}"
+      environment:
+        OSSEC_ACTION_CONFIRMED: "y"
+      changed_when: true
+      loop: >-
+        {{ (vm_retire_agents.stdout | default('{"data": []}') | from_json).data
+           | selectattr('name', 'equalto', vm) | list }}
+      loop_control:
+        label: "{{ item.id }} {{ item.name }}"
+      when: vm not in groups['siem_servers']
