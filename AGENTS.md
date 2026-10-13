@@ -771,8 +771,11 @@ agent recommends an app to self-host.
 
 ### Exceptions
 
-- A tool can use Python or bash. Ansible, an Ansible module, a script in
-  `scripts/`, and a step in a workflow are tools.
+- Write a new tool in bash, or in a language of the rules above. Ansible, an
+  Ansible module, a script in `scripts/`, and a step in a workflow are tools.
+- Do not write Python. Use Python only when no other option exists, for
+  example an Ansible module or a plugin for an app in Python. Tell the
+  owner the reason.
 - A plugin for an app uses the language of that app. For example, an
   integration for Home Assistant uses Python.
 - The apps that run in the homelab now stay. Pangolin, Headplane, Seerr,
