@@ -9,7 +9,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/services-dark.svg">
-  <img src=".github/assets/services-light.svg" alt="The services of the homelab, on each host" width="878">
+  <img src=".github/assets/services-light.svg" alt="The service map of the homelab" width="878">
 </picture>
 
 </div>

@@ -497,7 +497,8 @@ secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens, Pla
 scripts/tofu-env.sh         # exports the OpenTofu secrets of one target
 scripts/vps-harden.sh       # the first bootstrap of a new VPS
 scripts/vm-rebuild.sh       # destroys a VM of pantheon and makes it again
-.github/workflows/          # ansible-hermes, tofu, tofu-target, typhon, lint, tailnet-check
+scripts/readme-services.sh  # makes the service map of README.md
+.github/workflows/          # ansible-hermes, tofu, tofu-target, typhon, lint, tailnet-check, readme-services
 typhon-cluster/talos/       # talconfig.yaml, talsecret.sops.yaml; clusterconfig/ is ignored
 typhon-cluster/flux/        # the entry point of Flux; the order of the Kustomizations
 typhon-cluster/infrastructure/{controllers,configs}/  # the base services, for Flux
@@ -581,6 +582,10 @@ mise run plan:pantheon
   pulls from GitHub.
 - `lint.yml` runs shellcheck, and checks that each SOPS file is encrypted. It
   runs for each change.
+- `readme-services.yml` runs `scripts/readme-services.sh` after a change to
+  it, and commits the service map in `.github/assets/`. When you add, move,
+  or delete an app, a VM, or a host, change the lists in that script too. Do
+  not change the SVG files by hand.
 - Each job installs its tools with `.github/actions/mise-install`. Its cache
   key uses only the versions of those tools, so a bump of a different tool
   does not empty the cache.

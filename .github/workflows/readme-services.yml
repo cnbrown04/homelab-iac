@@ -1,0 +1,61 @@
+# Makes the service map of README.md again after each change to
+# scripts/readme-services.sh. See the lists at the top of that script.
+#
+# - A pull request runs the script only. A text that does not fit, or an icon
+#   that does not exist, makes the job fail.
+# - A push to main also commits the new map, when it changed. A push with
+#   GITHUB_TOKEN starts no other workflow, so the commit does not start this
+#   workflow again.
+name: readme-services
+
+on:
+  pull_request:
+    paths:
+      - scripts/readme-services.sh
+      - .github/workflows/readme-services.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/readme-services.sh
+      - .github/workflows/readme-services.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readme-services-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  map:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The runner has curl and jq. rsvg-convert makes a large icon small.
+      - name: Install rsvg-convert
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends librsvg2-bin
+
+      - name: Make the service map
+        run: scripts/readme-services.sh
+
+      - name: Commit the service map
+        if: github.event_name != 'pull_request'
+        run: |
+          if git diff --quiet -- .github/assets; then
+            echo "The service map did not change."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/assets/services-light.svg .github/assets/services-dark.svg
+          git commit -m 'docs: update the service map'
+          # main can move while the job runs.
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
