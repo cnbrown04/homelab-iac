@@ -223,9 +223,10 @@ the cluster.
   by their service names. Its SQLite database and `settings.json` are on
   `local-path`. To restore: put the old config folder in
   `/lethe/k8s/seerr/migrate/`, then delete the pod and the claim `config`.
-- Termix is at `termix.buildwithcaleb.com`, with the Pangolin login in front
-  of its Pocket ID login. The owner sets OIDC in the admin UI of Termix, and
-  copies the callback URL from that page to Pocket ID. The SQLite database is
+- Termix is at `termix.buildwithcaleb.com`, with no Pangolin login. It logs
+  in with Pocket ID only. Registration and the password login are off in its
+  admin UI, and they must stay off. The owner sets OIDC in the admin UI of
+  Termix, and copies the callback URL from that page to Pocket ID. The SQLite database is
   on `local-path`.
   - A Tailscale sidecar joins the tailnet as `termix`, with `tag:termix`. It
     runs in kernel mode, as root with `NET_ADMIN`, so the namespace is

@@ -234,14 +234,15 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Termix logs in with Pocket ID, but it opens SSH to the hosts. Keep SSO
-    # on, also because the first user to register gets the admin role.
+    # Termix logs in with Pocket ID only. Registration and the password login
+    # are off in its admin UI, so SSO is off. Keep them off: the pod reaches
+    # SSH, RDP, and VNC on each node of the tailnet.
     termix:
       name: Termix
       mode: http
       full-domain: termix.buildwithcaleb.com
       auth:
-        sso-enabled: true
+        sso-enabled: false
       targets:
         - site: "{{ pangolin_typhon_site }}"
           method: http
