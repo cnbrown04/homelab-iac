@@ -15,7 +15,7 @@ python = "3.14.8"
 # Mitogen goes into the environment of ansible-core, because Ansible imports
 # its strategy plugin. See ansible/ansible.cfg. Renovate bumps the two
 # together. Each version of Mitogen supports a set of ansible-core versions.
-ansible-core = { version = "2.21.4", uvx_args = "--with mitogen==0.3.53" }
+ansible-core = { version = "2.21.5", uvx_args = "--with mitogen==0.3.54" }
 
 # Lints the Ansible content on every PR. Check collection compatibility in
 # ansible/requirements.yml before a version bump.
