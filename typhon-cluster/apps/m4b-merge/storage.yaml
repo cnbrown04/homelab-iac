@@ -1,0 +1,37 @@
+# The volumes of m4b-merge:
+# - media: /lethe/data/media on gaia, at /media. The script reads
+#   /media/audiobooks/.merge-inbox and writes the M4B files to
+#   /media/audiobooks.
+# The static volume keeps its data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: m4b-merge-media
+spec:
+  capacity:
+    storage: 4Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: m4b-merge
+    name: media
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: m4b-merge-media
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/data/media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: m4b-merge-media
+  resources:
+    requests:
+      storage: 4Ti

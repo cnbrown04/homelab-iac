@@ -1,0 +1,9 @@
+# The entrypoint of the Tdarr image starts the tools as root and drops down
+# to PUID/PGID. The container needs root, so the namespace only allows
+# baseline pods, not restricted pods.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tdarr
+  labels:
+    pod-security.kubernetes.io/enforce: baseline

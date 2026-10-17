@@ -572,6 +572,10 @@ pages:
                 url: https://audiobooks.buildwithcaleb.com
                 check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
                 icon: di:audiobookshelf
+              - title: Tdarr
+                url: https://tdarr.buildwithcaleb.com
+                check-url: http://tdarr.tdarr.svc.cluster.local:8265/
+                icon: di:tdarr
 
           - type: monitor
             title: Downloads
@@ -736,6 +740,8 @@ pages:
               - jellyfin/jellyfin
               - seerr-team/seerr
               - advplyr/audiobookshelf
+              - HaveAGitGat/Tdarr
+              - djdembeck/m4b-merge
               - Sonarr/Sonarr
               - Radarr/Radarr
               - Prowlarr/Prowlarr
