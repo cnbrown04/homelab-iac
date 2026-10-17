@@ -42,7 +42,7 @@ GUESTS=(
   "hyperion|typhon-w-3|talos|513|"
   "hyperion|typhon-w-4|talos|514|"
   "tartarus|argus|ubuntu-linux|400|Wazuh:wazuh"
-  "tartarus|athena|ubuntu-linux|600|Hermes Agent:hermes"
+  "tartarus|athena|ubuntu-linux|600|Hermes Agent:hermes,opencode:opencode"
   "tartarus|daedalus|ubuntu-linux|300|Claude Code:claude-ai,opencode:opencode,Neovim:neovim"
   "atlas|Home Assistant|home-assistant|100|"
 )

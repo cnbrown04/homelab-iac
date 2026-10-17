@@ -25,6 +25,15 @@
       tags: [security]
     - role: tailscale
       tags: [tailscale]
+    # Hermes starts its sandbox with Docker, so Docker comes first.
+    - role: docker
+      tags: [docker]
+    # The shell of the owner and opencode. hermes_agent mounts opencode in the
+    # sandbox, so dev_tools comes first.
+    - role: dev_tools
+      tags: [dev_tools]
+    - role: hermes_agent
+      tags: [hermes_agent]
     - role: wazuh_agent
       tags: [wazuh_agent]
   tasks:
