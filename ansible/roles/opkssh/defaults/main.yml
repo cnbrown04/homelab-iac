@@ -2,7 +2,7 @@
 # opkssh lets a user log in with a short-lived SSH certificate from Pocket ID.
 # sshd asks opkssh for the keys of each login (AuthorizedKeysCommand).
 # renovate: datasource=github-releases depName=openpubkey/opkssh
-opkssh_version: v0.17.0
+opkssh_version: v0.18.0
 
 opkssh_architecture_map:
   x86_64: amd64
