@@ -93,6 +93,10 @@ run = "ansible-playbook ansible/playbooks/daedalus.yml --check --diff"
 description = "Check argus with Ansible"
 run = "ansible-playbook ansible/playbooks/argus.yml --check --diff"
 
+[tasks."check:athena"]
+description = "Check athena with Ansible"
+run = "ansible-playbook ansible/playbooks/athena.yml --check --diff"
+
 [tasks."check:all"]
 description = "Check each host with Ansible"
 run = "ansible-playbook ansible/playbooks/site.yml --check --diff"

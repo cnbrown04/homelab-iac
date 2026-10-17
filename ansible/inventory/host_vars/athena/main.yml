@@ -1,0 +1,12 @@
+---
+# The VM of the Hermes agent on tartarus.
+
+ssh_hardening_allow_users:
+  - caleb
+  - iac-admin
+
+# The policy gives tag:agent no grant as a source, so the agent cannot open a
+# connection to a different node of the tailnet.
+tailscale_login_server: https://vpn.buildwithcaleb.com
+tailscale_tags:
+  - tag:agent

@@ -11,6 +11,7 @@
     "tag:termix": [],
     "tag:siem": [],
     "tag:hermes": [],
+    "tag:agent": [],
   },
 
   // Headscale approves these routes when a node with the tag advertises them.

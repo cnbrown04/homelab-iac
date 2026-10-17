@@ -17,3 +17,5 @@
   ansible.builtin.import_playbook: daedalus.yml
 - name: Configure the SIEM server
   ansible.builtin.import_playbook: argus.yml
+- name: Configure the VM of the Hermes agent
+  ansible.builtin.import_playbook: athena.yml

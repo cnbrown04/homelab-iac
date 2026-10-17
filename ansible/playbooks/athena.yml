@@ -1,0 +1,35 @@
+---
+# Run this play by hand. No pipeline reaches the VM.
+#
+# The first run after OpenTofu creates the VM: cloud-init gave iac-admin sudo
+# with no password. The play deletes the cloud-init rule. The admin_user role
+# gives iac-admin its own rule.
+- name: Configure athena
+  hosts: agent_hosts
+  # The roles use the facts of min and network only. The hardware facts are
+  # the slowest.
+  gather_subset: [min, network]
+  roles:
+    - role: common
+    - role: admin_user
+      tags: [admin_user]
+    - role: owner_user
+      tags: [owner_user]
+    - role: ssh_hardening
+      tags: [security]
+    - role: opkssh
+      tags: [security, opkssh]
+    - role: sysctl_hardening
+      tags: [security]
+    - role: unattended_upgrades
+      tags: [security]
+    - role: tailscale
+      tags: [tailscale]
+    - role: wazuh_agent
+      tags: [wazuh_agent]
+  tasks:
+    - name: Delete the sudo rule of cloud-init
+      ansible.builtin.file:
+        path: /etc/sudoers.d/90-cloud-init-users
+        state: absent
+      tags: [admin_user]

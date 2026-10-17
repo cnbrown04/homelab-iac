@@ -131,6 +131,7 @@ Always refer to a machine by its hostname, not by its provider.
 | `mnemosyne` | File server VM on `gaia` (VMID `200`), Debian 13. Runs Samba and OpenCloud. | `10.0.1.16` | MagicDNS |
 | `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
 | `argus` | SIEM VM on `tartarus` (VMID `400`), Ubuntu 24.04. Runs Wazuh. | `10.0.1.18` | MagicDNS |
+| `athena` | Agent VM on `tartarus` (VMID `600`), Ubuntu 24.04. Runs the Hermes agent. | `10.0.1.19` | MagicDNS |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
@@ -371,7 +372,7 @@ the cluster.
   `wazuh_agent_version` together. Upgrade the server first, because an agent
   must not be newer than the manager.
 - The role `wazuh_agent` puts the agent on the Proxmox nodes, `mnemosyne`,
-  `daedalus`, and `hermes`. Each agent sends its events to `10.0.1.18` on TCP
+  `daedalus`, `athena`, and `hermes`. Each agent sends its events to `10.0.1.18` on TCP
   `1514`, and enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus`
   has no agent, because the manager watches its own host. Talos nodes get no
   agent.
@@ -398,6 +399,15 @@ the cluster.
     nothing.
   - The user `admin` still logs in with its password, for when Pocket ID is
     down.
+- Run its playbook by hand. No pipeline reaches it.
+
+### The agent VM `athena`
+
+- `athena` runs the Hermes agent of Nous Research, with 4 vCPU, 8 GiB, and
+  a disk of 128 GiB.
+- The VM has the tag `tag:agent` on the tailnet. The policy gives
+  `tag:agent` no grant, so the agent cannot open a connection to a node of
+  the tailnet. Personal devices still reach the VM.
 - Run its playbook by hand. No pipeline reaches it.
 
 ### The admin group of Pocket ID
@@ -490,7 +500,7 @@ tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 tofu/targets/asphodel/      # the PlanetScale Postgres asphodel; databases are data in databases.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus, vm_retire
+ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus, athena, vm_retire
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens, PlanetScale service token
