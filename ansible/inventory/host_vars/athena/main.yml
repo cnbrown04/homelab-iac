@@ -1,7 +1,8 @@
 ---
 # The VM of the Hermes agent on tartarus. caleb runs Hermes, and the agent
 # runs its commands in a Docker sandbox. secrets.sops.yml holds
-# dev_tools_opencode_auth and hermes_agent_env.
+# dev_tools_opencode_auth, hermes_agent_env, and hermes_agent_soul, the
+# identity of the agent in ~/.hermes/SOUL.md.
 
 ssh_hardening_allow_users:
   - caleb
@@ -44,9 +45,11 @@ hermes_agent_user: caleb
 # 4 vCPU and 8 GiB, so the gateway keeps 2 vCPU and 4 GiB.
 #
 # opencode in the sandbox is the opencode of caleb on the VM, read-only, so
-# it updates with each run of dev_tools. The opencode skill of Hermes looks
-# for it in ~/.opencode/bin. opencode reads OPENCODE_API_KEY for Zen and Go.
-# Code in the sandbox can read this key.
+# it updates with each run of dev_tools. Hermes runs each command in a login
+# shell, and /etc/profile of the image sets PATH again. /usr/local/sbin is on
+# that PATH and empty in the image, so opencode goes there. The opencode skill
+# of Hermes also looks in ~/.opencode/bin. opencode reads OPENCODE_API_KEY for
+# Zen and Go. Code in the sandbox can read this key.
 hermes_agent_config:
   terminal:
     backend: docker
@@ -54,7 +57,9 @@ hermes_agent_config:
     container_cpu: 2
     container_memory: 4096
     docker_volumes:
+      - /home/caleb/.opencode/bin:/usr/local/sbin:ro
       - /home/caleb/.opencode/bin:/root/.opencode/bin:ro
+    # The PATH of a shell that is not a login shell.
     docker_env:
       PATH: /root/.opencode/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
     docker_forward_env:

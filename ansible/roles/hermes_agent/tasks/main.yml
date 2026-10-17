@@ -90,6 +90,21 @@
   when: not (ansible_check_mode and hermes_agent_install is changed)
   notify: Restart the Hermes gateway
 
+# The value comes from SOPS, so the task does not show it. A new identity
+# applies to each new session after the restart.
+- name: Write the identity of the agent
+  ansible.builtin.copy:
+    content: "{{ hermes_agent_soul }}"
+    dest: "{{ hermes_agent_home }}/.hermes/SOUL.md"
+    owner: "{{ hermes_agent_user }}"
+    group: "{{ hermes_agent_user }}"
+    mode: "0600"
+  no_log: true
+  when:
+    - hermes_agent_soul | length > 0
+    - not (ansible_check_mode and hermes_agent_install is changed)
+  notify: Restart the Hermes gateway
+
 # Hermes keeps the source and the commit of each Git plugin in this file.
 - name: Read the installed plugins of Hermes
   ansible.builtin.slurp:

@@ -415,6 +415,10 @@ the cluster.
     values of `hermes_agent_env` in `.env`. Hermes keeps the other keys.
   - The owner runs `hermes setup` and the setup of each channel by hand, for
     example `hermes photon setup`. The answers stay in `~/.hermes`.
+  - `hermes_agent_soul` in SOPS is the identity of the agent. Ansible writes
+    it to `~/.hermes/SOUL.md`. Change it in SOPS, not on the VM.
+  - Hermes writes `~/.hermes/memories/USER.md` and `MEMORY.md` itself, so
+    Ansible does not manage them.
 - The agent runs each command in the Docker sandbox of Hermes
   (`terminal.backend: docker`). The sandbox reaches the internet and the LAN.
   - The sandbox mounts `~/.opencode/bin` of `caleb` read-only. It gets

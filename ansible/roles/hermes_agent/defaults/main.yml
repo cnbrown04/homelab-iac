@@ -23,6 +23,11 @@ hermes_agent_config: {}
 # the other lines. Put the values in secrets.sops.yml of the host.
 hermes_agent_env: {}
 
+# The identity of the agent: the content of ~/.hermes/SOUL.md. Hermes puts it
+# first in the system prompt, and it never writes the file itself. Empty: the
+# role does not touch the file. Put the value in secrets.sops.yml of the host.
+hermes_agent_soul: ""
+
 # The plugins from Git, each with a name, a source, and a full commit SHA:
 #   - name: my-plugin
 #     source: owner/repo
