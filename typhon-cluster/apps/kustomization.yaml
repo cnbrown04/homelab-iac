@@ -7,9 +7,11 @@ resources:
   - glance
   - jackett
   - jellyfin
+  - m4b-merge
   - prowlarr
   - qbittorrent
   - radarr
   - seerr
   - sonarr
+  - tdarr
   - termix

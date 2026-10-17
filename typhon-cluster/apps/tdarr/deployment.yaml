@@ -1,0 +1,120 @@
+# Tdarr. The libraries each carry a flow, and a CPU worker turns the media
+# of Sonarr, Radarr, and qBittorrent into AV1 with SVT-AV1. The web UI sits
+# behind the Pangolin login of Pocket ID.
+#
+# The entrypoint of the image is s6: it chowns the app folders and drops down
+# to PUID/PGID. So the container starts as root, and the namespace allows
+# baseline pods only. PUID/PGID gives each created file to user 1000.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tdarr
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Tdarr
+    glance/icon: di:tdarr
+spec:
+  replicas: 1
+  # The server database on local-path allows one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: tdarr
+  template:
+    metadata:
+      labels:
+        app: tdarr
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+      containers:
+        - name: tdarr
+          image: ghcr.io/haveagitgat/tdarr:2.59.03
+          env:
+            # The image runs as root and drops to this UID. User 1000 owns
+            # the media.
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: UMASK_SET
+              value: "002"
+            - name: serverIP
+              value: 0.0.0.0
+            - name: serverPort
+              value: "8266"
+            - name: webUIPort
+              value: "8265"
+            # The server and one node run in this pod. Nodes connect outward
+            # to the server, so no port of the node opens.
+            - name: internalNode
+              value: "true"
+            - name: inContainer
+              value: "true"
+            - name: nodeName
+              value: typhon
+            - name: ffmpegVersion
+              value: "7"
+            # One CPU worker for the SVT-AV1 encode. Raise it after a test of
+            # the memory use.
+            - name: transcodecpuWorkers
+              value: "1"
+            - name: transcodegpuWorkers
+              value: "0"
+            - name: healthcheckcpuWorkers
+              value: "1"
+            - name: healthcheckgpuWorkers
+              value: "0"
+            # The Pangolin login is the only login of the UI, so the app
+            # login stays off.
+            - name: auth
+              value: "false"
+            - name: maxLogSizeMB
+              value: "10"
+            - name: cronPluginUpdate
+              value: ""
+          ports:
+            - name: http
+              containerPort: 8265
+          securityContext:
+            allowPrivilegeEscalation: false
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              memory: 8Gi
+          volumeMounts:
+            - name: config
+              mountPath: /app/server
+            - name: data
+              mountPath: /app/configs
+              subPath: configs
+            - name: data
+              mountPath: /app/logs
+              subPath: logs
+            - name: media
+              mountPath: /media
+            - name: data
+              mountPath: /temp
+              subPath: temp
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: media
+          persistentVolumeClaim:
+            claimName: media

@@ -1,0 +1,79 @@
+# m4b-merge. Each hour, it turns one folder of MP3 files in
+# /media/audiobooks/.merge-inbox into one chaptered M4B, with the metadata,
+# the cover, and the chapters of Audible through the API of Audnexus. No
+# HTTP route exists, so no Pangolin resource and no site in Glance exist.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: m4b-merge
+spec:
+  # At minute 23 of each hour.
+  schedule: "23 * * * *"
+  concurrencyPolicy: Forbid
+  # A merge of many books can take hours.
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      # A merge of one book takes about one CPU hour. The window stays under
+      # the gap to the next run, and a long list of books fails at the
+      # deadline. The next run then starts again.
+      activeDeadlineSeconds: 3000
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: m4b-merge
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: m4b-merge
+              # The image of the commit 45852fa, the release v1.0.1. The
+              # release has no version tag on the image, so the commit tag
+              # stays the pin.
+              image: ghcr.io/djdembeck/m4b-merge:sha-45852fa
+              command: [sh, /scripts/run.sh]
+              env:
+                # The merge writes its temporary files here.
+                - name: TMPDIR
+                  value: /tmp
+                - name: HOME
+                  value: /tmp
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: [ALL]
+                readOnlyRootFilesystem: true
+              resources:
+                requests:
+                  cpu: 2
+                  memory: 1Gi
+                limits:
+                  memory: 4Gi
+              volumeMounts:
+                - name: media
+                  mountPath: /media
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: media
+              persistentVolumeClaim:
+                claimName: media
+            - name: script
+              configMap:
+                name: m4b-merge-run
+                defaultMode: 0555
+            - name: tmp
+              emptyDir:
+                sizeLimit: 5Gi

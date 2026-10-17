@@ -1,0 +1,85 @@
+# The volumes of Tdarr:
+# - media: /lethe/data/media on gaia, at /media. Tdarr reads and replaces the
+#   files that Sonarr, Radarr, and qBittorrent keep there.
+# - config: the server database, the samples, and the plugins, on the disk of
+#   a worker. The database must not go on NFS.
+# - data: /lethe/k8s/tdarr on gaia, at /app/configs, /app/logs, and /temp.
+#   /temp is the transcode cache. The server reads and writes the media over
+#   NFS anyway, so the cache also goes on NFS.
+# The static volumes keep their data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tdarr-media
+spec:
+  capacity:
+    storage: 4Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: tdarr
+    name: media
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: tdarr-media
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/data/media
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tdarr-data
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: tdarr
+    name: data
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: tdarr-data
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/tdarr
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: tdarr-media
+  resources:
+    requests:
+      storage: 4Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: tdarr-data
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
