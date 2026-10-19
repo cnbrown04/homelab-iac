@@ -239,9 +239,6 @@ the cluster.
     config of the plugin is `typhon-cluster/apps/termix/opkssh-config.yml`.
     An init container copies it to the data volume at each start. `OPKSSH_VERSION` keeps the plugin on the version of the
     hosts.
-  - guacd 1.6.0 runs in the pod on `127.0.0.1:4822`, for RDP and VNC.
-    `GUACD_HOST` and `GUACD_PORT` set it, and they win over the setting in
-    the UI.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
