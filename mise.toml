@@ -19,7 +19,7 @@ ansible-core = { version = "2.21.4", uvx_args = "--with mitogen==0.3.53" }
 
 # Lints the Ansible content on every PR. Check collection compatibility in
 # ansible/requirements.yml before a version bump.
-"pypi:ansible-lint" = "26.8.0"
+"pypi:ansible-lint" = "26.10.1"
 
 # Secret encryption. See AGENTS.md, section 4, decision 6.
 sops = "3.13.3"
@@ -37,7 +37,7 @@ talosctl = "1.14.2"
 talhelper = "3.1.17"
 kubectl = "1.37.1"
 flux2 = "2.9.6"
-helm = "4.3.0"
+helm = "4.3.1"
 cilium-cli = "0.20.1"
 # Checks the manifests of the typhon cluster in the pipeline. See
 # .github/workflows/typhon.yml.
