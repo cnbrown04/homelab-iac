@@ -3,11 +3,8 @@
 #
 # A Tailscale sidecar joins the tailnet as the node termix, with tag:termix.
 # It runs in kernel mode, so each container of the pod reaches the tailnet
-# with no proxy: SSH from Termix, and RDP and VNC from guacd. The SOCKS5 proxy
-# on localhost:1055 stays for the hosts that still have it in their settings.
-#
-# guacd, the Guacamole proxy, runs in the pod for the remote desktop plugin.
-# It listens on localhost only. GUACD_HOST tells Termix where it is.
+# with no proxy. The SOCKS5 proxy on localhost:1055 stays for the hosts that
+# still have it in their settings.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -128,10 +125,6 @@ spec:
           env:
             - name: PORT
               value: "8080"
-            - name: GUACD_HOST
-              value: 127.0.0.1
-            - name: GUACD_PORT
-              value: "4822"
             # The opkssh plugin uses the same opkssh as the hosts. Keep it
             # at opkssh_version of ansible/roles/opkssh. The checksum is the
             # one of opkssh-linux-amd64 in checksums.txt of the release.
@@ -159,22 +152,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /app/data
-        - name: guacd
-          image: docker.io/guacamole/guacd:1.6.0
-          # The image listens on 0.0.0.0. Termix is in the same pod, so
-          # localhost is enough.
-          command: ["/opt/guacamole/sbin/guacd"]
-          args: ["-b", "127.0.0.1", "-l", "4822", "-L", "info", "-f"]
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: [ALL]
-          resources:
-            requests:
-              cpu: 20m
-              memory: 64Mi
-            limits:
-              memory: 512Mi
       volumes:
         - name: data
           persistentVolumeClaim:
