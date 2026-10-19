@@ -54,7 +54,7 @@ spec:
               mountPath: /seed
       containers:
         - name: sonarr
-          image: ghcr.io/home-operations/sonarr:5.0.0.2569
+          image: ghcr.io/home-operations/sonarr:5.0.0.2701
           env:
             # No login page. The Pangolin login (Pocket ID) is the only login,
             # so the Pangolin resource must keep SSO on. The API still needs
