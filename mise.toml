@@ -45,7 +45,7 @@ kubeconform = "0.8.0"
 
 # The SSH login of Ansible. scripts/opkssh-login.sh uses it. The hosts run
 # the same version. See ansible/roles/opkssh.
-"github:openpubkey/opkssh" = "0.17.0"
+"github:openpubkey/opkssh" = "0.19.0"
 
 [env]
 # Ansible reads ansible/ansible.cfg from each folder of the repository, so each
