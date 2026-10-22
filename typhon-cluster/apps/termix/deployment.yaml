@@ -100,7 +100,7 @@ spec:
               mountPath: /tmp
       containers:
         - name: termix
-          image: ghcr.io/lukegus/termix:26.10.4
+          image: ghcr.io/lukegus/termix:26.10.5
           env:
             - name: PORT
               value: "8080"
