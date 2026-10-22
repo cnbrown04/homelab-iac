@@ -417,8 +417,6 @@ the cluster.
     keys at the URL. So a copy on GitHub does not change the access.
   - Do not put the key of `iac-admin` or the key of Termix on GitHub. A key
     on GitHub can also push to the repositories of the owner.
-- The hosts used opkssh until 22 October 2026. The role `opkssh_cleanup`
-  deletes it. Delete the role when each host ran it one time.
 - On `mnemosyne`, `caleb` is also the Samba user. The Samba role does not
   change the account.
 
@@ -730,9 +728,6 @@ mise run plan:pantheon
   `authkey` input of the action.
 - Renovate closed its open pull requests after the history rewrite of
   28 September 2026. Check that it opens them again.
-- When each host ran `opkssh_cleanup` one time: delete the role, its entries
-  in the playbooks, and `opkssh_cleanup_extra_paths` in
-  `host_vars/daedalus/main.yml`.
 
 ### Do not
 

@@ -81,10 +81,6 @@ dev_tools_mise_tools:
   "npm:vscode-langservers-extracted": latest
   rust-analyzer: latest
 
-# The opkssh build of the device flow. The role opkssh_cleanup deletes it.
-opkssh_cleanup_extra_paths:
-  - /home/caleb/.local/share/opkssh-source
-
 # Claude Code and opencode use their own installers, so they stay on the
 # newest version. Each run of the playbook also updates them.
 dev_tools_claude_code: true

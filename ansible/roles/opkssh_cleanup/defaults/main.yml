@@ -1,3 +1,0 @@
----
-# More paths to delete, for example the opkssh build on daedalus.
-opkssh_cleanup_extra_paths: []
