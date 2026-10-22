@@ -136,9 +136,9 @@ Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
 The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
 Let's Encrypt certificate and the Pocket ID login (realm `pocketid`).
-Ansible logs in to each host as `iac-admin`, with an opkssh key and sudo with
-no password. Before each run, the callback plugin `opkssh_login` runs
-`scripts/opkssh-login.sh`, which logs in when the key is older than 23 hours.
+Ansible logs in to each host as `iac-admin`, with the key in
+`ansible/iac-admin-key.pub` and sudo with no password. The 1Password agent
+signs each login, and asks the owner to approve the first use.
 
 ### The `typhon` cluster
 
@@ -234,10 +234,9 @@ the cluster.
     The policy gives `tag:termix` TCP `22`, `3389`, and `5900` on each node.
   - The SOCKS5 proxy `127.0.0.1:1055` stays for the hosts that still use it.
     A new host does not need it.
-  - Each host in Termix logs in as `caleb` with the auth type OPKSSH. The
-    config of the plugin is `typhon-cluster/apps/termix/opkssh-config.yml`.
-    An init container copies it to the data volume at each start. `OPKSSH_VERSION` keeps the plugin on the version of the
-    hosts.
+  - Each host in Termix logs in as `caleb` with the key of Termix, at its
+    tailnet address. The key works only from `ssh_key_sources`, so the pod
+    network cannot use it. Termix keeps the private key in its database.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
@@ -342,12 +341,8 @@ the cluster.
   - Each run imports the opencode logins from `opencode auth export` on the
     desktop. The import adds a missing login and skips a login that exists.
     After a new login on the desktop, put the export in SOPS again.
-- `mise run login` on `daedalus` uses the device flow of opkssh. It prints a
-  link and a QR code, and you approve the login on any device, for example
-  the phone with Termix. The release of opkssh has no device flow yet, so
-  the role `dev_tools` builds opkssh from the commit in
-  `dev_tools_opkssh_source_ref`. `.zshrc` sets `OPKSSH_BIN` and
-  `OPKSSH_DEVICE_FLOW` for `scripts/opkssh-login.sh`.
+- Ansible on `daedalus` uses the agent of the desktop, through SSH agent
+  forwarding. No private key stays on the VM.
 - SSH allows TCP forwarding and agent forwarding, for VS Code Remote-SSH and
   git. VS Code installs its server at the first connection.
 - The VM has the tag `tag:dev` on the tailnet.
@@ -420,9 +415,10 @@ the cluster.
     the tailnet and the home IP of the owner.
   - `owner_user` drops the key of `iac-admin` and the key of Termix from the
     keys at the URL. So a copy on GitHub does not change the access.
-- opkssh lets the Pocket ID group `homelab_admin` log in as `caleb` and as
-  `iac-admin`, with a certificate that expires after 24 hours. The Pocket ID
-  client `opkssh` signs the login.
+  - Do not put the key of `iac-admin` or the key of Termix on GitHub. A key
+    on GitHub can also push to the repositories of the owner.
+- The hosts used opkssh until 22 October 2026. The role `opkssh_cleanup`
+  deletes it. Delete the role when each host ran it one time.
 - On `mnemosyne`, `caleb` is also the Samba user. The Samba role does not
   change the account.
 
@@ -477,8 +473,8 @@ These decisions are closed. Ask the owner before you re-open one.
     login, for the cluster), the kernel settings of `sysctl_hardening`, and
     automatic Debian security updates only. No Fail2ban, CrowdSec, or UFW.
     The `proxmox_web` role adds the web certificate, port 443, and SSO. The
-    owner logs in as `caleb`, with a key or with opkssh. The owner chose
-    opkssh on 10 October 2026.
+    owner logs in as `caleb`, with a key. The owner chose opkssh on
+    10 October 2026, and returned to keys on 22 October 2026.
 11. **Dockge is the Compose manager.** Ansible deploys each stack. Dockge does
     not.
 12. **The Proxmox web UI:** an nftables rule sends port 443 to 8006. ACME uses
@@ -526,8 +522,8 @@ no port, and add a resource to `pangolin_blueprint_resources`.
 
 To add a host: a new VPS runs `scripts/vps-harden.sh`, then the play with
 `-e ansible_user=caleb` one time. Give that run the key of `caleb` with
-`-e ansible_ssh_private_key_file=<file>`, because opkssh is not on the VPS
-yet. A new Proxmox node runs
+`-e ansible_ssh_private_key_file=<file>`, because `iac-admin` has no key on
+the VPS yet. A new Proxmox node runs
 `playbooks/proxmox_bootstrap.yml` as root, then `playbooks/proxmox_nodes.yml`.
 Add the node to `hosts.yml` first, and to the group `pantheon` for the
 cluster.
@@ -537,7 +533,8 @@ change a version by hand.
 
 ### Working with the owner
 
-- The agent can run a playbook with `--check`, after `mise run login`. The
+- The agent can run a playbook with `--check`. The owner approves the key in
+  1Password. The
   agent runs a playbook without `--check` only when the owner
   asks for it. For a command as root outside Ansible, give the owner the
   exact command, and ask for the output.
@@ -714,8 +711,8 @@ mise run plan:pantheon
   `module.vm["<host>"].proxmox_virtual_environment_vm.this`, not the module.
 - cloud-init gives `iac-admin` an SSH key and no password. Ansible deletes
   the key at the first run. Log in to the console as `caleb`.
-- The first run on a new VM uses the cloud-init key, because opkssh is not
-  on the VM yet. `ansible/cloud-init-key.pub` holds the public key. SSH gets
+- The first run on a new VM uses the cloud-init key, because the key of
+  `iac-admin` is not on the VM yet. `ansible/cloud-init-key.pub` holds the public key. SSH gets
   the private key from the 1Password agent.
 - The pool `lethe` on `gaia` has 5 disks with 4096-byte sectors (4Kn). A QEMU
   disk shows 512-byte sectors, so a pool made in a VM has its GPT at byte
@@ -733,10 +730,9 @@ mise run plan:pantheon
   `authkey` input of the action.
 - Renovate closed its open pull requests after the history rewrite of
   28 September 2026. Check that it opens them again.
-
-- When a release of opkssh has the device flow (it came after v0.17.0):
-  delete `dev_tools_opkssh_source_ref` from `host_vars/daedalus/main.yml`.
-  Then set `OPKSSH_DEVICE_FLOW=1` on `daedalus` with no source build.
+- When each host ran `opkssh_cleanup` one time: delete the role, its entries
+  in the playbooks, and `opkssh_cleanup_extra_paths` in
+  `host_vars/daedalus/main.yml`.
 
 ### Do not
 

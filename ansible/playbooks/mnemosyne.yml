@@ -17,7 +17,7 @@
       tags: [owner_user]
     - role: ssh_hardening
       tags: [security]
-    - role: opkssh
+    - role: opkssh_cleanup
       tags: [security, opkssh]
     - role: sysctl_hardening
       tags: [security]

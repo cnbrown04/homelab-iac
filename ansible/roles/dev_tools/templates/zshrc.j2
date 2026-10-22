@@ -39,13 +39,6 @@ alias vim=nvim
 # Claude Code is in ~/.local/bin, and opencode is in ~/.opencode/bin.
 export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 [ -f ~/.config/dev_tools/claude.zsh ] && source ~/.config/dev_tools/claude.zsh
-{% if dev_tools_opkssh_source_ref | length > 0 %}
-
-# scripts/opkssh-login.sh of homelab-iac uses the opkssh that Ansible built
-# from source, with the device flow. The host has no browser.
-export OPKSSH_BIN="{{ dev_tools_opkssh_dir }}/bin/opkssh"
-export OPKSSH_DEVICE_FLOW=1
-{% endif %}
 
 # mise first, because it gives zoxide and starship.
 eval "$(mise activate zsh)"

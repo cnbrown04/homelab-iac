@@ -37,27 +37,6 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       initContainers:
-        # The opkssh plugin reads its config from the data volume, and writes
-        # its binary next to it. So this container copies the config from git
-        # at each start, and the folder stays writable.
-        - name: opkssh-config
-          image: ghcr.io/lukegus/termix:26.10.4
-          command:
-            - sh
-            - -c
-            - >-
-              mkdir -p /app/data/plugin-data/opkssh &&
-              install -m 600 /config/config.yml /app/data/plugin-data/opkssh/config.yml
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: [ALL]
-          volumeMounts:
-            - name: data
-              mountPath: /app/data
-            - name: opkssh-config
-              mountPath: /config
-              readOnly: true
         # A sidecar: it runs for the life of the pod. Termix starts after the
         # node is on the tailnet.
         - name: tailscale
@@ -125,13 +104,6 @@ spec:
           env:
             - name: PORT
               value: "8080"
-            # The opkssh plugin uses the same opkssh as the hosts. Keep it
-            # at opkssh_version of ansible/roles/opkssh. The checksum is the
-            # one of opkssh-linux-amd64 in checksums.txt of the release.
-            - name: OPKSSH_VERSION
-              value: v0.17.0
-            - name: OPKSSH_SHA256_AMD64
-              value: 7da9090ce4abb448683b6770af5efd30d0e6f2c0667cb9b4ddef9a4da3dfc88e
           ports:
             - name: http
               containerPort: 8080
@@ -161,6 +133,3 @@ spec:
             claimName: tailscale
         - name: tailscale-tmp
           emptyDir: {}
-        - name: opkssh-config
-          configMap:
-            name: termix-opkssh

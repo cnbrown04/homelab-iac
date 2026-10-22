@@ -49,13 +49,9 @@ hermes went from 73 s to 24 s. A check of all hosts went from 150 s to 68 s.
 - [x] Send the events of hermes to Wazuh. hermes joins the tailnet as tag:hermes, with TCP 1514 and 1515 on tag:siem only (11 October 2026).
 - [ ] Look at the Wazuh scans of each agent (SCA, rootcheck, and vulnerabilities). Fix each finding in Ansible, or write down why it stays.
 - [x] Log in to the Wazuh dashboard with Pocket ID (OIDC). Give the admin role to the group homelab_admin. It is public at wazuh.buildwithcaleb.com, through the Newt site argus.
-- [ ] Get a YubiKey for the break-glass key of iac-admin. iac-admin logs in with opkssh, and Pocket ID runs on hermes. When Pocket ID is down, the break-glass key is the only way for Ansible to log in.
+- [ ] Get a YubiKey, and make a new key of iac-admin on it. Then no copy of the key can exist.
   - Use a FIDO2 key (ed25519-sk), so each login needs a touch of the YubiKey.
   - Keep a second YubiKey with a copy, or a second key in a safe place.
-- [ ] Let Termix log in to the hosts as caleb with opkssh. Each host already has opkssh.
-  - Add the callback URL of Termix, https://termix.buildwithcaleb.com/plugin-api/opkssh/callback, to the Pocket ID client opkssh.
-  - Write the provider in /app/data/plugin-data/opkssh/config.yml in the Termix pod, with the scopes openid email profile groups. Leave redirect_uris out.
-  - Termix ships opkssh v0.16.0, and the hosts run v0.17.0. Test one host before the others.
 
 
 ### Cluster

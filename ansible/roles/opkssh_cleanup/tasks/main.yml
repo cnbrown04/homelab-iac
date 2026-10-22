@@ -1,0 +1,30 @@
+---
+# The hosts used opkssh until October 2026. This role deletes it. Delete the
+# role when each host ran it one time.
+
+# The handler of the role ssh_hardening checks the whole configuration, then
+# reloads sshd. sshd stops the use of opkssh before the binary goes.
+- name: Stop sshd from asking opkssh for the keys of a login
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d/60-opkssh.conf
+    state: absent
+  notify: SSH configuration changed
+
+- name: Reload sshd before the files of opkssh go
+  ansible.builtin.meta: flush_handlers
+
+- name: Delete the files of opkssh
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ ['/usr/local/bin/opkssh', '/etc/opk', '/var/log/opkssh.log'] + opkssh_cleanup_extra_paths }}"
+
+- name: Delete the user of opkssh
+  ansible.builtin.user:
+    name: opksshuser
+    state: absent
+
+- name: Delete the group of opkssh
+  ansible.builtin.group:
+    name: opksshuser
+    state: absent

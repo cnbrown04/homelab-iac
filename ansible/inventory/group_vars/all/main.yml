@@ -50,13 +50,3 @@ owner_user_extra_ssh_keys:
 # copy on GitHub does not let the key of iac-admin log in as the owner, and
 # does not remove the network limit of the key of Termix.
 owner_user_refused_ssh_keys: "{{ admin_user_ssh_keys }}"
-
-# opkssh: a login with a 24-hour SSH certificate from Pocket ID. Members of
-# the Pocket ID group homelab_admin log in as the owner and as iac-admin.
-opkssh_issuer: https://auth.buildwithcaleb.com
-# The client ID of the Pocket ID client "opkssh". It is not a secret.
-opkssh_client_ids:
-  - opkssh
-opkssh_policy:
-  - {principal: caleb, identity: "oidc:groups:homelab_admin"}
-  - {principal: iac-admin, identity: "oidc:groups:homelab_admin"}

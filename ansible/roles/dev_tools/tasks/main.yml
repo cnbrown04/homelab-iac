@@ -166,11 +166,6 @@
   changed_when: "'installed' in dev_tools_nvim_plugins_install.stdout"
   when: dev_tools_nvim_config
 
-# The build uses the Go of mise, so it comes after the mise tools.
-- name: Build opkssh for the device flow
-  ansible.builtin.include_tasks: opkssh.yml
-  when: dev_tools_opkssh_source_ref | length > 0
-
 - name: Install Claude Code and opencode
   ansible.builtin.include_tasks: agents.yml
   when: dev_tools_claude_code or dev_tools_opencode

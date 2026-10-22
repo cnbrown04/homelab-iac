@@ -43,10 +43,6 @@ cilium-cli = "0.20.1"
 # .github/workflows/typhon.yml.
 kubeconform = "0.8.0"
 
-# The SSH login of Ansible. scripts/opkssh-login.sh uses it. The hosts run
-# the same version. See ansible/roles/opkssh.
-"github:openpubkey/opkssh" = "0.17.0"
-
 [env]
 # Ansible reads ansible/ansible.cfg from each folder of the repository, so each
 # command runs from the root. The pipelines use the same file.
@@ -66,10 +62,6 @@ idiomatic_version_file_enable_tools = []
 # Use a precompiled Python only. A build from source takes minutes, and the
 # runner has no bz2, lzma, or readline for it.
 python.compile = false
-
-[tasks.login]
-description = "Log in with opkssh, when the key of Ansible is older than 23 hours"
-run = "scripts/opkssh-login.sh"
 
 # Short commands for the checks. Each task makes no change. Put more flags of
 # ansible-playbook after --, for example: mise run check:hermes -- --tags pangolin
