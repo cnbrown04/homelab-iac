@@ -131,7 +131,6 @@ Always refer to a machine by its hostname, not by its provider.
 | `mnemosyne` | File server VM on `gaia` (VMID `200`), Debian 13. Runs Samba and OpenCloud. | `10.0.1.16` | MagicDNS |
 | `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
 | `argus` | SIEM VM on `tartarus` (VMID `400`), Ubuntu 24.04. Runs Wazuh. | `10.0.1.18` | MagicDNS |
-| `athena` | Agent VM on `tartarus` (VMID `600`), Ubuntu 24.04. Runs Hermes Agent. | `10.0.1.19` | MagicDNS |
 
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
@@ -369,7 +368,7 @@ the cluster.
   `wazuh_agent_version` together. Upgrade the server first, because an agent
   must not be newer than the manager.
 - The role `wazuh_agent` puts the agent on the Proxmox nodes, `mnemosyne`,
-  `daedalus`, `athena`, and `hermes`. Each agent sends its events to `10.0.1.18` on TCP
+  `daedalus`, and `hermes`. Each agent sends its events to `10.0.1.18` on TCP
   `1514`, and enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus`
   has no agent, because the manager watches its own host. Talos nodes get no
   agent.
@@ -396,38 +395,6 @@ the cluster.
     nothing.
   - The user `admin` still logs in with its password, for when Pocket ID is
     down.
-- Run its playbook by hand. No pipeline reaches it.
-
-### The agent VM `athena`
-
-- `athena` runs the Hermes agent of Nous Research, with 4 vCPU, 8 GiB, and
-  a disk of 128 GiB.
-- The VM has the tag `tag:agent` on the tailnet. The policy gives
-  `tag:agent` no grant, so the agent cannot open a connection to a node of
-  the tailnet. Personal devices still reach the VM.
-- The role `hermes_agent` installs Hermes for `caleb` in `~/.hermes`. Each
-  run also runs `hermes update`. The system service `hermes-gateway` runs as
-  `caleb` and starts at boot.
-  - Ansible sets the keys of `hermes_agent_config` in `config.yaml`, and the
-    values of `hermes_agent_env` in `.env`. Hermes keeps the other keys.
-  - The owner runs `hermes setup` and the setup of each channel by hand, for
-    example `hermes photon setup`. The answers stay in `~/.hermes`.
-  - `hermes_agent_soul` in SOPS is the identity of the agent. Ansible writes
-    it to `~/.hermes/SOUL.md`. Change it in SOPS, not on the VM.
-  - Hermes writes `~/.hermes/memories/USER.md` and `MEMORY.md` itself, so
-    Ansible does not manage them.
-- The agent runs each command in the Docker sandbox of Hermes
-  (`terminal.backend: docker`). The sandbox reaches the internet and the LAN.
-  - The sandbox mounts `~/.opencode/bin` of `caleb` read-only. It gets
-    `OPENCODE_API_KEY` from `.env`, so code in the sandbox can read the key.
-  - The agent cannot install a plugin, because its terminal is in the
-    sandbox.
-- To add a plugin from Git, add its name, source, and full commit SHA to
-  `hermes_agent_plugins`. A plugin that ships with Hermes, for example
-  Photon, needs no entry.
-- `dev_tools` gives `caleb` the shell of the owner and opencode, the same as
-  on `daedalus`.
-- Nothing backs up `~/.hermes` yet.
 - Run its playbook by hand. No pipeline reaches it.
 
 ### The admin group of Pocket ID
@@ -457,7 +424,7 @@ the cluster.
 
 | Name | Service | Route |
 | --- | --- | --- |
-| `vpn.buildwithcaleb.com` | Headscale 0.29.4, a system service on `10.200.0.1:8085` | Traefik file route |
+| `vpn.buildwithcaleb.com` | Headscale 0.29.5, a system service on `10.200.0.1:8085` | Traefik file route |
 | `pangolin.buildwithcaleb.com` | Pangolin Enterprise Edition, with Traefik and Gerbil | Traefik file route |
 | `auth.buildwithcaleb.com` | Pocket ID, the SSO provider | Pangolin resource, no Pangolin login |
 | `headplane.buildwithcaleb.com` | Headplane | Pangolin resource, no Pangolin login |
@@ -520,7 +487,7 @@ tofu/modules/{vm,lxc}/      # one guest each
 tofu/targets/{atlas,pantheon}/  # one root and one state each; guests are data in vms.tf and containers.tf
 tofu/targets/asphodel/      # the PlanetScale Postgres asphodel; databases are data in databases.tf
 ansible/inventory/          # hosts.yml, group_vars/{all,proxmox_nodes}, host_vars/hermes
-ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus, athena, vm_retire
+ansible/playbooks/          # site, hermes, headscale, hermes_tailnet, pangolin_resources, stacks, proxmox_nodes, proxmox_bootstrap, mnemosyne, daedalus, argus, vm_retire
 ansible/roles/              # one job each
 ansible/stacks/             # Compose files
 secrets/tofu.sops.yaml      # R2 keys, state passphrase, Proxmox API tokens, PlanetScale service token

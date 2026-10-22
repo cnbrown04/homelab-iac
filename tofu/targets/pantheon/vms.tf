@@ -153,32 +153,6 @@ locals {
         }
       }
     }
-
-    # The VM of the Hermes agent of the owner. Ansible configures the host. See
-    # ansible/playbooks/athena.yml.
-    athena = {
-      node_name   = "tartarus"
-      vm_id       = 600
-      description = "The Hermes agent, Ubuntu 24.04. OpenTofu manages this VM from homelab-iac."
-      tags        = ["agent", "ubuntu"]
-      cpu_type    = "host"
-      cpu_cores   = 4
-      memory_mb   = 8192
-      # The image has no guest agent. Ansible installs it.
-      agent_wait_for_ip = false
-      disks             = [{ interface = "scsi0", datastore_id = "local-lvm", size = 128, import_from = proxmox_download_file.ubuntu["tartarus"].id }]
-      network_devices   = [{ bridge = "vmbr0" }]
-      initialization = {
-        datastore_id = "local-lvm"
-        ipv4_address = "10.0.1.19/24"
-        ipv4_gateway = "10.0.1.1"
-        dns_servers  = ["10.0.1.1"]
-        user_account = {
-          username = "iac-admin"
-          keys     = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP88BOfNMfJoF99u1UYpf3CDUGl5nv+Ovbh0B8fyaqTH"]
-        }
-      }
-    }
   }
 }
 

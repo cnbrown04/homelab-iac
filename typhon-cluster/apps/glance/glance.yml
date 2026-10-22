@@ -548,7 +548,6 @@ pages:
               - tale/headplane
               - louislam/dockge
               - wazuh/wazuh
-              - NousResearch/hermes-agent
 
   # The services: each app, each node, and the releases of the apps.
   - name: Services

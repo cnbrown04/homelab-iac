@@ -60,11 +60,14 @@
         owner: root
         group: root
         mode: "0644"
+      register: headscale_package
 
+    # In a check run, get_url does not download the file.
     - name: Install Headscale
       ansible.builtin.apt:
         deb: "/tmp/headscale_{{ headscale_version }}_linux_{{ headscale_package_architecture }}.deb"
         state: present
+      when: not (ansible_check_mode and headscale_package is changed)
 
 - name: Create the directory for the Headscale unit override
   ansible.builtin.file:
