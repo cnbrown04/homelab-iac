@@ -5,8 +5,13 @@ owner_user_name: ""
 owner_user_shell: /bin/bash
 owner_user_groups:
   - sudo
-# A URL that returns public SSH keys, one on each line. These keys replace
-# all other keys of the user. opkssh gives a second way in.
+# A URL that returns public SSH keys, one on each line. These keys and the
+# extra keys replace all other keys of the user.
 owner_user_ssh_keys_url: ""
+# More keys, one line each, with options such as from="...".
+owner_user_extra_ssh_keys: []
+# Keys that must not log in as the owner. The role drops these keys and the
+# extra keys from the keys at the URL. Only the key part of each line counts.
+owner_user_refused_ssh_keys: []
 # A SHA-512 crypt hash. The password is for sudo.
 owner_user_password_hash: ""

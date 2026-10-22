@@ -19,6 +19,12 @@ fail2ban_ignore_ip:
 crowdsec_allowlist_ips:
   - "{{ hermes_home_ip }}"
 
+# Ansible and Termix reach hermes at its public IP from home, or through the
+# tailnet. If the home IP changes, set the new IP before a run from home.
+ssh_key_sources:
+  - 100.64.0.0/10
+  - "{{ hermes_home_ip }}"
+
 # caleb runs docker with no sudo.
 docker_users:
   - caleb

@@ -408,10 +408,18 @@ the cluster.
 ### The accounts on each host
 
 - `caleb` is the account of the owner, with sudo and a password. The role
-  `owner_user` makes it, with the key at `github.com/cnbrown04.keys`.
+  `owner_user` makes it, with the keys at `github.com/cnbrown04.keys`.
 - `iac-admin` is for Ansible and the pipelines only. The owner does not log
-  in with it. It has sudo with no password, and its password is locked. It
-  has no key, except the pipeline key on `hermes`.
+  in with it. It has sudo with no password, and its password is locked.
+- Each user has a different key. Do not give one key to two users.
+  - `iac-admin` has the key in `ansible/iac-admin-key.pub`. Its private key
+    is in 1Password. `hermes` also has the pipeline key.
+  - `caleb` also has the key of Termix, in `ansible/termix-key.pub`.
+  - The key of `iac-admin` and the key of Termix work only from
+    `ssh_key_sources`: the LAN and the tailnet. On `hermes`, the list holds
+    the tailnet and the home IP of the owner.
+  - `owner_user` drops the key of `iac-admin` and the key of Termix from the
+    keys at the URL. So a copy on GitHub does not change the access.
 - opkssh lets the Pocket ID group `homelab_admin` log in as `caleb` and as
   `iac-admin`, with a certificate that expires after 24 hours. The Pocket ID
   client `opkssh` signs the login.

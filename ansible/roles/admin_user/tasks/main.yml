@@ -3,7 +3,10 @@
   ansible.builtin.assert:
     that:
       - admin_user_name is match('^[a-z_][a-z0-9_-]*$')
-    fail_msg: Set the name of the admin user.
+      - (admin_user_ssh_keys + admin_user_extra_ssh_keys) | length > 0
+    fail_msg: >-
+      Set the name of the admin user, and at least one key. With no key,
+      Ansible cannot log in again.
 
 - name: Install sudo
   ansible.builtin.apt:
@@ -23,7 +26,7 @@
     mode: "0440"
     validate: /usr/sbin/visudo -cf %s
 
-# "!" locks the password. A key or an opkssh certificate still logs in.
+# "!" locks the password. A key still logs in.
 - name: Create the admin user
   ansible.builtin.user:
     name: "{{ admin_user_name }}"
@@ -41,11 +44,10 @@
     group: "{{ admin_user_name }}"
     mode: "0700"
 
-# These keys replace all other keys. With no extra keys, the file is empty,
-# and only opkssh logs in.
+# These keys replace all other keys.
 - name: Set the SSH keys of the admin user
   ansible.builtin.copy:
-    content: "{{ (admin_user_extra_ssh_keys | join('\n') ~ '\n') if admin_user_extra_ssh_keys | length > 0 else '' }}"
+    content: "{{ (admin_user_ssh_keys + admin_user_extra_ssh_keys) | join('\n') ~ '\n' }}"
     dest: "/home/{{ admin_user_name }}/.ssh/authorized_keys"
     owner: "{{ admin_user_name }}"
     group: "{{ admin_user_name }}"

@@ -62,10 +62,22 @@
       - owner_user_url_keys is search('^ssh-', multiline=True)
     fail_msg: "The URL {{ owner_user_ssh_keys_url }} gave no SSH key. Ansible stops, so it does not delete your keys."
 
+# A key on GitHub can also be a refused key or an extra key. The role drops
+# it from the URL keys, so the extra key keeps its options, for example from=.
 - name: Set the SSH keys of the owner user
   ansible.posix.authorized_key:
     user: "{{ owner_user_name }}"
-    key: "{{ owner_user_url_keys | trim }}"
+    key: "{{ (owner_user_kept_url_keys + owner_user_extra_ssh_keys) | join('\n') }}"
     exclusive: true
     state: present
+  vars:
+    owner_user_url_lines: "{{ owner_user_url_keys.splitlines() | map('trim') | select | list }}"
+    owner_user_dropped_keys: >-
+      {{ (owner_user_refused_ssh_keys + owner_user_extra_ssh_keys)
+         | map('regex_search', ' (AAAA[A-Za-z0-9+/=]+)', '\1') | map('first') | list }}
+    owner_user_kept_url_keys: >-
+      {{ owner_user_url_lines
+         | reject('search', ' (' ~ (owner_user_dropped_keys | map('regex_escape') | join('|')) ~ ')( |$)')
+         | list
+         if owner_user_dropped_keys | length > 0 else owner_user_url_lines }}
   when: owner_user_name in ansible_facts['getent_passwd']
