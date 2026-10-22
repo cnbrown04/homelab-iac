@@ -41,7 +41,7 @@ spec:
         # its binary next to it. So this container copies the config from git
         # at each start, and the folder stays writable.
         - name: opkssh-config
-          image: ghcr.io/lukegus/termix:26.10.2
+          image: ghcr.io/lukegus/termix:26.10.4
           command:
             - sh
             - -c
@@ -61,7 +61,7 @@ spec:
         # A sidecar: it runs for the life of the pod. Termix starts after the
         # node is on the tailnet.
         - name: tailscale
-          image: ghcr.io/tailscale/tailscale:v1.104.1
+          image: ghcr.io/tailscale/tailscale:v1.104.2
           restartPolicy: Always
           env:
             - name: TS_USERSPACE
@@ -121,7 +121,7 @@ spec:
               mountPath: /tmp
       containers:
         - name: termix
-          image: ghcr.io/lukegus/termix:26.10.2
+          image: ghcr.io/lukegus/termix:26.10.4
           env:
             - name: PORT
               value: "8080"
