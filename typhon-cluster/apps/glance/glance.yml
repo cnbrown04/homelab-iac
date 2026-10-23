@@ -614,6 +614,10 @@ pages:
                 url: https://termix.buildwithcaleb.com
                 check-url: http://termix.termix.svc.cluster.local:8080/health
                 icon: sh:termix
+              - title: Faved
+                url: https://faved.buildwithcaleb.com
+                check-url: http://faved.faved.svc.cluster.local/
+                icon: sh:faved
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
@@ -744,6 +748,7 @@ pages:
               - Jackett/Jackett
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
+              - denho/faved
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

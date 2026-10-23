@@ -240,6 +240,16 @@ the cluster.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
+- Faved, the bookmark manager, is at `faved.buildwithcaleb.com`, with no
+  Pangolin login. Its Chrome extension and the Apple Shortcut cannot pass that
+  login.
+  - Faved has no login until it has a user. Make the user before the Pangolin
+    resource exists, or turn the Pangolin login on first.
+  - The image starts Apache as root. The pod runs it as user 1000, with the
+    sysctl `net.ipv4.ip_unprivileged_port_start=0` for port 80.
+  - The SQLite database and the preview images are on `local-path`. Faved
+    can fetch the images again.
+  - The probe and Glance use `/`, because the API needs the login.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The

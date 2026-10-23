@@ -1,0 +1,13 @@
+# The volume of Faved, on the disk of a worker. SQLite must not go on NFS.
+# - faved.db: the SQLite database with the bookmarks, the tags, and the user.
+# - img/: the preview images. Faved can fetch them again from each site.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: storage
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi

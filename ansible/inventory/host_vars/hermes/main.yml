@@ -100,6 +100,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Faved has its own login. Its Chrome extension and the Apple Shortcut
+    # cannot pass the Pangolin login, so SSO is off.
+    faved:
+      name: Faved
+      mode: http
+      full-domain: faved.buildwithcaleb.com
+      auth:
+        sso-enabled: false
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     glance:
       name: Glance
       mode: http
