@@ -11,6 +11,8 @@ locals {
   # One entry for each app. The key is the name of the database and of the
   # role.
   apps = {
+    # Its a Plan on typhon. See typhon-cluster/apps/itsaplan/.
+    itsaplan = {}
   }
 }
 
@@ -64,8 +66,13 @@ resource "postgresql_grant" "app_connect" {
   privileges  = []
 }
 
-output "app_passwords" {
-  description = "The password of each app role. Run: tofu output -json app_passwords"
-  value       = { for name, role in planetscale_postgres_branch_role.app : name => role.password }
-  sensitive   = true
+# The user name of a role has the routing suffix of the branch. libpq and the
+# Node.js drivers read sslmode=verify-full from the URL.
+output "app_database_urls" {
+  description = "The DATABASE_URL of each app. Run: tofu output -json app_database_urls"
+  value = {
+    for name, role in planetscale_postgres_branch_role.app :
+    name => "postgres://${role.username}:${urlencode(role.password)}@${local.host}:5432/${postgresql_database.app[name].name}?sslmode=verify-full"
+  }
+  sensitive = true
 }
