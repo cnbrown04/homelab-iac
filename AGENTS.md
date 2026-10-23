@@ -170,25 +170,7 @@ the cluster.
   WireGuard in userspace, and it gave about 40 Mbit/s. Gerbil and the pod
   `pangolin-wireguard` both use kernel WireGuard. The pod has the tunnel
   address `100.89.128.4`, and it sends TCP port 80 to the Gateway
-  `10.0.20.200`. `FORWARDS` in its Deployment sets each port. Gerbil does not
-  answer a ping through the tunnel.
-- Anytype syncs through `any-sync-bundle` at `anytype.buildwithcaleb.com`.
-  The bundle holds MongoDB and Redis in one container.
-  - The apps use TCP `33010` and QUIC on UDP `33020`, not HTTP. So it has no
-    HTTPRoute and no Pangolin login. The protocol has its own keys.
-  - Each port needs a raw Pangolin resource, a Gerbil port in the stack
-    `pangolin`, and a Traefik entry point `<protocol>-<port>`. The pod
-    `pangolin-wireguard` sends the ports to the LoadBalancer `10.0.20.201`.
-  - The files go to the R2 bucket `homelab-anytype`. The rest is on
-    `local-path`, because MongoDB and BadgerDB must not go on NFS.
-  - The bundle writes the `INIT` values to `/data/bundle-config.yml` at the
-    first start only. To change one later, change that file.
-  - `bundle-config.yml` holds the private keys of the network. If it goes
-    away, each app must join a new network.
-  - Each app imports `/data/client-config.yml` one time. Get it with
-    `kubectl -n anytype exec deploy/anytype -- cat /data/client-config.yml`.
-  - Glance has no monitor for it, because a `monitor` widget checks HTTP
-    only.
+  `10.0.20.200`. Gerbil does not answer a ping through the tunnel.
 - Audiobookshelf is at `audiobooks.buildwithcaleb.com`, with no Pangolin
   login. It logs in with its own users and with OIDC through Pocket ID. The
   owner made its Pocket ID client by hand.

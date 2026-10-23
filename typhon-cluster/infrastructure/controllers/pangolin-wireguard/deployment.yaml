@@ -25,16 +25,11 @@ spec:
             # The MTU of Gerbil on hermes.
             - name: MTU
               value: "1280"
-            # <protocol>:<tunnel port>:<IP>:<port>, separated by spaces.
-            # - TCP 80 goes to the Gateway main. See
-            #   infrastructure/configs/cilium/gateway.yaml.
-            # - TCP 33010 and UDP 33020 go to the service of Anytype. See
-            #   apps/anytype/service.yaml.
-            - name: FORWARDS
-              value: >-
-                tcp:80:10.0.20.200:80
-                tcp:33010:10.0.20.201:33010
-                udp:33020:10.0.20.201:33020
+            # The Gateway main. See infrastructure/configs/cilium/gateway.yaml.
+            - name: GATEWAY_IP
+              value: 10.0.20.200
+            - name: GATEWAY_PORT
+              value: "80"
           securityContext:
             privileged: true
           # Gerbil answers the keepalive every 5 seconds. With no handshake in

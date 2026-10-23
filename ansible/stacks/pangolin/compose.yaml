@@ -42,11 +42,6 @@ services:
       - 443:443
       - 443:443/udp
       - 80:80
-      # The raw resources of Pangolin. Each port also needs an entry point in
-      # traefik_config.yml.j2 of the role pangolin.
-      # Anytype on typhon: DRPC on TCP and QUIC on UDP.
-      - 33010:33010
-      - 33020:33020/udp
 
   traefik:
     image: docker.io/traefik:v3.7.16

@@ -1,8 +1,7 @@
 #!/bin/bash
 # The peer of the basic WireGuard site "typhon" of Pangolin. Gerbil on hermes
 # and this pod both use kernel WireGuard. Pangolin sends each request to the
-# tunnel address of this pod, and NAT sends it on to the Gateway or to a
-# LoadBalancer service. FORWARDS in deployment.yaml sets the ports.
+# tunnel address of this pod, and NAT sends it on to the Gateway.
 set -euo pipefail
 
 conf=/etc/wireguard/pangolin.conf
@@ -24,21 +23,16 @@ for net in $(wg show wg0 allowed-ips | awk '{for (i = 2; i <= NF; i++) print $i}
   ip route replace "$net" dev wg0
 done
 
-# Forward only the ports in FORWARDS. Each entry is
-# <protocol>:<tunnel port>:<IP>:<port>.
+# Forward only the HTTP port of the tunnel address to the Gateway.
 sysctl -qw net.ipv4.ip_forward=1
 "$ipt" -P FORWARD DROP
 "$ipt" -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-for forward in $FORWARDS; do
-  IFS=: read -r proto port dest_ip dest_port <<<"$forward"
-  "$ipt" -A FORWARD -i wg0 -d "$dest_ip" -p "$proto" --dport "$dest_port" -j ACCEPT
-  "$ipt" -t nat -A PREROUTING -i wg0 -d "$tunnel_ip" -p "$proto" --dport "$port" \
-    -j DNAT --to-destination "$dest_ip:$dest_port"
-  "$ipt" -t nat -A POSTROUTING -o eth0 -d "$dest_ip" -p "$proto" --dport "$dest_port" -j MASQUERADE
-  echo "$proto $port goes to $dest_ip:$dest_port."
-done
+"$ipt" -A FORWARD -i wg0 -d "$GATEWAY_IP" -p tcp --dport "$GATEWAY_PORT" -j ACCEPT
+"$ipt" -t nat -A PREROUTING -i wg0 -d "$tunnel_ip" -p tcp --dport "$GATEWAY_PORT" \
+  -j DNAT --to-destination "$GATEWAY_IP:$GATEWAY_PORT"
+"$ipt" -t nat -A POSTROUTING -o eth0 -d "$GATEWAY_IP" -j MASQUERADE
 
-echo "wg0 is up at $tunnel_ip."
+echo "wg0 is up at $tunnel_ip. Port $GATEWAY_PORT goes to $GATEWAY_IP."
 trap 'ip link delete wg0; exit 0' TERM INT
 sleep infinity &
 wait

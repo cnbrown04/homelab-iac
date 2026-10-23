@@ -94,16 +94,6 @@
       "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d{8})-(?<build>\\d{6})$"
     },
     {
-      "description": "any-sync-bundle tags have the form <version>-<date>. The date is the version of any-sync that the bundle supports. The tags with -minimal do not match.",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "ghcr.io/grishy/any-sync-bundle"
-      ],
-      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-\\d{4}-\\d{2}-\\d{2}$"
-    },
-    {
       "description": "Wait 3 days before a bump of code that runs in the pipelines with the secrets. Most bad releases are found and pulled in that time.",
       "matchManagers": [
         "ansible-galaxy",
