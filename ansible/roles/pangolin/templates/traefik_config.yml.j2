@@ -51,6 +51,16 @@ entryPoints:
       encodedCharacters:
         allowEncodedSlash: true
         allowEncodedQuestionMark: true
+  # The raw resources of Pangolin. Pangolin finds an entry point by the name
+  # <protocol>-<port>. Gerbil publishes each port, in the stack pangolin.
+  # Anytype on typhon: DRPC on TCP and QUIC on UDP.
+  tcp-33010:
+    address: ":33010/tcp"
+  udp-33020:
+    address: ":33020/udp"
+    # The default of 3 seconds ends an idle QUIC session too soon.
+    udp:
+      timeout: "60s"
 
 serversTransport:
   insecureSkipVerify: true

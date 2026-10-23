@@ -1,0 +1,22 @@
+# The apps of Anytype do not use HTTP, so the Gateway does not apply. The pod
+# pangolin-wireguard sends TCP 33010 and UDP 33020 of the tunnel to this
+# address. See infrastructure/controllers/pangolin-wireguard/.
+apiVersion: v1
+kind: Service
+metadata:
+  name: anytype
+  annotations:
+    lbipam.cilium.io/ips: 10.0.20.201
+spec:
+  type: LoadBalancer
+  selector:
+    app: anytype
+  ports:
+    - name: drpc
+      protocol: TCP
+      port: 33010
+      targetPort: drpc
+    - name: quic
+      protocol: UDP
+      port: 33020
+      targetPort: quic

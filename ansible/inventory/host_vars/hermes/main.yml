@@ -66,7 +66,8 @@ pangolin_network_gateway: 10.200.0.1
 pangolin_blueprint_org_id: pantheon-homelab
 pangolin_local_site: hermes-local
 # The basic WireGuard site of the typhon cluster. Its peer sends port 80 of
-# the tunnel address to the Gateway of the cluster. See AGENTS.md.
+# the tunnel address to the Gateway of the cluster, and the ports of Anytype
+# to its service. See AGENTS.md.
 pangolin_typhon_site: typhon-cluster
 pangolin_typhon_target: 100.89.128.4
 # The Newt site in Home Assistant OS on atlas. Newt runs as an add-on. The
@@ -87,6 +88,25 @@ pangolin_mnemosyne_target: 127.0.0.1
 # request through the Pangolin app, and Headscale must not depend on it.
 pangolin_blueprint_resources:
   public-resources:
+    # The sync server of Anytype. A raw resource has no Pangolin login. The
+    # protocol has its own keys and encryption. Each proxy-port also needs a
+    # Gerbil port and a Traefik entry point.
+    anytype-drpc:
+      name: Anytype DRPC
+      mode: tcp
+      proxy-port: 33010
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 33010
+    anytype-quic:
+      name: Anytype QUIC
+      mode: udp
+      proxy-port: 33020
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 33020
     # Audiobookshelf has its own login. Its mobile apps cannot pass the
     # Pangolin login, so SSO is off.
     audiobookshelf:

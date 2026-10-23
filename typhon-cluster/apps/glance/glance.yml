@@ -744,6 +744,8 @@ pages:
               - Jackett/Jackett
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
+              - grishy/any-sync-bundle
+              - anyproto/anytype-ts
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

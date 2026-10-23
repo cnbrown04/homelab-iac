@@ -1,0 +1,81 @@
+# The sync server of Anytype: any-sync-bundle, all in one container, with
+# MongoDB and Redis inside. The apps of Anytype connect to
+# anytype.buildwithcaleb.com through Pangolin, with no Pangolin login. The
+# protocol has its own keys and encryption.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anytype
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Anytype
+    glance/icon: di:anytype
+spec:
+  replicas: 1
+  # MongoDB and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: anytype
+  template:
+    metadata:
+      labels:
+        app: anytype
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # The bundle stops MongoDB cleanly in less than 2 minutes.
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: bundle
+          image: ghcr.io/grishy/any-sync-bundle:1.7.0-2026-10-12
+          # The INIT values go into /data/bundle-config.yml at the first start
+          # only. To change one later, change the file on the volume.
+          env:
+            - name: ANY_SYNC_BUNDLE_INIT_EXTERNAL_ADDRS
+              value: anytype.buildwithcaleb.com
+            - name: ANY_SYNC_BUNDLE_INIT_S3_BUCKET
+              value: homelab-anytype
+            - name: ANY_SYNC_BUNDLE_INIT_S3_REGION
+              value: auto
+            - name: ANY_SYNC_BUNDLE_INIT_S3_FORCE_PATH_STYLE
+              value: "true"
+          # r2.sops.yaml gives the endpoint of the bucket and its keys. The
+          # bundle reads the keys at each start.
+          envFrom:
+            - secretRef:
+                name: r2
+          ports:
+            - name: drpc
+              containerPort: 33010
+              protocol: TCP
+            - name: quic
+              containerPort: 33020
+              protocol: UDP
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            tcpSocket:
+              port: drpc
+          # MongoDB sizes its cache from the memory limit.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1536Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
