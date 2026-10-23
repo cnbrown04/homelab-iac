@@ -345,6 +345,17 @@ pages:
                 show-thumbnails: true
                 collapse-after: 5
 
+      - size: small
+        widgets:
+          - type: bookmarks
+            groups:
+              - title: Trending
+                links:
+                  - title: Trendshift
+                    url: https://trendshift.io/
+                  - title: GitHub Trending
+                    url: https://github.com/trending?since=daily
+
   # The homelab: the Proxmox nodes and guests, typhon, the pipelines, the storage,
   # and the releases.
   - name: Homelab

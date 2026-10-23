@@ -708,6 +708,10 @@ mise run plan:pantheon
   `pg_dump`) needs it, so the backup job sets `PGSSLROOTCERT=system`.
 - A GitHub release can come before its container image. Before you pin a
   tag, make sure that the registry has it.
+- If the Cilium operator starts while the Kubernetes API is down, it starts
+  with no Gateway API controller. The old routes still work, but a new
+  HTTPRoute gets no status, and the Gateway gives `404`. After a restart of
+  the control plane, delete the pods of `cilium-operator` in `kube-system`.
 - The level `restricted` refuses a probe with `host`. A sidecar that gives a
   health endpoint must listen on the pod IP.
 - tailscaled sets the mode of its state folder. Put the state in a folder in
