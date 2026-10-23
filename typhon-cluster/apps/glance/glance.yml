@@ -265,7 +265,7 @@ pages:
                 <a href="https://gaia.vnet.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/proxmox.svg" alt="">Proxmox</a>
                 <a href="https://seerr.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyseerr.svg" alt="">Seerr</a>
                 <a href="https://homeassistant.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" alt="">Home Assistant</a>
-                <a href="https://bambuddy.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bambu-lab.svg" alt="">Bambuddy</a>
+                <a href="https://faved.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/faved.svg" alt="">Faved</a>
               </nav>
 
           - type: search
