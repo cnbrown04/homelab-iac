@@ -44,11 +44,13 @@ resource "planetscale_postgres_branch_role" "app" {
   name         = each.key
 }
 
+# The role of OpenTofu owns each database. It cannot give the database to the
+# app role: pscale_admin makes that role, so OpenTofu has no ADMIN on it. The
+# grants below let the app make its own schemas and tables, and own them.
 resource "postgresql_database" "app" {
   for_each = local.apps
 
-  name  = each.key
-  owner = planetscale_postgres_branch_role.app[each.key].base_username
+  name = each.key
   # A database of PlanetScale can have connections from other roles. A drop
   # by mistake loses the data of an app.
   lifecycle {
@@ -64,6 +66,27 @@ resource "postgresql_grant" "app_connect" {
   role        = "public"
   object_type = "database"
   privileges  = []
+}
+
+resource "postgresql_grant" "app_database" {
+  for_each = local.apps
+
+  database    = postgresql_database.app[each.key].name
+  role        = planetscale_postgres_branch_role.app[each.key].base_username
+  object_type = "database"
+  privileges  = ["CONNECT", "CREATE", "TEMPORARY"]
+}
+
+# PostgreSQL 15 and later give CREATE on public to the owner of the database
+# only.
+resource "postgresql_grant" "app_schema" {
+  for_each = local.apps
+
+  database    = postgresql_database.app[each.key].name
+  schema      = "public"
+  role        = planetscale_postgres_branch_role.app[each.key].base_username
+  object_type = "schema"
+  privileges  = ["CREATE", "USAGE"]
 }
 
 # The user name of a role has the routing suffix of the branch. libpq and the
