@@ -263,8 +263,12 @@ the cluster.
     migrations. It keeps each dump for 30 days.
   - The users log in with Pocket ID, through the OIDC of the app. The owner
     sets the client in god mode, under Integrations, Auth provider.
-  - The first account becomes the instance admin. So the Pangolin resource
-    keeps SSO on until that account exists and the registration is closed.
+  - The Pangolin resource has no Pangolin login. The registration is invite
+    only.
+  - On a new instance, the first account becomes the instance admin. Turn the
+    Pangolin login on until that account exists.
+  - God mode is at `/god`. The admin is the user with the role `god` in the
+    table `user`. The app cannot move that role, so an `UPDATE` moves it.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The
