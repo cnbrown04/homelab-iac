@@ -20,6 +20,17 @@ zfs_nfs_datasets:
     owner: "3000"
     group: "3000"
     mode: "0770"
+# The folders of the static volumes that need an owner. The migrate step of
+# Its a Plan runs as user 1000, the same as iac-admin.
+zfs_nfs_directories:
+  - path: /lethe/k8s/itsaplan
+    owner: iac-admin
+    group: iac-admin
+    mode: "0755"
+  - path: /lethe/k8s/itsaplan/Backups
+    owner: iac-admin
+    group: iac-admin
+    mode: "0755"
 zfs_nfs_exports:
   # The dynamic volumes of csi-driver-nfs.
   - path: /lethe/k8s

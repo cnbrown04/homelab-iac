@@ -22,7 +22,8 @@ max_svg=6000
 
 # Each logo and icon is the name of an icon of dashboard-icons, without
 # ".svg". If dashboard-icons has no icon for an app, use "selfhst/<name>" for
-# an icon of selfh.st. Each app is "<name>:<icon>". A subtitle can show a Proxmox node as
+# an icon of selfh.st, or the https URL of an SVG file. Each app is
+# "<name>:<icon>". A subtitle can show a Proxmox node as
 # "@<node>".
 
 # The nodes of the pantheon cluster: the name and the hardware. The map puts
@@ -53,7 +54,7 @@ GUESTS=(
 TYPHON="typhon|talos|Talos Kubernetes on the VMs of @gaia and @hyperion"
 TYPHON_NODES=(gaia hyperion)
 TYPHON_GROUPS=(
-  "Platform|Flux:flux-cd,Glance:glance,Termix:termix,Faved:selfhst/faved"
+  "Platform|Flux:flux-cd,Glance:glance,Termix:termix,Faved:selfhst/faved,Its a Plan:https://cdn.jsdelivr.net/gh/croffasia/itsaplan@v1.7.0/apps/web/src/app/icon.svg"
   "Media|Jellyfin:jellyfin,Audiobookshelf:audiobookshelf,Seerr:seerr"
   "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"
@@ -97,7 +98,9 @@ data_uri() {
 
 # Prints the URL of the SVG file of an icon name.
 svg_url() {
-  if [[ $1 == selfhst/* ]]; then
+  if [[ $1 == https://* ]]; then
+    printf '%s' "$1"
+  elif [[ $1 == selfhst/* ]]; then
     printf '%s/svg/%s.svg' "$selfhst" "${1#selfhst/}"
   else
     printf '%s/svg/%s.svg' "$dashboard" "$1"
@@ -111,7 +114,8 @@ icon() {
   local name=$1 file key="$cache/icon-${1//\//-}$variant"
   if [[ ! -f $key ]]; then
     file=''
-    if [[ -n $variant && $name != selfhst/* ]] \
+    # Only a name of dashboard-icons has no "/".
+    if [[ -n $variant && $name != */* ]] \
         && jq -e --arg f "$name$variant.svg" '.svg | index($f)' \
         "$(fetch "$dashboard/tree.json")" > /dev/null; then
       file=$(fetch "$dashboard/svg/$name$variant.svg")

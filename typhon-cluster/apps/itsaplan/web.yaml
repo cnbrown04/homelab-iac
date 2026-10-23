@@ -1,0 +1,70 @@
+# The web app of Its a Plan (Next.js). It reads the origins at the start, and
+# streams the avatars and the attachments from the api.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Its a Plan web
+    glance/icon: https://cdn.jsdelivr.net/gh/croffasia/itsaplan@v1.7.0/apps/web/src/app/icon.svg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: ghcr.io/croffasia/itsaplan-web:1.7.0
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3001"
+            - name: HOSTNAME
+              value: 0.0.0.0
+            - name: API_URL
+              value: https://plan.buildwithcaleb.com/api
+            - name: SERVICE_URL_API
+              value: http://api.itsaplan.svc.cluster.local:3000
+          ports:
+            - name: http
+              containerPort: 3001
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          # /login renders with no session and no api.
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+    - name: http
+      port: 3001
+      targetPort: http

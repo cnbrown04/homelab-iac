@@ -1,0 +1,44 @@
+# The secrets of Its a Plan. BETTER_AUTH_SECRET and APP_ENCRYPTION_KEY are
+# random. A new APP_ENCRYPTION_KEY makes the stored credentials unreadable.
+# Set these values with sops set:
+# - DATABASE_URL: from tofu -chdir=tofu/targets/asphodel output -json
+#   app_database_urls.
+# - S3_ENDPOINT: https://<account ID>.r2.cloudflarestorage.com.
+# - S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY: an R2 API token with Object
+#   Read & Write on the bucket homelab-itsaplan only.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: itsaplan
+type: Opaque
+stringData:
+    DATABASE_URL: ENC[AES256_GCM,data:1J4tHZmvtfFn7wZMaPKukRuuitban7oy+GD3T4kBjld8W61eOOG4F/5cmEcCjtWRjcyJ5IpYYWzsHxw2XByyTnnJtNnvBhzLB+wbfW/TBsqT7Yj8+RcuZZ3X5eft8zc3rNPB3Gfv/3xcIiMJow+T+0wGlyieRFJFnV5Zu+jlTrdreFhgiZ4PG1X2DAeIfQZ+1RIu3Q==,iv:hRa2pkJherTYClY9ac6idLt9E3P/4+mFtG27UgKg5fw=,tag:5YcwDawY6gUPcAPfME+Rtw==,type:str]
+    BETTER_AUTH_SECRET: ENC[AES256_GCM,data:puuE2dn3Vq+zg6Ti3pO09L8wCrKycUmo8VuiZXErI6P8WHatopNdDAiMQiQ=,iv:Z83xqcySOSRyc+Rg25juS/EZqVvlGKP+3SAuG0aZ91g=,tag:w9bR9IC1GxKzV3d7UJQUOg==,type:str]
+    APP_ENCRYPTION_KEY: ENC[AES256_GCM,data:bBtath/fLoZV2i6++l2sweUlpwLOJagt2mYHGz1n7fyFbDGorhZLXTCPatA=,iv:taH3gAG8/SuL178+YN4q0vZORh6/95RsCzzIKZNPPbA=,tag:hw2VdbSqYRl4bJ6blfqGJw==,type:str]
+    S3_ENDPOINT: ENC[AES256_GCM,data:bMLWYMDj2RCXE/44QLjyJfMx0j4lb4axccCD3FRR/ecV1PWhyNNBxepaxJaXxYEybBzBZ1Avzq1A0zvbR9OKg9c=,iv:2QbQIHaaIFUbk2Pa83NkrmQG/1YcN1Jr/qwb0M5Brp8=,tag:Kq+dj9R8bR48kF3Y5a0BHg==,type:str]
+    S3_ACCESS_KEY_ID: ENC[AES256_GCM,data:bZalux8ODZTJq2GZvHQzxsYg6s4PgNyN0i79eBSJ2Vk=,iv:3EnsGWebMAABvxRC7oulcDHpX/yGYJeHewI+vIDpOW0=,tag:A6amIdb/DFbJeULc8UuZdw==,type:str]
+    S3_SECRET_ACCESS_KEY: ENC[AES256_GCM,data:ZpzCGPxjQTTVv9fPVkC8U2Ar/2MM/JVXoUErucy+B4xosDizedIJWduJxJmKtIz/L/H3lwAb9NfHSyIvbwcygw==,iv:ydmu3xSZkwoHpD1Iseq0sHdq5baDXSp+iIZotdMgT58=,tag:/UMPZgI0pGc/UZqYoOjDjg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBwemRsa3lRZlAwZkJDTHlY
+            bHU3QjFtb01tWUg0U24zKzNERjErUzlkWTM4CkI2S3p4ZGRxTWNsQmxKOUxNZTBJ
+            VHU3SUlDek5Bc3NnakdnNTBsMVRBQ3MKLS0tIFpQOWVRTXJNdzQ0bnNTa0s3YkV5
+            WS9WdzdMTk5iZU95VS9ETE9aTkdlTGMKrsJTzkeeANFL0WDRyh6ZxxgCoaCZjpd1
+            arL1BcJgkDG+svqkMKJRdFRaO3I98rMlSxcXtvtnDmkYxnew1zNjmA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJTDF4Z3VZTFlleTlwU2NK
+            YnB1TjlIZ2lkTUlEVEsyQ3kycWpMaVkvYVEwCkFOR0xQUU1uVkc0R1JHbDZoRUU0
+            cmdxRXd0SlhiWTFHcWU1enQ5SnZ2cWsKLS0tIC9EVERzSy96aVBPZm5vVExCcDV1
+            QlQ3K0hqN0ZxUFJpWnBLdkdLY3FLOWcKWETanMmBbkqoIz7G6eupf9asKZ+g1A0l
+            25iwUxg9C/Mpt+4aeGI2j5/63FAPYltox6pkcxAcu6dTeaXWQu2fNA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-23T04:28:56Z"
+    mac: ENC[AES256_GCM,data:qp5vlcDz2YzNaBVSzrfZuJf7zjaaN/oyAtjlha7/zHoFB7x9vwCdLzjRtsklsSnIWEtUIA2AUae0SoSfhgjtKkGgX5pO8C0BwkxKFQCGSLs2LH0qSxBGDFgOWDX9cY71rieqpDTNb0CXrogDTx1/5O4rxql7iJXv7IY2ECJiVcc=,iv:wKjNZBK2npzxswimeKcAp5KWkEA3Pp/4oEmYnZn5gE0=,tag:Rdf6d+QdfH6zqQPzL0kA6A==,type:str]
+    version: 3.13.3

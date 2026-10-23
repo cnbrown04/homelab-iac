@@ -6,6 +6,7 @@ resources:
   - chaptarr
   - faved
   - glance
+  - itsaplan
   - jackett
   - jellyfin
   - prowlarr

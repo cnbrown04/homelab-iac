@@ -629,6 +629,10 @@ pages:
                 url: https://faved.buildwithcaleb.com
                 check-url: http://faved.faved.svc.cluster.local/
                 icon: sh:faved
+              - title: Its a Plan
+                url: https://plan.buildwithcaleb.com
+                check-url: http://web.itsaplan.svc.cluster.local:3001/login
+                icon: https://cdn.jsdelivr.net/gh/croffasia/itsaplan@v1.7.0/apps/web/src/app/icon.svg
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
@@ -760,6 +764,7 @@ pages:
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
               - denho/faved
+              - croffasia/itsaplan
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

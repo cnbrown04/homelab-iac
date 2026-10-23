@@ -1,0 +1,113 @@
+# The api of Its a Plan (Bun). The browser reaches it at
+# https://plan.buildwithcaleb.com/api. The HTTPRoute removes /api.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Its a Plan
+    glance/icon: https://cdn.jsdelivr.net/gh/croffasia/itsaplan@v1.7.0/apps/web/src/app/icon.svg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      # The images run as root by default. Bun runs as any user.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # Writes a pg_dump to /backups, then applies the migrations of the
+        # release. An advisory lock in Postgres lets one pod do it.
+        - name: migrate
+          image: ghcr.io/croffasia/itsaplan-api:1.7.0
+          command: [bun, run, packages/db/src/migrate.ts]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: itsaplan
+                  key: DATABASE_URL
+            # The URL has sslmode=verify-full. pg_dump (libpq) checks the
+            # certificate of PlanetScale against the CAs of the image.
+            - name: PGSSLROOTCERT
+              value: system
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: backups
+              mountPath: /backups
+      containers:
+        - name: api
+          image: ghcr.io/croffasia/itsaplan-api:1.7.0
+          command: [bun, run, apps/api/src/index.ts]
+          # itsaplan.sops.yaml gives DATABASE_URL, BETTER_AUTH_SECRET,
+          # APP_ENCRYPTION_KEY, and the S3 values of R2.
+          envFrom:
+            - secretRef:
+                name: itsaplan
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: API_PORT
+              value: "3000"
+            # With the api on a path of the web host, the session cookie stays
+            # on plan.buildwithcaleb.com only.
+            - name: API_URL
+              value: https://plan.buildwithcaleb.com/api
+            - name: APP_URL
+              value: https://plan.buildwithcaleb.com
+            # The Gateway adds the address of the pod pangolin-wireguard to
+            # X-Forwarded-For. The api skips the pod network from the right.
+            - name: TRUSTED_PROXIES
+              value: 10.244.0.0/16
+            - name: S3_BUCKET
+              value: homelab-itsaplan
+            - name: S3_REGION
+              value: auto
+            # R2 takes the virtual-host style.
+            - name: S3_FORCE_PATH_STYLE
+              value: "false"
+            - name: TELEMETRY_DISABLED
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext: *container-security
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: backups
+          persistentVolumeClaim:
+            claimName: backups
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector:
+    app: api
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

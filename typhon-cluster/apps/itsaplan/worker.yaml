@@ -1,0 +1,55 @@
+# The worker of Its a Plan: webhooks, notifications, agent schedules, and
+# imports. It has no port. It restarts until the api applied the migrations.
+# The Telegram bot of the app does not run here.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Its a Plan worker
+    glance/icon: https://cdn.jsdelivr.net/gh/croffasia/itsaplan@v1.7.0/apps/web/src/app/icon.svg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: worker
+          image: ghcr.io/croffasia/itsaplan-worker:1.7.0
+          # It reads DATABASE_URL, APP_ENCRYPTION_KEY, and the S3 values.
+          envFrom:
+            - secretRef:
+                name: itsaplan
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: S3_BUCKET
+              value: homelab-itsaplan
+            - name: S3_REGION
+              value: auto
+            - name: S3_FORCE_PATH_STYLE
+              value: "false"
+            - name: TELEMETRY_DISABLED
+              value: "1"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi

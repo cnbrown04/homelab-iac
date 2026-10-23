@@ -250,6 +250,21 @@ the cluster.
   - The SQLite database and the preview images are on `local-path`. Faved
     can fetch the images again.
   - The probe and Glance use `/`, because the API needs the login.
+- Its a Plan, the project tracker, is at `plan.buildwithcaleb.com`. It has
+  the pods `api` and `worker` (Bun), and `web` (Next.js). The Telegram bot
+  does not run.
+  - The database `itsaplan` is in `asphodel`. The attachments go to the R2
+    bucket `homelab-itsaplan`.
+  - The api is at the path `/api` of the same host, and the HTTPRoute
+    removes `/api`. So the session cookie stays on `plan.buildwithcaleb.com`.
+    With a host of its own, the cookie goes to each subdomain.
+  - The init container `migrate` writes a `pg_dump` to
+    `/lethe/k8s/itsaplan/Backups` before each release applies its
+    migrations. It keeps each dump for 30 days.
+  - The users log in with Pocket ID, through the OIDC of the app. The owner
+    sets the client in god mode, under Integrations, Auth provider.
+  - The first account becomes the instance admin. So the Pangolin resource
+    keeps SSO on until that account exists and the registration is closed.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The
@@ -271,8 +286,13 @@ the cluster.
     one entry to `local.apps` in `databases.tf`. OpenTofu makes a role and a
     database with the same name.
   - After the apply, run `tofu -chdir=tofu/targets/asphodel output -json
-    app_passwords`, and put the password in the SOPS file of the app. The
+    app_database_urls`, and put the URL in the SOPS file of the app. The
     state keeps the password only after the create.
+  - The user name in the URL has the routing suffix of the branch. Use the
+    URL of the output, not the name of the role.
+  - The role `tofu` owns each database. `pscale_admin` makes each app role,
+    so `tofu` has no `ADMIN` on it and cannot give it a database. Grants let
+    the app make its own schemas and tables.
 - To add an app to `typhon`: put it in `typhon-cluster/apps/<name>/`, with an
   HTTPRoute to the Gateway `main` in the namespace `gateway`. Add a resource to
   `pangolin_blueprint_resources`. Its target uses the site

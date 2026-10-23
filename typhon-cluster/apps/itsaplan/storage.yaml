@@ -1,0 +1,37 @@
+# The volume of the backups of Its a Plan, in /lethe/k8s/itsaplan/Backups on
+# gaia. Before a release applies its migrations, the migrate step writes a
+# pg_dump here, and keeps it for 30 days. Ansible creates the folder. See
+# zfs_nfs_directories of gaia. The database is on PlanetScale, and the
+# attachments are in R2. The volume keeps its data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: itsaplan-backups
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: itsaplan
+    name: backups
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: itsaplan-backups
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/itsaplan/Backups
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backups
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: itsaplan-backups
+  resources:
+    requests:
+      storage: 10Gi
