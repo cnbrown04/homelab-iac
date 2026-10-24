@@ -280,20 +280,6 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_home_assistant_target }}"
           port: 80
-    # Bambuddy runs as an app in Home Assistant OS, with the host network on
-    # port 8000. It has no Pangolin login. It logs in with OIDC through Pocket
-    # ID itself.
-    bambuddy:
-      name: Bambuddy
-      mode: http
-      full-domain: bambuddy.buildwithcaleb.com
-      auth:
-        sso-enabled: false
-      targets:
-        - site: "{{ pangolin_home_assistant_site }}"
-          method: http
-          hostname: "{{ pangolin_home_assistant_target }}"
-          port: 8000
     # Wazuh logs in with Pocket ID, but it shows the security events of each
     # host. Keep SSO on, like Termix.
     wazuh:
