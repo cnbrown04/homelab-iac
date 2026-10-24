@@ -250,25 +250,6 @@ the cluster.
   - The SQLite database and the preview images are on `local-path`. Faved
     can fetch the images again.
   - The probe and Glance use `/`, because the API needs the login.
-- Its a Plan, the project tracker, is at `plan.buildwithcaleb.com`. It has
-  the pods `api` and `worker` (Bun), and `web` (Next.js). The Telegram bot
-  does not run.
-  - The database `itsaplan` is in `asphodel`. The attachments go to the R2
-    bucket `homelab-itsaplan`.
-  - The api is at the path `/api` of the same host, and the HTTPRoute
-    removes `/api`. So the session cookie stays on `plan.buildwithcaleb.com`.
-    With a host of its own, the cookie goes to each subdomain.
-  - The init container `migrate` writes a `pg_dump` to
-    `/lethe/k8s/itsaplan/Backups` before each release applies its
-    migrations. It keeps each dump for 30 days.
-  - The users log in with Pocket ID, through the OIDC of the app. The owner
-    sets the client in god mode, under Integrations, Auth provider.
-  - The Pangolin resource has no Pangolin login. The registration is invite
-    only.
-  - On a new instance, the first account becomes the instance admin. Turn the
-    Pangolin login on until that account exists.
-  - God mode is at `/god`. The admin is the user with the role `god` in the
-    table `user`. The app cannot move that role, so an `UPDATE` moves it.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The

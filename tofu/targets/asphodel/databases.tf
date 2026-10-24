@@ -10,10 +10,7 @@ locals {
 
   # One entry for each app. The key is the name of the database and of the
   # role.
-  apps = {
-    # Its a Plan on typhon. See typhon-cluster/apps/itsaplan/.
-    itsaplan = {}
-  }
+  apps = {}
 }
 
 resource "planetscale_postgres_branch" "main" {
@@ -51,11 +48,6 @@ resource "postgresql_database" "app" {
   for_each = local.apps
 
   name = each.key
-  # A database of PlanetScale can have connections from other roles. A drop
-  # by mistake loses the data of an app.
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Each app connects to its own database only.

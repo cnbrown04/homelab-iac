@@ -126,20 +126,6 @@ pangolin_blueprint_resources:
           port: 80
     # Jellyfin has its own login. Its apps cannot pass the Pangolin login, so
     # SSO is off.
-    # Its a Plan logs in with Pocket ID through its own OIDC, and its
-    # registration is invite only, so SSO is off. On a new instance, the first
-    # account becomes the admin: turn SSO on until that account exists.
-    itsaplan:
-      name: Its a Plan
-      mode: http
-      full-domain: plan.buildwithcaleb.com
-      auth:
-        sso-enabled: false
-      targets:
-        - site: "{{ pangolin_typhon_site }}"
-          method: http
-          hostname: "{{ pangolin_typhon_target }}"
-          port: 80
     jellyfin:
       name: Jellyfin
       mode: http
