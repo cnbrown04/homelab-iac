@@ -48,6 +48,11 @@ resource "postgresql_database" "app" {
   for_each = local.apps
 
   name = each.key
+  # A database of PlanetScale can have connections from other roles. A drop
+  # by mistake loses the data of an app.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Each app connects to its own database only.
