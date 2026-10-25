@@ -1,7 +1,7 @@
-# Sure, the personal finance app (Rails). It has its own login. Pangolin keeps
-# SSO on while the owner tests it. The web app and the Sidekiq worker share
-# the volume storage, so they are two containers in one pod. The web app
-# applies the migrations at each start.
+# Sure, the personal finance app (Rails). It logs in with Pocket ID, and the
+# password login stays for when Pocket ID is down. The web app and the Sidekiq
+# worker share the volume storage, so they are two containers in one pod. The
+# web app applies the migrations at each start.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -56,7 +56,24 @@ spec:
               value: sure
             - name: REDIS_URL
               value: redis://redis:6379/1
-          # sure.sops.yaml gives SECRET_KEY_BASE and POSTGRES_PASSWORD.
+            # The Pocket ID client "sure". sure.sops.yaml gives the secret.
+            - name: OIDC_ISSUER
+              value: https://auth.buildwithcaleb.com
+            - name: OIDC_CLIENT_ID
+              value: sure
+            - name: OIDC_REDIRECT_URI
+              value: https://sure.buildwithcaleb.com/auth/openid_connect/callback
+            - name: OIDC_BUTTON_LABEL
+              value: Sign in with Cerberus
+            # A Pocket ID login only links to an account that exists. The
+            # first login asks for the password of the account one time.
+            - name: AUTH_JIT_MODE
+              value: link_only
+            # No new account with a password.
+            - name: ONBOARDING_STATE
+              value: closed
+          # sure.sops.yaml gives SECRET_KEY_BASE, POSTGRES_PASSWORD, and
+          # OIDC_CLIENT_SECRET.
           envFrom: &env-from
             - secretRef:
                 name: sure

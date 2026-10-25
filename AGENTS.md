@@ -251,21 +251,31 @@ the cluster.
     can fetch the images again.
   - The probe and Glance use `/`, because the API needs the login.
 - The owner tests Karakeep, Sure, TaskView, and Tududi, at
-  `<app>.buildwithcaleb.com`, with the Pangolin login. Karakeep is to replace
+  `<app>.buildwithcaleb.com`, with no Pangolin login. Karakeep is to replace
   Faved. Keep Faved until the owner moves the bookmarks.
+  - Each app logs in with Pocket ID, with the client ID `<app>`. The login
+    button and the Tududi slug use the name of the SSO, `Cerberus`. Only
+    `homelab_admin` can use the clients. The owner made them by hand. The
+    password login stays for when Pocket ID is down, and no app makes a new
+    account.
+  - Karakeep has a public client with PKCE. The first Pocket ID login links
+    the account with the same email. `DISABLE_SIGNUPS` is on.
+  - The first Pocket ID login of Sure asks for the Sure password one time
+    (`AUTH_JIT_MODE=link_only`). Sure makes its encryption keys from
+    `SECRET_KEY_BASE`. Do not set `ACTIVE_RECORD_ENCRYPTION_*`, because Sure
+    then cannot read its data.
+  - Tududi makes no account at a Pocket ID login. Link Pocket ID in Profile,
+    Security. Tududi makes the user of `tududi.sops.yaml` at each start.
+  - The SSO config of TaskView is in its UI, for the domain `gmail.com`.
+    `SSO_TRUSTED_DOMAINS` skips the proof of the domain.
   - Each app keeps its data in the cluster, on `local-path`. Sure and TaskView
     have a Postgres pod each, not PlanetScale. No app has NFS or a backup.
   - Each pod runs as a user that is not root, so each namespace is
     `restricted`. Karakeep, Tududi, and the TaskView API start their own
     processes, not the entrypoint of the image.
   - Karakeep runs the migration, the web app, and the workers in one pod, with
-    Meilisearch and Chrome in their own pods. The first user to sign up is
-    the admin. To use the browser extension, set `DISABLE_SIGNUPS` and turn
-    the Pangolin login off.
-  - The TaskView API is at `/api` on the host of the web app, so the Pangolin
-    login covers it. The first start makes the default user `user`. Claim it
-    in the account settings at the first login.
-  - Tududi makes the user of `tududi.sops.yaml` at each start.
+    Meilisearch and Chrome in their own pods.
+  - The TaskView API is at `/api` on the host of the web app.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The

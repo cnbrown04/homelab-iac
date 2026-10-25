@@ -1,6 +1,6 @@
-# Karakeep, the bookmark manager. It has its own login. Pangolin keeps SSO on
-# while the owner tests it. The browser extension and the mobile apps cannot
-# pass the Pangolin login.
+# Karakeep, the bookmark manager. It logs in with Pocket ID, and the password
+# login stays for the browser extension and the mobile apps. They cannot pass
+# the Pangolin login, so SSO of Pangolin is off.
 #
 # The image starts s6-overlay as root. The pod runs the three s6 services
 # itself, as user 1000: the migration first, then the web app and the
@@ -54,6 +54,22 @@ spec:
               value: "true"
             # Renovate updates the image.
             - name: DISABLE_NEW_RELEASE_CHECK
+              value: "true"
+            # The Pocket ID client "karakeep" is a public client with PKCE, so
+            # it has no secret. Its callback URL is
+            # https://karakeep.buildwithcaleb.com/api/auth/callback/custom.
+            - name: OAUTH_WELLKNOWN_URL
+              value: https://auth.buildwithcaleb.com/.well-known/openid-configuration
+            - name: OAUTH_CLIENT_ID
+              value: karakeep
+            - name: OAUTH_PROVIDER_NAME
+              value: Cerberus
+            # The first Pocket ID login links the account with the same email.
+            # Pocket ID verifies each email, so the link is safe.
+            - name: OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING
+              value: "true"
+            # No new account, with a password or with Pocket ID.
+            - name: DISABLE_SIGNUPS
               value: "true"
           # karakeep.sops.yaml gives NEXTAUTH_SECRET and MEILI_MASTER_KEY.
           envFrom: &env-from

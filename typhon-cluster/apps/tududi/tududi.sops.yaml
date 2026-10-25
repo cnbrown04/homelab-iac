@@ -10,6 +10,7 @@ stringData:
     TUDUDI_SESSION_SECRET: ENC[AES256_GCM,data:BDNl91MxaS0rT3rDXaY2Y6Pdu4CO18nRdNWjcrD3Kcr76Vgywhqotbc8l89bUSjq+olMvXs6hm5KtNREQ7Io1UOWffAFeynWNJjb03+l4JnmQ7TJV60XOLWU1kguvMxCyBEcMhSjkps97c3xTNJnr+U8dvIZS4F3vsVqg33JA44=,iv:wDxRH2vAGdSCwlSLzHQm7wyGilXGsW6PxYV/OVzajBg=,tag:xJLrY0rhBflZec3Mm43Zwg==,type:str]
     TUDUDI_USER_EMAIL: ENC[AES256_GCM,data:JWgElDiCn+IVX3YMzMENwQOG2K/Hksxf0g==,iv:ymOLGXIz0Mdpd8+AmiCZA6DyrpEeD48rIo9okA3vkl4=,tag:tBWIGB8D6pbdmrn481FhlQ==,type:str]
     TUDUDI_USER_PASSWORD: ENC[AES256_GCM,data:xx58v7XVzBIxNWT3Ld6WIdIaXDGryHYTo3/+KdFFcg==,iv:szor1hXD8JxOug42pQDdDMjb6dfqiJGEX1LD30vZtpM=,tag:bfCCFF3+3LwHbAvnubc7zg==,type:str]
+    OIDC_CLIENT_SECRET: ENC[AES256_GCM,data:OXEcSOn5mOl5HsWFUKVY2U9wOJnAfbpRohK1U8YFgrM=,iv:QPqwXq0xi29jWwOKNy+LRPd1JyCArBudavHdRGd0fF8=,tag:Wumq/UUj+JSthB2tPjFpew==,type:str]
 sops:
     age:
         - enc: |
@@ -31,6 +32,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-10-25T01:34:17Z"
-    mac: ENC[AES256_GCM,data:T633mxjenhrP2jYjUfgt0LVurN2HNywNGirF2b7z0zyDwrMmENSrm2asM+BtjfCpIevH2WoY136QTyOS1nVXvJhKUdF7tNJt8c/1vlII+zL1eQGlysDgB6qx+F9Kx6+DvzZ3qRtvZhtL7X5dfvHrXov2844d38hyzRCdRnH3750=,iv:E6nGXhnXMXqibtsLlENU/bAYpjO3GTLeQBg1SffowL0=,tag:27n9dnEovX7Cvp0z+S+S7A==,type:str]
+    lastmodified: "2026-10-25T02:10:59Z"
+    mac: ENC[AES256_GCM,data:BaHV7b26SDM2NenkZFKaT6/l24CLqZDFuRVHkQMRrTnSaINu91LH1KRC5PcYVzKxXszn9BNoXqjbNbhkILpy9oFtd2Q3cXvyJ1yyT4puAYTzWijFxlBLpImM0uB1W/1e6A6PRFvZjJ08QvrUp0HkQy/XTqwax9G/B+r4q1Mwqhw=,iv:oQ7S7eit7ukrBH3LDXkoCzBuD+emaEe5KNnrcTmNGnA=,tag:c6fR8RmGo2H7qL1kscg+NQ==,type:str]
     version: 3.13.3

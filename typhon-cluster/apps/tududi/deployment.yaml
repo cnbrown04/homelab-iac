@@ -1,5 +1,5 @@
-# Tududi, the task manager. It has its own login. Pangolin keeps SSO on while
-# the owner tests it. At each start, Tududi makes the user of
+# Tududi, the task manager. It logs in with Pocket ID, and the password login
+# stays for when Pocket ID is down. At each start, Tududi makes the user of
 # tududi.sops.yaml, or sets its password again.
 apiVersion: apps/v1
 kind: Deployment
@@ -62,8 +62,24 @@ spec:
               value: "true"
             - name: DISABLE_TELEGRAM
               value: "true"
+            # The Pocket ID client "tududi". Its callback URL is
+            # https://tududi.buildwithcaleb.com/api/oidc/callback/cerberus.
+            - name: OIDC_ENABLED
+              value: "true"
+            - name: OIDC_PROVIDER_NAME
+              value: Cerberus
+            - name: OIDC_PROVIDER_SLUG
+              value: cerberus
+            - name: OIDC_ISSUER_URL
+              value: https://auth.buildwithcaleb.com
+            - name: OIDC_CLIENT_ID
+              value: tududi
+            # A Pocket ID login makes no account. Link Pocket ID to the
+            # account in Profile, Security.
+            - name: OIDC_AUTO_PROVISION
+              value: "false"
           # tududi.sops.yaml gives TUDUDI_SESSION_SECRET, TUDUDI_USER_EMAIL,
-          # and TUDUDI_USER_PASSWORD.
+          # TUDUDI_USER_PASSWORD, and OIDC_CLIENT_SECRET.
           envFrom:
             - secretRef:
                 name: tududi

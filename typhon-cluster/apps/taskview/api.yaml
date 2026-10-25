@@ -94,8 +94,15 @@ spec:
             # password and not for a code by email.
             - name: PASSWORD_CHANGE_CONFIRMATION
               value: password
+            # The SSO config of the organization is in the UI of TaskView. It
+            # sends each email of the domain gmail.com to Pocket ID.
             - name: AUTH_LOGIN_METHODS
-              value: password
+              value: password,sso
+            # TaskView cannot get a proof that the owner has gmail.com. Pocket
+            # ID lets in only the members of homelab_admin, so the proof is
+            # not necessary.
+            - name: SSO_TRUSTED_DOMAINS
+              value: gmail.com
             - name: ALLOW_PUBLIC_REGISTRATION
               value: "false"
           envFrom: *env-from
