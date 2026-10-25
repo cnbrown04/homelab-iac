@@ -9,7 +9,7 @@ metadata:
   # The widget of glance-k8s shows each Deployment with glance/name.
   annotations:
     glance/name: Sure
-    glance/icon: sh:sure-finance
+    glance/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/sure-finance.svg
 spec:
   replicas: 1
   # A local-path volume allows one pod only.

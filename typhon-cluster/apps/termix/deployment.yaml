@@ -12,7 +12,7 @@ metadata:
   # The widget of glance-k8s shows each Deployment with glance/name.
   annotations:
     glance/name: Termix
-    glance/icon: sh:termix
+    glance/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/termix.svg
 spec:
   replicas: 1
   # SQLite and a local-path volume allow one pod only. Two pods with the same

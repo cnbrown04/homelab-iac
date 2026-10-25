@@ -240,19 +240,9 @@ the cluster.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
-- Faved, the bookmark manager, is at `faved.buildwithcaleb.com`, with no
-  Pangolin login. Its Chrome extension and the Apple Shortcut cannot pass that
-  login.
-  - Faved has no login until it has a user. Make the user before the Pangolin
-    resource exists, or turn the Pangolin login on first.
-  - The image starts Apache as root. The pod runs it as user 1000, with the
-    sysctl `net.ipv4.ip_unprivileged_port_start=0` for port 80.
-  - The SQLite database and the preview images are on `local-path`. Faved
-    can fetch the images again.
-  - The probe and Glance use `/`, because the API needs the login.
 - The owner tests Karakeep, Sure, TaskView, and Tududi, at
-  `<app>.buildwithcaleb.com`, with no Pangolin login. Karakeep is to replace
-  Faved. Keep Faved until the owner moves the bookmarks.
+  `<app>.buildwithcaleb.com`, with no Pangolin login. Karakeep is the
+  bookmark manager.
   - Each app logs in with Pocket ID, with the client ID `<app>`. The login
     button and the Tududi slug use the name of the SSO, `Cerberus`. Only
     `homelab_admin` can use the clients. The owner made them by hand. The
@@ -743,6 +733,9 @@ mise run plan:pantheon
   with no Gateway API controller. The old routes still work, but a new
   HTTPRoute gets no status, and the Gateway gives `404`. After a restart of
   the control plane, delete the pods of `cilium-operator` in `kube-system`.
+- The annotation `glance/icon` of glance-k8s takes `di:`, `si:`, or a URL.
+  It does not know `sh:`, so give a selfh.st icon as its full URL. Glance
+  itself knows `sh:` and `auto-invert`.
 - The level `restricted` refuses a probe with `host`. A sidecar that gives a
   health endpoint must listen on the pod IP.
 - tailscaled sets the mode of its state folder. Put the state in a folder in

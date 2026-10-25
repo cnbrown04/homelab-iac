@@ -265,8 +265,7 @@ pages:
                 <a href="https://gaia.vnet.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/proxmox.svg" alt="">Proxmox</a>
                 <a href="https://seerr.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyseerr.svg" alt="">Seerr</a>
                 <a href="https://homeassistant.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" alt="">Home Assistant</a>
-                <a href="https://faved.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/faved.svg" alt="">Faved</a>
-                <a href="https://karakeep.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/selfhst/icons/svg/karakeep.svg" alt="">Karakeep</a>
+                <a href="https://karakeep.buildwithcaleb.com" target="_blank" rel="noreferrer"><img class="mono" src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/karakeep.svg" alt="">Karakeep</a>
               </nav>
 
           - type: search
@@ -626,14 +625,10 @@ pages:
                 url: https://termix.buildwithcaleb.com
                 check-url: http://termix.termix.svc.cluster.local:8080/health
                 icon: sh:termix
-              - title: Faved
-                url: https://faved.buildwithcaleb.com
-                check-url: http://faved.faved.svc.cluster.local/
-                icon: sh:faved
               - title: Karakeep
                 url: https://karakeep.buildwithcaleb.com
                 check-url: http://karakeep.karakeep.svc.cluster.local/api/health
-                icon: sh:karakeep
+                icon: auto-invert sh:karakeep
               - title: Sure
                 url: https://sure.buildwithcaleb.com
                 check-url: http://sure.sure.svc.cluster.local/up
@@ -772,7 +767,6 @@ pages:
               - Jackett/Jackett
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
-              - denho/faved
               - karakeep-app/karakeep
               - we-promise/sure
               - Gimanh/taskview-community

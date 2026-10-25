@@ -8,7 +8,7 @@ metadata:
   # The widget of glance-k8s shows each Deployment with glance/name.
   annotations:
     glance/name: Tududi
-    glance/icon: sh:tududi
+    glance/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/tududi.svg
 spec:
   replicas: 1
   # SQLite and a local-path volume allow one pod only.

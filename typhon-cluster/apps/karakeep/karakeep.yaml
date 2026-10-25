@@ -12,7 +12,7 @@ metadata:
   # The widget of glance-k8s shows each Deployment with glance/name.
   annotations:
     glance/name: Karakeep
-    glance/icon: sh:karakeep
+    glance/icon: di:karakeep
 spec:
   replicas: 1
   # SQLite and a local-path volume allow one pod only.
