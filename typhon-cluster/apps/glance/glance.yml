@@ -641,6 +641,12 @@ pages:
                 url: https://tududi.buildwithcaleb.com
                 check-url: http://tududi.tududi.svc.cluster.local/api/health
                 icon: sh:tududi
+              # DavMail answers 401 to a request with no login.
+              - title: DavMail
+                url: https://davmail.buildwithcaleb.com
+                check-url: http://davmail.davmail.svc.cluster.local/
+                alt-status-codes: [401]
+                icon: di:microsoft-outlook
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.

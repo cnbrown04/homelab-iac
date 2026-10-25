@@ -1,0 +1,13 @@
+# The volume of DavMail, on the disk of a worker. It holds .env.oauth only:
+# the refresh token of each Microsoft 365 account. DavMail encrypts each
+# token with the password that the CalDAV app sends.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 64Mi

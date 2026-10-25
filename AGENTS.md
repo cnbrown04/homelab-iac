@@ -266,6 +266,21 @@ the cluster.
   - Karakeep runs the migration, the web app, and the workers in one pod, with
     Meilisearch and Chrome in their own pods.
   - The TaskView API is at `/api` on the host of the web app.
+- DavMail is at `davmail.buildwithcaleb.com`, with no Pangolin login. It is
+  a CalDAV gateway to the Microsoft 365 calendar of Auburn. Only the CalDAV
+  listener is on.
+  - It uses Graph (`O365Graph`), because Microsoft turned off EWS in Exchange
+    Online in October 2026.
+  - It logs in with the device code flow. At the first CalDAV login, the log
+    of the pod shows a URL and a code. Open the URL, enter the code, and log
+    in to Auburn.
+  - The CalDAV app logs in with the Auburn email and a password that the
+    owner chooses. DavMail encrypts the refresh token with that password, in
+    `/config/.env.oauth` on `local-path`. A different password starts a new
+    device code login.
+  - If Auburn asks for the approval of an admin, set
+    `davmail.oauth.clientId` in `davmail.properties` to a client that Auburn
+    allows.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The

@@ -301,6 +301,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # A CalDAV app cannot pass the Pangolin login, so SSO is off. DavMail
+    # asks for the Auburn email and the password of the CalDAV app.
+    davmail:
+      name: DavMail
+      mode: http
+      full-domain: davmail.buildwithcaleb.com
+      auth:
+        sso-enabled: false
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:
