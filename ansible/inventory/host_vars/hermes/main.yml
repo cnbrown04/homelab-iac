@@ -267,6 +267,53 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # Karakeep, Sure, TaskView, and Tududi have their own login. The owner
+    # tests them, so SSO stays on. The browser extension and the mobile apps
+    # cannot pass the Pangolin login.
+    karakeep:
+      name: Karakeep
+      mode: http
+      full-domain: karakeep.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
+    sure:
+      name: Sure
+      mode: http
+      full-domain: sure.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
+    taskview:
+      name: TaskView
+      mode: http
+      full-domain: taskview.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
+    tududi:
+      name: Tududi
+      mode: http
+      full-domain: tududi.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:

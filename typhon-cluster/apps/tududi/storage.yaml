@@ -1,0 +1,14 @@
+# The volume of Tududi, on the disk of a worker. SQLite must not go on NFS.
+# - db/: the SQLite database, and a copy of it from before each start.
+# - uploads/: the attachments.
+# - backups/: the backups that the owner makes in the UI.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi

@@ -1,0 +1,118 @@
+# Sure, the personal finance app (Rails). It has its own login. Pangolin keeps
+# SSO on while the owner tests it. The web app and the Sidekiq worker share
+# the volume storage, so they are two containers in one pod. The web app
+# applies the migrations at each start.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sure
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Sure
+    glance/icon: sh:sure-finance
+spec:
+  replicas: 1
+  # A local-path volume allows one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sure
+  template:
+    metadata:
+      labels:
+        app: sure
+    spec:
+      # The image runs as rails (1000).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: ghcr.io/we-promise/sure:0.7.5-hotfix.3
+          env: &env
+            - name: SELF_HOSTED
+              value: "true"
+            - name: APP_DOMAIN
+              value: sure.buildwithcaleb.com
+            # Pangolin ends TLS. With RAILS_ASSUME_SSL, Rails sees each
+            # request as HTTPS, so FORCE_SSL does not redirect the probe. It
+            # adds HSTS and secure cookies.
+            - name: RAILS_FORCE_SSL
+              value: "true"
+            - name: RAILS_ASSUME_SSL
+              value: "true"
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: sure
+            - name: POSTGRES_DB
+              value: sure
+            - name: REDIS_URL
+              value: redis://redis:6379/1
+          # sure.sops.yaml gives SECRET_KEY_BASE and POSTGRES_PASSWORD.
+          envFrom: &env-from
+            - secretRef:
+                name: sure
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          # The first start makes the database, so it can take a minute.
+          startupProbe:
+            httpGet:
+              path: /up
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /up
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 1Gi
+          volumeMounts: &mounts
+            - name: storage
+              mountPath: /rails/storage
+        - name: worker
+          image: ghcr.io/we-promise/sure:0.7.5-hotfix.3
+          command: [bundle, exec, sidekiq]
+          env: *env
+          envFrom: *env-from
+          securityContext: *container-security
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts: *mounts
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sure
+spec:
+  selector:
+    app: sure
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

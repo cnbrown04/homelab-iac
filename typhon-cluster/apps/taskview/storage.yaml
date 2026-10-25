@@ -1,0 +1,12 @@
+# The volume of the Postgres of TaskView, on the disk of a worker. The owner
+# tests TaskView, so the database stays in the cluster, not on PlanetScale.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

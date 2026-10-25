@@ -250,6 +250,22 @@ the cluster.
   - The SQLite database and the preview images are on `local-path`. Faved
     can fetch the images again.
   - The probe and Glance use `/`, because the API needs the login.
+- The owner tests Karakeep, Sure, TaskView, and Tududi, at
+  `<app>.buildwithcaleb.com`, with the Pangolin login. Karakeep is to replace
+  Faved. Keep Faved until the owner moves the bookmarks.
+  - Each app keeps its data in the cluster, on `local-path`. Sure and TaskView
+    have a Postgres pod each, not PlanetScale. No app has NFS or a backup.
+  - Each pod runs as a user that is not root, so each namespace is
+    `restricted`. Karakeep, Tududi, and the TaskView API start their own
+    processes, not the entrypoint of the image.
+  - Karakeep runs the migration, the web app, and the workers in one pod, with
+    Meilisearch and Chrome in their own pods. The first user to sign up is
+    the admin. To use the browser extension, set `DISABLE_SIGNUPS` and turn
+    the Pangolin login off.
+  - The TaskView API is at `/api` on the host of the web app, so the Pangolin
+    login covers it. The first start makes the default user `user`. Claim it
+    in the account settings at the first login.
+  - Tududi makes the user of `tududi.sops.yaml` at each start.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The

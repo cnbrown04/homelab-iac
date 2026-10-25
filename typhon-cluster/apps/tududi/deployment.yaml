@@ -1,0 +1,104 @@
+# Tududi, the task manager. It has its own login. Pangolin keeps SSO on while
+# the owner tests it. At each start, Tududi makes the user of
+# tududi.sops.yaml, or sets its password again.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tududi
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Tududi
+    glance/icon: sh:tududi
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: tududi
+  template:
+    metadata:
+      labels:
+        app: tududi
+    spec:
+      # The entrypoint of the image runs as root, and changes the user to app
+      # (1001). The pod runs as app, and starts the start script itself.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: tududi
+          image: docker.io/chrisvel/tududi:1.9.7
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data/db /data/uploads /data/backups
+              exec dumb-init -- /app/backend/cmd/start.sh
+          env:
+            - name: HOME
+              value: /tmp
+            - name: DB_FILE
+              value: /data/db/production.sqlite3
+            - name: TUDUDI_UPLOAD_PATH
+              value: /data/uploads
+            - name: TUDUDI_BACKUP_PATH
+              value: /data/backups
+            - name: BASE_URL
+              value: https://tududi.buildwithcaleb.com
+            - name: TUDUDI_ALLOWED_ORIGINS
+              value: https://tududi.buildwithcaleb.com
+            # The Gateway and the pod pangolin-wireguard have private
+            # addresses. Express reads the client IP and the HTTPS of
+            # Pangolin from the X-Forwarded headers.
+            - name: TUDUDI_TRUST_PROXY
+              value: uniquelocal
+            - name: UPGRADE_INSECURE_REQUESTS
+              value: "true"
+            - name: DISABLE_TELEGRAM
+              value: "true"
+          # tududi.sops.yaml gives TUDUDI_SESSION_SECRET, TUDUDI_USER_EMAIL,
+          # and TUDUDI_USER_PASSWORD.
+          envFrom:
+            - secretRef:
+                name: tududi
+          ports:
+            - name: http
+              containerPort: 3002
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          # The first start makes the database and runs the migrations.
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 768Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: tmp
+          emptyDir: {}

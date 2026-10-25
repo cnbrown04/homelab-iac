@@ -1,0 +1,136 @@
+# The api of TaskView (Node.js). The browser reaches it at
+# https://taskview.buildwithcaleb.com/api. The HTTPRoute removes /api.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: TaskView
+    glance/icon: https://cdn.jsdelivr.net/gh/Gimanh/taskview-community@v1.56.0/web/public/logo.svg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      # The images run as root by default. Node.js runs as node (1000).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # Makes the schema on an empty database, with the default user
+        # "user". Else it applies the migrations of the release.
+        - name: migrate
+          image: docker.io/gimanhead/taskview-ce-db-migration:1.56.0
+          env:
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: taskview
+            - name: DB_NAME
+              value: taskview
+          # taskview.sops.yaml gives DB_PASSWORD, JWT_SIGN, and ENCRYPTION_KEY.
+          envFrom: &env-from
+            - secretRef:
+                name: taskview
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+      containers:
+        # The image starts pm2 with two workers. One worker is enough, so the
+        # pod starts the server itself.
+        - name: api
+          image: docker.io/gimanhead/taskview-ce-api-server:1.56.0
+          command: [node, taskview-server.js]
+          env:
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: taskview
+            - name: DB_NAME
+              value: taskview
+            - name: NODE_ENV
+              value: production
+            - name: HOME
+              value: /tmp
+            - name: APP_PORT
+              value: "1401"
+            - name: DB_POOL_MAX
+              value: "10"
+            - name: APP_URL
+              value: https://taskview.buildwithcaleb.com
+            - name: API_URL
+              value: https://taskview.buildwithcaleb.com/api
+            - name: API_PUBLIC_URL
+              value: https://taskview.buildwithcaleb.com/api
+            - name: CORS_ALLOWED_ORIGINS
+              value: https://taskview.buildwithcaleb.com
+            - name: CORS_REMOVE_DEFAULT_ALLOWED_ORIGINS
+              value: "true"
+            # The Gateway and the pod pangolin-wireguard have private
+            # addresses.
+            - name: TRUST_PROXY
+              value: uniquelocal
+            - name: JWT_ALG
+              value: HS256
+            - name: ACCESS_LIFE_TIME
+              value: 3d
+            - name: REFRESH_LIFE_TIME
+              value: 9d
+            # TaskView has no SMTP, so a change of password asks for the old
+            # password and not for a code by email.
+            - name: PASSWORD_CHANGE_CONFIRMATION
+              value: password
+            - name: AUTH_LOGIN_METHODS
+              value: password
+            - name: ALLOW_PUBLIC_REGISTRATION
+              value: "false"
+          envFrom: *env-from
+          ports:
+            - name: http
+              containerPort: 1401
+          securityContext: *container-security
+          readinessProbe:
+            tcpSocket:
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: logs
+              mountPath: /usr/src/app/logs
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: logs
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector:
+    app: api
+  ports:
+    - name: http
+      port: 1401
+      targetPort: http

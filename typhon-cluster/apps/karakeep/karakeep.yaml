@@ -1,0 +1,125 @@
+# Karakeep, the bookmark manager. It has its own login. Pangolin keeps SSO on
+# while the owner tests it. The browser extension and the mobile apps cannot
+# pass the Pangolin login.
+#
+# The image starts s6-overlay as root. The pod runs the three s6 services
+# itself, as user 1000: the migration first, then the web app and the
+# workers.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karakeep
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Karakeep
+    glance/icon: sh:karakeep
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: karakeep
+  template:
+    metadata:
+      labels:
+        app: karakeep
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: ghcr.io/karakeep-app/karakeep:0.34.1
+          command: [node, index.js]
+          workingDir: /db_migrations
+          env: &env
+            - name: DATA_DIR
+              value: /data
+            - name: HOME
+              value: /tmp
+            - name: NEXTAUTH_URL
+              value: https://karakeep.buildwithcaleb.com
+            - name: MEILI_ADDR
+              value: http://meilisearch:7700
+            - name: BROWSER_WEB_URL
+              value: http://chrome:9222
+            # The database is on a local disk, so WAL is safe.
+            - name: DB_WAL_MODE
+              value: "true"
+            # Renovate updates the image.
+            - name: DISABLE_NEW_RELEASE_CHECK
+              value: "true"
+          # karakeep.sops.yaml gives NEXTAUTH_SECRET and MEILI_MASTER_KEY.
+          envFrom: &env-from
+            - secretRef:
+                name: karakeep
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts: &mounts
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: web
+          image: ghcr.io/karakeep-app/karakeep:0.34.1
+          command: [node, server.js]
+          workingDir: /app/apps/web
+          env: *env
+          envFrom: *env-from
+          ports:
+            - name: http
+              containerPort: 3000
+          securityContext: *container-security
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts: *mounts
+        # The crawler, the search indexer, and the other background jobs.
+        - name: workers
+          image: ghcr.io/karakeep-app/karakeep:0.34.1
+          command: [node, dist/index.js]
+          workingDir: /app/apps/workers
+          env: *env
+          envFrom: *env-from
+          securityContext: *container-security
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts: *mounts
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: karakeep
+spec:
+  selector:
+    app: karakeep
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

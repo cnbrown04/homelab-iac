@@ -1,0 +1,34 @@
+# The secrets of Karakeep. NEXTAUTH_SECRET signs the login cookies. Meilisearch
+# and Karakeep share MEILI_MASTER_KEY. Each is a random value.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: karakeep
+type: Opaque
+stringData:
+    NEXTAUTH_SECRET: ENC[AES256_GCM,data:9cB9hDg+PjyoCX7HnMJdGYURWRnljIdhlP6uM3ySXPfGg5y9YZuR/soRjFdKmjsh,iv:vbFatuqjfk8g0ZYTzYVPwieZ4PdR/pczWDb2nRuePec=,tag:C78BdeiQTezIf+B8xBwtaQ==,type:str]
+    MEILI_MASTER_KEY: ENC[AES256_GCM,data:Q7bMaJgqQ7yhgEONEq06mZ9hsYVxiYxZ33yd3k+KxqkC+eum0+0Srw3gwXFpMzr8,iv:3PfI/yyNJ1wIarU3mLd82vZ5Nvra7LZ6uMLAvIqJfi4=,tag:SgtTLJzm3ezBPm9Z8zRvFQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAwNVBidFBTTFZMOVpBc0R3
+            V1dGY1R1aWYyQnQ1dTJkVEhBUkl2bTZ0aVFRCkgyMGJzbVNQdW5ZcitUbFY0QUNs
+            RFE0NUNrU0cyWTAya0RaNjRPbC8rQjgKLS0tIEJUMytwY005RG1vR2FldHUxWVF5
+            bVp4Z0pPaEpyckgrMFFzbWZQRWdFaUkKd9mElrYNcUBTaRyL20d5kWRaMmLB8L1b
+            WQl0WOnJJjo91ZnojTR2ze6WLb1qM0DzbjQHkHq/EH3/cdRk9wXZNQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBCbERjYzBsWXVyWlg1OXN3
+            Ykg1TzEzQ0Q2VUx4eG42bVJZei9ZTVVNZ1VFCjZpOWhYbDJPUU5BTDhWaXdMWnRx
+            TDZpdWlNWDNuamFhL3l1blpxYlF0M2MKLS0tIGxlaWRYQU11b2hIQlJtWjE3akc5
+            eURZb0thbnpLTitIVkx2Qm84d2FxOWMKdHoHU/09qWnptYnjyV6L1PZJ71Ls4RU5
+            sPjbFyqvFFFJPAliTz+GOHFottrHO9XkqC8/AUW32bQIQEMiaqq8gQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-25T01:32:40Z"
+    mac: ENC[AES256_GCM,data:HDQCtK0OK/rZhx0Rk+rBJiSeoWcucAc0n6X6NkQSXPZbNAgHTCWyipLECK57u4EmMZkFnaWfvZPzqET6j5BB/NHKg/A0uc9W0CDKo5BsJHeIE9ZVURqwfbPaIFDOOoL/nqPvhAjg3pHY91tfHxhpuJEo5Th2uLq1ao6+F9BtD5Y=,iv:aWZjJ+8t778EV/7Vp4h5jJzI1GMkwxcBHzIdw7IKnpY=,tag:CbRT6/T3DfyhvebfYgk1Hw==,type:str]
+    version: 3.13.3

@@ -1,0 +1,36 @@
+# The secrets of Tududi. TUDUDI_SESSION_SECRET signs the session cookies. The
+# owner logs in with TUDUDI_USER_EMAIL and TUDUDI_USER_PASSWORD. Read the
+# password with: sops -d --extract '["stringData"]["TUDUDI_USER_PASSWORD"]'
+apiVersion: v1
+kind: Secret
+metadata:
+    name: tududi
+type: Opaque
+stringData:
+    TUDUDI_SESSION_SECRET: ENC[AES256_GCM,data:BDNl91MxaS0rT3rDXaY2Y6Pdu4CO18nRdNWjcrD3Kcr76Vgywhqotbc8l89bUSjq+olMvXs6hm5KtNREQ7Io1UOWffAFeynWNJjb03+l4JnmQ7TJV60XOLWU1kguvMxCyBEcMhSjkps97c3xTNJnr+U8dvIZS4F3vsVqg33JA44=,iv:wDxRH2vAGdSCwlSLzHQm7wyGilXGsW6PxYV/OVzajBg=,tag:xJLrY0rhBflZec3Mm43Zwg==,type:str]
+    TUDUDI_USER_EMAIL: ENC[AES256_GCM,data:JWgElDiCn+IVX3YMzMENwQOG2K/Hksxf0g==,iv:ymOLGXIz0Mdpd8+AmiCZA6DyrpEeD48rIo9okA3vkl4=,tag:tBWIGB8D6pbdmrn481FhlQ==,type:str]
+    TUDUDI_USER_PASSWORD: ENC[AES256_GCM,data:xx58v7XVzBIxNWT3Ld6WIdIaXDGryHYTo3/+KdFFcg==,iv:szor1hXD8JxOug42pQDdDMjb6dfqiJGEX1LD30vZtpM=,tag:bfCCFF3+3LwHbAvnubc7zg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBxaC94Vzd3bzdpdHk4aStl
+            YW5NWkZHRHFCL293SVhQcVNNQm9sU1FLT3dzCjZDVDRnOGpZVGh5SDhFdXIvVjEz
+            dmxxSktLWHdDR0pjWFk2dlowRC9xZjQKLS0tIHhpZ0pWRjA1VnFQZFFYQ0lyYnEw
+            aEdtMy9BQk9YeVgyTG9HQlNIT0lTNG8K6/mUSDnHZXiNHPWw+LrdyITLoDryhViq
+            iMIt3/MCD1tQDz2/EIujeKQtn9DZLVuoh+UDm5ZIxSqsM1aJXUEmUg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBVTVkrNEpHYVg4V29UNTFW
+            RmZGbGsxMEJsaDJ5M3JpMGtUdVdoSFJaWmxVCjVrejdKcEkrZUhkOVdXemJZbmIv
+            MEdYbVFtem5Yc0lORGVPTFJWNExVQm8KLS0tIGxQMEJGWTIvLzZzQnFtODFwWTVT
+            TjF5ak8wZUNUcGh1VU1RaCtWcHJESXcKNuNywDK8fyZ+nVvZCpPTPZPx4LgmHeRx
+            K+WBteLLRNYEoYl1VMPBc4s2Tqvs6gt9CO3yd//xZbeCiV2nPcUO5g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-25T01:34:17Z"
+    mac: ENC[AES256_GCM,data:T633mxjenhrP2jYjUfgt0LVurN2HNywNGirF2b7z0zyDwrMmENSrm2asM+BtjfCpIevH2WoY136QTyOS1nVXvJhKUdF7tNJt8c/1vlII+zL1eQGlysDgB6qx+F9Kx6+DvzZ3qRtvZhtL7X5dfvHrXov2844d38hyzRCdRnH3750=,iv:E6nGXhnXMXqibtsLlENU/bAYpjO3GTLeQBg1SffowL0=,tag:27n9dnEovX7Cvp0z+S+S7A==,type:str]
+    version: 3.13.3

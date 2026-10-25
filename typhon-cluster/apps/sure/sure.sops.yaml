@@ -1,0 +1,35 @@
+# The secrets of Sure. SECRET_KEY_BASE signs the sessions of Rails and
+# encrypts the keys of the bank connections. POSTGRES_PASSWORD is the password
+# of the role sure in the Postgres of the pod. Each is a random value.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: sure
+type: Opaque
+stringData:
+    SECRET_KEY_BASE: ENC[AES256_GCM,data:WF1SBsuWKKuiHJL6LM4mGlPvJAFlcRU29JggZvigBj+On2zGrJHr+XarU/3akWjAxnQUQV0mfZqPW/Mhmfw+d/QtRQZ5fXzMFSqvovsVj9V0iIYhfK0WSU2YHAF3ekkB80EGJjki/vJ9CX4KjLHEXNK6JjYjiA9qqIdbtHNGG9A=,iv:TAc+gj0K0nlucMMJP4PooGiOhFphUwVmaWI2ohoc7lA=,tag:GrA/0A1OWEkK6KKGDcoxxw==,type:str]
+    POSTGRES_PASSWORD: ENC[AES256_GCM,data:zfPXsxMY9znArxwJ629LKrjjd/cD6t4n2QGCBFtV+FCIpuP36BFznPNNfovyGrXD,iv:3xemBclXy5/SaNN/cvl8ETzbSvhRSioFBxIuzIcp6g4=,tag:TnkD8Gk6AymIjdTQu1BOuw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBrWWRRZUtnRWRtNWljWWxO
+            b1VDVkJ0QUlmMGEwVmtyZmlNcjlqVThtbGpJCmFHMjN0RW9SUk12eVFXQzNCeFNT
+            QTU3bHcxaDFEZ3FRWGNEY0JUK0N3NDAKLS0tICtkVjBwK0dnN1ZnV0psbWJ3ZWx4
+            L0tIVXVjbW16VW1XSk1iMmFaWi84T0kKni6GgvKlNU1htQtPH6DnB/WP25kX30DQ
+            NywUAWeD61Jm4kr7wbZhbrYFZ0UXbChDAcRyfN1R0eKnG9pojNXaSA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB0QTkxNnNFYUU1Tjc1QnpJ
+            R2kzSDkzQi9jTk1wQVAvcmFYVXdjYTZYUlRVCjZ3K0FhNVdEWGZodkhRb3pzSWVW
+            RW5EOTdsNXdOYSt3a0NVYm1LUGZlbXMKLS0tIHVUeUFsY0NzSnBIZ25Fa2E4aFJX
+            c0tpUEhNeHorZFpLeTd4djVCaXVmeTgK2ZwgUKR5mTujI6H2VSm9obqXB8gzYDA7
+            yjRFM1c1Y40+XS/SKK40ssD3W16cehiESww1jPxj5F6V+GKpEw8DxA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-25T01:33:36Z"
+    mac: ENC[AES256_GCM,data:IAktTJ87jlV+jVPilV0T+J4YLvh8ofmUSo/S/YtW79zfIe8m/GuHQJWt8iVOhQwMrhqPkGsP+J3Wrda39wRc5Yp485DKZcl4LOn7029nQN39QxTWkwC6XbFZUFEHPkDugSSi7fGWMXhW/IWCh5GJdpxwzUK1FSMAU01pdYlvNjA=,iv:E2gD5ACd5nH9fbS1qzEQKQ+VPoWbKRHIh4XH4HzrUqI=,tag:+d2NGoBTQztL9YLdpTiQXw==,type:str]
+    version: 3.13.3

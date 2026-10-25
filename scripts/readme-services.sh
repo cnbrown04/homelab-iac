@@ -58,6 +58,7 @@ TYPHON_GROUPS=(
   "Media|Jellyfin:jellyfin,Audiobookshelf:audiobookshelf,Seerr:seerr"
   "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"
+  "Testing|Karakeep:selfhst/karakeep,Sure:selfhst/sure-finance,TaskView:https://cdn.jsdelivr.net/gh/Gimanh/taskview-community@v1.56.0/web/public/logo.svg,Tududi:selfhst/tududi"
 )
 
 # The hosts out of the cluster: the name, the logo, the subtitle, and the apps

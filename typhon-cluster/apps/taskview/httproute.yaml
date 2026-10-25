@@ -1,0 +1,30 @@
+# The api is at /api on the web host, so the Pangolin login covers it too.
+# The route removes /api, so the api gets /module/..., the same as on a host
+# of its own.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: taskview
+spec:
+  parentRefs:
+    - name: main
+      namespace: gateway
+  hostnames:
+    - taskview.buildwithcaleb.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: api
+          port: 1401
+    - backendRefs:
+        - name: web
+          port: 80

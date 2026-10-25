@@ -1,0 +1,36 @@
+# The secrets of TaskView. DB_PASSWORD is the password of the role taskview in
+# the Postgres of the pod. JWT_SIGN signs the login tokens. ENCRYPTION_KEY
+# encrypts the tokens of the integrations. Each is a random value.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: taskview
+type: Opaque
+stringData:
+    DB_PASSWORD: ENC[AES256_GCM,data:64OxbzPjv4wLr3CHtmVEYTj43l9DCm7zvBLETFmSSa43RIT/btGdx0Fsy35doCDI,iv:wRRDnR8fIZ6I6Vsd7t5awsYqVeBIAJXwbu8zILdAMi0=,tag:ZnwuLmr0dOlDQmltMrxZvQ==,type:str]
+    JWT_SIGN: ENC[AES256_GCM,data:BFqh0ohFyBGtlELL69thTUGUD8ds+iB4fbdFDJk78S74Nt4ptBl5uY59lzYl/6Yuv+s/AQ1RMivfiskc2OPIV0FAFBJjMxv4Y3zA7k9GRcvVa6gK/WPS1f04sDQmEJgM,iv:M9zLKvyYlL6e5r4b81Ih0tH4uiZ7+0dYnluGZORYgKE=,tag:ZP2pdK1XAlRQyH5HoqRAIw==,type:str]
+    ENCRYPTION_KEY: ENC[AES256_GCM,data:ylr7DhyWKmTBvbhxppP5BUvrJ0w67PoLFm6s4tkQ2UzOJJiQFR6bntMp98S49r5azZaoFZ6EqSQip/XMhUFxcA==,iv:i9mgAYN4rySsms/313q48dDto56ynhSCC+K5g6Z7W+w=,tag:U4Rl+fa7YpuJNqgljKZfiA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBXMGxDVC9mdTdoRGh3ODda
+            NTVGc1ByeWlWSmpZUlNzSzFGY2ZReTNPOWdFCnlZdVlueW83dUhWSE9Qb3ZkZEdT
+            MllQNjNqUXk5Rm42clhzNFVNMXBTYUEKLS0tIHI3dEhva205ZjFzMXJsdi9KSnFJ
+            Ujk3cGY4bEoyUlBpcDVkeEFWRnBQWTAKiup3+nTRUw7ywOPBz9zOt2UTA9pPIRlr
+            iHWuDEoZXt7R4lpZND5LWl9jl8E7HJnCW3ZnzwP+by6broKnbSX+rg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBsQk1SektwTktLQzFMSEJu
+            WGlKZjMzK2l6YkhISkRuVGZ3Y0QzbnozSEJzCnJ2M05PbmhsYXpUL1Y5SGFYWVJI
+            R2FPNzJoZFEwNnNCVy9kTXRsZDZHSDQKLS0tIEMzd0FhTFhONktkeXFaVHNsbktJ
+            bVQvaFdjbkNvYXBjNUxpRWFzOThKQW8KYmi5eaNtVDvHWkFRXce9tyi7ZvORXSjt
+            GPf3g1+Uw66jhue4QtDtKa48kgKXLAQu8rYccML5mrmK8yFFfSCvgw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-25T01:36:14Z"
+    mac: ENC[AES256_GCM,data:UMiuuc5dR3hKjfzHYBNXOdV1W9wInJ0kz/I3dNng16sctZrI4BauaYeVlwlsVyzwIptfRFHk5sodpPCEnIIxLNaTQ0Nl50UZ0jv1hv10n9Mqp5gJAPKnkGaSyhCaoMr3DLsojBTylZgWtw5ahMx03JB9GSaOD28c8QBWNWXOBgE=,iv:nqdVtxxEUhm/xZdbsJXk9QF7lc0wkQJVrERWp7hCwa8=,tag:EH0VFe487ek6ZSYFE3Oyuw==,type:str]
+    version: 3.13.3

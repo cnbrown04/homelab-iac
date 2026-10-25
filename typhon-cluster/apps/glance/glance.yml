@@ -266,6 +266,7 @@ pages:
                 <a href="https://seerr.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/jellyseerr.svg" alt="">Seerr</a>
                 <a href="https://homeassistant.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/home-assistant.svg" alt="">Home Assistant</a>
                 <a href="https://faved.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/selfhst/icons/svg/faved.svg" alt="">Faved</a>
+                <a href="https://karakeep.buildwithcaleb.com" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/homarr-labs/selfhst/icons/svg/karakeep.svg" alt="">Karakeep</a>
               </nav>
 
           - type: search
@@ -629,6 +630,22 @@ pages:
                 url: https://faved.buildwithcaleb.com
                 check-url: http://faved.faved.svc.cluster.local/
                 icon: sh:faved
+              - title: Karakeep
+                url: https://karakeep.buildwithcaleb.com
+                check-url: http://karakeep.karakeep.svc.cluster.local/api/health
+                icon: sh:karakeep
+              - title: Sure
+                url: https://sure.buildwithcaleb.com
+                check-url: http://sure.sure.svc.cluster.local/up
+                icon: sh:sure-finance
+              - title: TaskView
+                url: https://taskview.buildwithcaleb.com
+                check-url: http://web.taskview.svc.cluster.local/
+                icon: https://cdn.jsdelivr.net/gh/Gimanh/taskview-community@v1.56.0/web/public/logo.svg
+              - title: Tududi
+                url: https://tududi.buildwithcaleb.com
+                check-url: http://tududi.tududi.svc.cluster.local/api/health
+                icon: sh:tududi
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
@@ -756,6 +773,10 @@ pages:
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
               - denho/faved
+              - karakeep-app/karakeep
+              - we-promise/sure
+              - Gimanh/taskview-community
+              - chrisvel/tududi
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

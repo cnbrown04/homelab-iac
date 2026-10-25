@@ -1,0 +1,25 @@
+# The volumes of Sure, on the disk of a worker. The owner tests Sure, so the
+# database stays in the cluster, not on PlanetScale.
+# - postgres: the Postgres database, with the accounts and the transactions.
+# - storage: the files of Active Storage, for example the uploaded statements.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: storage
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi

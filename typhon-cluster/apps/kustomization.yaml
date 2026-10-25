@@ -8,9 +8,13 @@ resources:
   - glance
   - jackett
   - jellyfin
+  - karakeep
   - prowlarr
   - qbittorrent
   - radarr
   - seerr
   - sonarr
+  - sure
+  - taskview
   - termix
+  - tududi
