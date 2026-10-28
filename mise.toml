@@ -11,7 +11,7 @@ opentofu = "1.13.1"
 
 # Configures hosts that are already running. Collections live in
 # ansible/requirements.yml, not here.
-python = "3.14.8"
+python = "3.15.1"
 # Mitogen goes into the environment of ansible-core, because Ansible imports
 # its strategy plugin. See ansible/ansible.cfg. Renovate bumps the two
 # together. Each version of Mitogen supports a set of ansible-core versions.
