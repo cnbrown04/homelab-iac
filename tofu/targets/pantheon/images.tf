@@ -2,7 +2,7 @@
 # that runs a Talos VM needs its own copy, because the storage is local.
 locals {
   # renovate: datasource=github-releases depName=siderolabs/talos
-  talos_version = "v1.14.4"
+  talos_version = "v1.14.5"
 
   # The Image Factory names a set of extensions by a hash, the schematic ID.
   # Create a new ID with a POST of the schematic to
