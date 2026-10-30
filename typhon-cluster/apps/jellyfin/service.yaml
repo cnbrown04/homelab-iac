@@ -9,3 +9,19 @@ spec:
     - name: http
       port: 80
       targetPort: http
+---
+# A direct address for the LAN, so the clients of Jellyfin need no Gateway and
+# no Pangolin. 10.0.20.200 is the Gateway, so this takes the next address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-lan
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.20.201
+  selector:
+    app: jellyfin
+  ports:
+    - name: http
+      port: 8096
+      targetPort: http
