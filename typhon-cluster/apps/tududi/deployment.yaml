@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: tududi
-          image: docker.io/chrisvel/tududi:1.9.7
+          image: docker.io/chrisvel/tududi:1.14.0
           command:
             - sh
             - -c
