@@ -54,7 +54,7 @@ spec:
               mountPath: /seed
       containers:
         - name: radarr
-          image: ghcr.io/home-operations/radarr:6.4.4.10685
+          image: ghcr.io/home-operations/radarr:7.0.0.10815
           env:
             # No login page. The Pangolin login (Pocket ID) is the only login,
             # so the Pangolin resource must keep SSO on. The API still needs
