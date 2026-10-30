@@ -41,7 +41,7 @@ runs:
     # The Proxmox API is on the tailnet. PlanetScale is public.
     - name: Join the tailnet
       if: inputs.target != 'asphodel'
-      uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+      uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4.3.0
       with:
         authkey: ${{ inputs.headscale-authkey }}
         args: --login-server=https://vpn.buildwithcaleb.com --accept-dns=false
