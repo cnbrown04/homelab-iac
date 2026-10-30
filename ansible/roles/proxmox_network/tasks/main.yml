@@ -70,19 +70,25 @@
     state: present
   when: proxmox_network_e1000e_interfaces | length > 0
 
-# udev turns off the offload each time the NIC starts, also after a reboot.
-- name: Write the offload rule of the e1000e interfaces
+# ifupdown runs this script after the NIC has its final name (nic0). A udev
+# rule ran too early, with the name eno1, and ethtool failed with code 92.
+- name: Write the offload script of the e1000e interfaces
   ansible.builtin.template:
-    src: e1000e-offload.rules.j2
-    dest: /etc/udev/rules.d/70-ansible-e1000e-offload.rules
+    src: e1000e-offload.sh.j2
+    dest: /etc/network/if-up.d/ansible-e1000e-offload
     owner: root
     group: root
-    mode: "0644"
+    mode: "0755"
   when: proxmox_network_e1000e_interfaces | length > 0
   notify: Turn off the offload of the e1000e interfaces
 
-- name: Delete the offload rule of the e1000e interfaces
+- name: Delete the offload script of the e1000e interfaces
+  ansible.builtin.file:
+    path: /etc/network/if-up.d/ansible-e1000e-offload
+    state: absent
+  when: proxmox_network_e1000e_interfaces | length == 0
+
+- name: Delete the old offload rule of the e1000e interfaces
   ansible.builtin.file:
     path: /etc/udev/rules.d/70-ansible-e1000e-offload.rules
     state: absent
-  when: proxmox_network_e1000e_interfaces | length == 0
