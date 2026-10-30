@@ -46,3 +46,9 @@ gatewayAPI:
   # With no trusted hop, Envoy replaces the header with http, and an app
   # like Audiobookshelf rejects its own https callback URL for OIDC.
   xffNumTrustedHops: 1
+
+# The agent and Envoy must use the same xDS mode. Chart 1.20.4 has no default,
+# but the first install by hand still owns the value ads in cilium-config. So
+# keep the mode here.
+envoy:
+  xdsMode: ads
