@@ -30,6 +30,10 @@ spec:
               value: production
             - name: MEILI_NO_ANALYTICS
               value: "true"
+            # Upgrades the database to the new version at start. Delete this
+            # variable after the first good start.
+            - name: MEILI_UPGRADE_DB
+              value: "true"
             - name: MEILI_MASTER_KEY
               valueFrom:
                 secretKeyRef:
