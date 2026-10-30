@@ -733,6 +733,12 @@ mise run plan:pantheon
   with no Gateway API controller. The old routes still work, but a new
   HTTPRoute gets no status, and the Gateway gives `404`. After a restart of
   the control plane, delete the pods of `cilium-operator` in `kube-system`.
+- The manager `helm` of the first Cilium install still owns some fields of
+  the Cilium objects. When a new chart deletes a field, `helm-controller`
+  gives up its part, but the old value stays. So set each Cilium default
+  that must change in `values.yaml`. Cilium 1.20.4 deleted
+  `envoy-xds-mode`, the agent kept `ads`, Envoy changed to `split`, and no
+  new pod got a network.
 - The annotation `glance/icon` of glance-k8s takes `di:`, `si:`, or a URL.
   It does not know `sh:`, so give a selfh.st icon as its full URL. Glance
   itself knows `sh:` and `auto-invert`.
