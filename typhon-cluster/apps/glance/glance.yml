@@ -633,10 +633,6 @@ pages:
                 url: https://sure.buildwithcaleb.com
                 check-url: http://sure.sure.svc.cluster.local/up
                 icon: sh:sure-finance
-              - title: TaskView
-                url: https://taskview.buildwithcaleb.com
-                check-url: http://web.taskview.svc.cluster.local/
-                icon: https://cdn.jsdelivr.net/gh/Gimanh/taskview-community@v1.56.0/web/public/logo.svg
               - title: Tududi
                 url: https://tududi.buildwithcaleb.com
                 check-url: http://tududi.tududi.svc.cluster.local/api/health
@@ -769,7 +765,6 @@ pages:
               - Termix-SSH/Termix
               - karakeep-app/karakeep
               - we-promise/sure
-              - Gimanh/taskview-community
               - chrisvel/tududi
               - siderolabs/talos
               - fosrl/pangolin

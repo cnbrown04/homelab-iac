@@ -240,9 +240,9 @@ the cluster.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
-- The owner tests Karakeep, Sure, TaskView, and Tududi, at
-  `<app>.buildwithcaleb.com`, with no Pangolin login. Karakeep is the
-  bookmark manager.
+- Karakeep, Sure, and Tududi are at `<app>.buildwithcaleb.com`, with no
+  Pangolin login. Karakeep is the bookmark manager. Karakeep and Sure stay.
+  The owner still tests Tududi.
   - Each app logs in with Pocket ID, with the client ID `<app>`. The login
     button and the Tududi slug use the name of the SSO, `Cerberus`. Only
     `homelab_admin` can use the clients. The owner made them by hand. The
@@ -256,16 +256,13 @@ the cluster.
     then cannot read its data.
   - Tududi makes no account at a Pocket ID login. Link Pocket ID in Profile,
     Security. Tududi makes the user of `tududi.sops.yaml` at each start.
-  - The SSO config of TaskView is in its UI, for the domain `gmail.com`.
-    `SSO_TRUSTED_DOMAINS` skips the proof of the domain.
-  - Each app keeps its data in the cluster, on `local-path`. Sure and TaskView
-    have a Postgres pod each, not PlanetScale. No app has NFS or a backup.
+  - Each app keeps its data in the cluster, on `local-path`. Sure has a
+    Postgres pod, not PlanetScale. No app has NFS or a backup.
   - Each pod runs as a user that is not root, so each namespace is
-    `restricted`. Karakeep, Tududi, and the TaskView API start their own
-    processes, not the entrypoint of the image.
+    `restricted`. Karakeep and Tududi start their own processes, not the
+    entrypoint of the image.
   - Karakeep runs the migration, the web app, and the workers in one pod, with
     Meilisearch and Chrome in their own pods.
-  - The TaskView API is at `/api` on the host of the web app.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The
