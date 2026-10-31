@@ -55,7 +55,7 @@ TYPHON="typhon|talos|Talos Kubernetes on the VMs of @gaia and @hyperion"
 TYPHON_NODES=(gaia hyperion)
 TYPHON_GROUPS=(
   "Platform|Flux:flux-cd,Glance:glance,Termix:termix"
-  "Media|Jellyfin:jellyfin,Audiobookshelf:audiobookshelf,Seerr:seerr,Tdarr:tdarr"
+  "Media|Jellyfin:jellyfin,Audiobookshelf:audiobookshelf,Seerr:seerr"
   "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"
   "Testing|Karakeep:selfhst/karakeep,Sure:selfhst/sure-finance,TaskView:https://cdn.jsdelivr.net/gh/Gimanh/taskview-community@v1.56.0/web/public/logo.svg,Tududi:selfhst/tududi"

@@ -180,18 +180,6 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Tdarr has no login of its own. Keep SSO on.
-    tdarr:
-      name: Tdarr
-      mode: http
-      full-domain: tdarr.buildwithcaleb.com
-      auth:
-        sso-enabled: true
-      targets:
-        - site: "{{ pangolin_typhon_site }}"
-          method: http
-          hostname: "{{ pangolin_typhon_target }}"
-          port: 80
     qbittorrent:
       name: qBittorrent
       mode: http

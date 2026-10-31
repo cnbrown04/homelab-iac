@@ -192,19 +192,6 @@ the cluster.
   - To restore the config: put the folders `config`, `data`, `plugins`, and
     `root` in `/lethe/k8s/jellyfin/migrate/`, then delete the pod and the
     claim `config`. The init container copies them.
-- Tdarr is at `tdarr.buildwithcaleb.com`, with the Pangolin login. Its own
-  login is off (`auth=false`). The server and one internal node run in one
-  pod on `typhon-w-3`.
-  - The GPU plugin shares the iGPU of `hyperion` with `-shared-dev-num=2`,
-    so Jellyfin and Tdarr each get `gpu.intel.com/i915: 1`.
-  - It mounts `/lethe/data/media` at `/media`. Its cache is
-    `/lethe/data/media/tdarr-cache`, at `/temp`. Set `/temp` as the cache of
-    each library. The cache is not in the transcode dataset, because Jellyfin
-    deletes old files there.
-  - The SQLite database and the settings are on `local-path`. The backups of
-    Tdarr are in `/lethe/k8s/tdarr/Backups`.
-  - The image starts s6 as user 1000. s6 accepts a `/run` that root owns
-    only with `S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES=1`.
 - Sonarr, Radarr, Prowlarr, Chaptarr, and qBittorrent are at
   `<app>.buildwithcaleb.com`, with the Pangolin login. Chaptarr manages the
   audiobooks in `/media/audiobooks`.
@@ -746,6 +733,8 @@ mise run plan:pantheon
   with no Gateway API controller. The old routes still work, but a new
   HTTPRoute gets no status, and the Gateway gives `404`. After a restart of
   the control plane, delete the pods of `cilium-operator` in `kube-system`.
+- The iGPU of `hyperion` (UHD 770 of the i5-13500T) decodes AV1, but it
+  cannot encode AV1. It encodes H.264 and HEVC with QSV and VAAPI.
 - The manager `helm` of the first Cilium install still owns some fields of
   the Cilium objects. When a new chart deletes a field, `helm-controller`
   gives up its part, but the old value stays. So set each Cilium default
