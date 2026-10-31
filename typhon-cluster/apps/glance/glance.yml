@@ -583,6 +583,10 @@ pages:
                 url: https://audiobooks.buildwithcaleb.com
                 check-url: http://audiobookshelf.audiobookshelf.svc.cluster.local/healthcheck
                 icon: di:audiobookshelf
+              - title: Tdarr
+                url: https://tdarr.buildwithcaleb.com
+                check-url: http://tdarr.tdarr.svc.cluster.local/api/v2/status
+                icon: di:tdarr
 
           - type: monitor
             title: Downloads
@@ -759,6 +763,8 @@ pages:
               - jellyfin/jellyfin
               - seerr-team/seerr
               - advplyr/audiobookshelf
+              # Tdarr has no releases on GitHub. Its images are on Docker Hub.
+              - dockerhub:haveagitgat/tdarr
               - Sonarr/Sonarr
               - Radarr/Radarr
               - Prowlarr/Prowlarr
