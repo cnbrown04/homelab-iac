@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: web
-          image: ghcr.io/we-promise/sure:0.7.5-hotfix.3
+          image: ghcr.io/we-promise/sure:0.7.6
           env: &env
             - name: SELF_HOSTED
               value: "true"
@@ -105,7 +105,7 @@ spec:
             - name: storage
               mountPath: /rails/storage
         - name: worker
-          image: ghcr.io/we-promise/sure:0.7.5-hotfix.3
+          image: ghcr.io/we-promise/sure:0.7.6
           command: [bundle, exec, sidekiq]
           env: *env
           envFrom: *env-from
