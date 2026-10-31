@@ -43,6 +43,7 @@ spec:
             - -p
             - /config/server/Tdarr/Backups
             - /config/configs
+            - /data/Backups
             - /media/tdarr-cache
           securityContext: &container-security
             allowPrivilegeEscalation: false
@@ -51,6 +52,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: data
+              mountPath: /data
             - name: media
               mountPath: /media
       containers:
@@ -101,8 +104,9 @@ spec:
             - name: config
               mountPath: /app/configs
               subPath: configs
-            - name: backups
+            - name: data
               mountPath: /app/server/Tdarr/Backups
+              subPath: Backups
             - name: logs
               mountPath: /app/logs
             - name: media
@@ -119,9 +123,9 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: config
-        - name: backups
+        - name: data
           persistentVolumeClaim:
-            claimName: backups
+            claimName: data
         - name: logs
           emptyDir:
             sizeLimit: 1Gi

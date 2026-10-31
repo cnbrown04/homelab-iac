@@ -3,11 +3,11 @@
 #   the library. Its cache is the folder tdarr-cache in the same dataset, so
 #   a finished file moves into the library with no copy. The cache is not in
 #   the transcode dataset, because Jellyfin deletes the old files there.
-# - backups: the backups of Tdarr, on a dynamic volume in /lethe/k8s. No
-#   SQLite.
+# - data: /lethe/k8s/tdarr on gaia. Backups/ holds the backups of Tdarr. No
+#   SQLite. The driver gives the folder to user 1000 at each mount.
 # - config: the SQLite database and the settings, on the disk of a worker.
 #   SQLite must not go on NFS.
-# The static volume keeps its data when the claim goes away.
+# The static volumes keep their data when the claim goes away.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -42,15 +42,39 @@ spec:
       storage: 4Ti
 ---
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tdarr-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: tdarr
+    name: data
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: tdarr-data
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/tdarr
+      uid: "1000"
+      gid: "1000"
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: backups
+  name: data
 spec:
   accessModes: [ReadWriteMany]
-  storageClassName: nfs-lethe
+  storageClassName: ""
+  volumeName: tdarr-data
   resources:
     requests:
-      storage: 10Gi
+      storage: 20Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
