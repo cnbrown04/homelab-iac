@@ -1,0 +1,15 @@
+# Ansible writes this file. See the role ip_options_filter.
+[Unit]
+Description=Drop IPv4 TCP packets with IP options (CVE-2026-98432)
+DefaultDependencies=no
+Before=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/drop-ip-options.nft
+ExecStop=/usr/sbin/nft delete table ip drop_ip_options
+
+[Install]
+WantedBy=multi-user.target

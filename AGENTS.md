@@ -783,6 +783,12 @@ mise run plan:pantheon
 - Renovate closed its open pull requests after the history rewrite of
   28 September 2026. Check that it opens them again.
 
+- CVE-2026-98432 (a use-after-free in IPv4 TCP, CVSS 9.8): Ubuntu has no
+  fixed kernel yet. The role `ip_options_filter` on `hermes` drops each IPv4
+  TCP packet with IP options. When Ubuntu ships the fix in `linux`
+  6.8.0-149 or later, reboot `hermes` into it, then delete the role. The
+  Proxmox nodes need `proxmox-kernel` 7.0.14-25 or later.
+
 ### Do not
 
 - Do not add a self-hosted runner.

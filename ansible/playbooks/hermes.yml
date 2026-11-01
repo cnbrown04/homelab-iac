@@ -18,6 +18,8 @@
       tags: [security]
     - role: ufw
       tags: [security]
+    - role: ip_options_filter
+      tags: [security]
     - role: fail2ban
       tags: [security]
     - role: crowdsec

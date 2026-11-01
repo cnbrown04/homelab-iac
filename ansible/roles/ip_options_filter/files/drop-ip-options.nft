@@ -1,0 +1,15 @@
+#!/usr/sbin/nft -f
+# Ansible writes this file. See the role ip_options_filter.
+# CVE-2026-98432: a SYN with IPv4 options can cause a use-after-free in the
+# kernel. A normal IPv4 header has 5 words, so each TCP packet with a longer
+# header goes. The table is separate, so UFW, Docker, and CrowdSec keep their
+# rules. The first two lines make the file safe to load again.
+table ip drop_ip_options
+delete table ip drop_ip_options
+
+table ip drop_ip_options {
+	chain prerouting {
+		type filter hook prerouting priority -300; policy accept;
+		meta l4proto tcp ip hdrlength != 5 counter drop
+	}
+}

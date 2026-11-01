@@ -1,0 +1,34 @@
+---
+# A temporary mitigation for CVE-2026-98432, until the vendor ships a fixed
+# kernel. Delete the role after the reboot into a fixed kernel.
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+
+- name: Write the rule
+  ansible.builtin.copy:
+    src: drop-ip-options.nft
+    dest: /etc/drop-ip-options.nft
+    owner: root
+    group: root
+    mode: "0644"
+    validate: nft -c -f %s
+  notify: Load the rule
+
+- name: Write the service that loads the rule at boot
+  ansible.builtin.copy:
+    src: drop-ip-options.service
+    dest: /etc/systemd/system/drop-ip-options.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Load the rule
+
+# In check mode, the unit file does not exist yet, so the task skips.
+- name: Start the service at boot
+  ansible.builtin.systemd_service:
+    name: drop-ip-options.service
+    enabled: true
+    daemon_reload: true
+  when: not ansible_check_mode
