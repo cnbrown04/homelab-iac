@@ -1,0 +1,52 @@
+# Ansible manages this file. See the role pulse_agent.
+[Unit]
+Description=Pulse agent
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=0
+
+# The agent runs as pulse-agent, not root. Its only root access is sudo for
+# smartctl-read. Commands from Pulse, Docker, the Proxmox token setup, SSH to
+# the other nodes, and the self-update are off.
+[Service]
+Type=simple
+User=pulse-agent
+Group=pulse-agent
+Environment=PULSE_SMARTCTL_PATH=/usr/local/libexec/pulse-agent/smartctl
+ExecStart=/usr/local/bin/pulse-agent \
+  --url {{ pulse_agent_url }} \
+  --token-file /etc/pulse-agent/token \
+  --state-dir /var/lib/pulse-agent \
+  --command-authority monitoring-only \
+  --enable-proxmox=false \
+  --enable-docker=false \
+  --enable-kubernetes=false \
+  --disable-auto-update \
+  --disable-cluster-peer-sensors \
+  --disable-ceph \
+  --health-addr=
+Restart=always
+RestartSec=5s
+UMask=0077
+StateDirectory=pulse-agent
+StateDirectoryMode=0700
+# sudo needs new privileges, so NoNewPrivileges stays off. The rest of the
+# system folders are read-only for the agent.
+NoNewPrivileges=false
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictNamespaces=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

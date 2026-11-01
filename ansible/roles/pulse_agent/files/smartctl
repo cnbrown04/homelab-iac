@@ -1,0 +1,4 @@
+#!/bin/sh
+# The agent runs this path as smartctl (PULSE_SMARTCTL_PATH). sudo runs
+# smartctl-read as root, and that script allows the read-only options only.
+exec sudo -n /usr/local/libexec/pulse-agent/smartctl-read "$@"

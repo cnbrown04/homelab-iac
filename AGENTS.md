@@ -292,6 +292,20 @@ the cluster.
     use the setup script of Pulse: it also gives `PVEDatastoreAdmin` on
     `/storage`, which can delete backups.
   - Its data is on `local-path`, with no backup.
+  - The role `pulse_agent` puts the Pulse agent on each Proxmox node, for the
+    SMART data and the temperatures. The agent runs as the user
+    `pulse-agent`, not root. Its only root access is sudo for
+    `/usr/local/libexec/pulse-agent/smartctl-read`, which allows only the
+    read-only options of `smartctl`.
+  - The agent has no commands from Pulse, no Docker, no SSH to the other
+    nodes, and no self-update. Do not use the installer of Pulse, and do not
+    turn on `--enable-proxmox`: the agent then makes a Proxmox token with
+    `PVEDatastoreAdmin` on `/storage`.
+  - The agent sends its reports to the LoadBalancer `pulse-agents` at
+    `http://10.0.20.202:7655`, not through Pangolin. Only the IPs of the
+    nodes can connect.
+  - Each node has its own agent token, from "Install on a host" in Pulse, in
+    `pulse_agent_tokens`. Keep `pulse_agent_version` the same as the image.
 - A NetworkPolicy with `namespaceSelector: {}` does not let the Gateway in.
   The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
   with `fromEntities: [ingress]`.
@@ -660,7 +674,7 @@ mise run plan:pantheon
   | --- | --- |
   | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens, the PlanetScale service token |
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb`, the enrollment password of Wazuh |
-  | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
+  | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client, the token of the Pulse agent of each node |
   | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user, the secret of the Newt site `mnemosyne` |
   | `ansible/inventory/host_vars/daedalus/secrets.sops.yml` | The logins of Claude Code and opencode for `caleb` |

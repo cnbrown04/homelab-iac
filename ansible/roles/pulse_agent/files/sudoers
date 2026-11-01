@@ -1,0 +1,5 @@
+# The Pulse agent can run one script as root: smartctl-read, which allows the
+# read-only options of smartctl only. Ansible manages this file.
+# The agent reads SMART at each report, so do not log each call.
+Defaults:pulse-agent !log_allowed, !pam_session
+pulse-agent ALL=(root) NOPASSWD: /usr/local/libexec/pulse-agent/smartctl-read

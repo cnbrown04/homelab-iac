@@ -1,0 +1,57 @@
+#!/bin/sh
+# The Pulse agent runs this script as root through sudo. It runs smartctl
+# with the read-only options that the agent uses, and refuses all other
+# options. So the agent cannot change a setting of a disk or start a test.
+#
+# Allowed:
+#   smartctl --scan
+#   smartctl [-d <type>] [-n standby,<n>] -i -A -H [--json=o] [-l scttempsts] /dev/<disk>
+set -eu
+
+refuse() {
+	echo "smartctl-read: refused" >&2
+	exit 64
+}
+
+if [ "$#" -eq 1 ] && [ "$1" = "--scan" ]; then
+	exec /usr/sbin/smartctl --scan
+fi
+
+[ "$#" -ge 1 ] || refuse
+
+device=""
+for arg in "$@"; do :; done
+device="$arg"
+case "$device" in
+/dev/*) ;;
+*) refuse ;;
+esac
+case "$device" in
+*..* | *[!A-Za-z0-9/_.:-]*) refuse ;;
+esac
+
+expect=""
+for arg in "$@"; do
+	if [ -n "$expect" ]; then
+		case "$expect:$arg" in
+		d:*[!a-z0-9,+_]* | d:) refuse ;;
+		n:standby,[0-9] | n:standby,[0-9][0-9] | n:standby,[0-9][0-9][0-9]) ;;
+		n:*) refuse ;;
+		l:scttempsts) ;;
+		l:*) refuse ;;
+		esac
+		expect=""
+		continue
+	fi
+	case "$arg" in
+	-i | -A | -H | --json=o) ;;
+	-d) expect=d ;;
+	-n) expect=n ;;
+	-l) expect=l ;;
+	"$device") ;;
+	*) refuse ;;
+	esac
+done
+[ -z "$expect" ] || refuse
+
+exec /usr/sbin/smartctl "$@"

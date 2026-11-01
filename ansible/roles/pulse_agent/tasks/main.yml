@@ -1,0 +1,97 @@
+---
+- name: Check the Pulse agent settings
+  ansible.builtin.assert:
+    that:
+      - pulse_agent_token | length > 0
+    fail_msg: "Put the token of {{ inventory_hostname }} in pulse_agent_tokens in SOPS."
+  no_log: true
+
+- name: Install smartmontools and sudo
+  ansible.builtin.apt:
+    name: [smartmontools, sudo]
+    state: present
+
+# A system user with no login and no home. It owns only its state folder.
+- name: Create the user pulse-agent
+  ansible.builtin.user:
+    name: pulse-agent
+    system: true
+    shell: /usr/sbin/nologin
+    home: /var/lib/pulse-agent
+    create_home: false
+  register: pulse_agent_user
+
+# root owns the binary, so the agent cannot replace it.
+- name: Download the Pulse agent
+  ansible.builtin.get_url:
+    url: "https://github.com/rcourtman/Pulse/releases/download/{{ pulse_agent_version }}/pulse-agent-linux-amd64"
+    checksum: "sha256:https://github.com/rcourtman/Pulse/releases/download/{{ pulse_agent_version }}/pulse-agent-linux-amd64.sha256"
+    dest: /usr/local/bin/pulse-agent
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart the Pulse agent
+
+- name: Create the folder of the token
+  ansible.builtin.file:
+    path: /etc/pulse-agent
+    state: directory
+    owner: root
+    group: pulse-agent
+    mode: "0750"
+  when: not (ansible_check_mode and pulse_agent_user is changed)
+
+- name: Write the token
+  ansible.builtin.copy:
+    content: "{{ pulse_agent_token }}\n"
+    dest: /etc/pulse-agent/token
+    owner: root
+    group: pulse-agent
+    mode: "0640"
+  no_log: true
+  notify: Restart the Pulse agent
+  when: not (ansible_check_mode and pulse_agent_user is changed)
+
+- name: Create the folder of the smartctl scripts
+  ansible.builtin.file:
+    path: /usr/local/libexec/pulse-agent
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the smartctl scripts
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/libexec/pulse-agent/{{ item }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop: [smartctl, smartctl-read]
+
+- name: Let pulse-agent run smartctl-read as root
+  ansible.builtin.copy:
+    src: sudoers
+    dest: /etc/sudoers.d/pulse-agent
+    owner: root
+    group: root
+    mode: "0440"
+    validate: visudo -cf %s
+
+- name: Write the service
+  ansible.builtin.template:
+    src: pulse-agent.service.j2
+    dest: /etc/systemd/system/pulse-agent.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the Pulse agent
+
+# In check mode, the user and the unit file do not exist yet.
+- name: Start and enable the Pulse agent
+  ansible.builtin.systemd_service:
+    name: pulse-agent.service
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: not (ansible_check_mode and pulse_agent_user is changed)

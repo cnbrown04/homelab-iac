@@ -9,3 +9,27 @@ spec:
     - name: http
       port: 7655
       targetPort: http
+---
+# A direct address on VLAN 20 for the Pulse agent on each Proxmox node. The
+# agent cannot get through the Pangolin login. Only the nodes can connect:
+# the LAN IP of each node, and 10.0.20.5 of gaia on VLAN 20.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulse-agents
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.0.20.202
+  loadBalancerSourceRanges:
+    - 10.0.1.101/32
+    - 10.0.1.113/32
+    - 10.0.1.120/32
+    - 10.0.1.124/32
+    - 10.0.1.131/32
+    - 10.0.20.5/32
+  selector:
+    app: pulse
+  ports:
+    - name: http
+      port: 7655
+      targetPort: http

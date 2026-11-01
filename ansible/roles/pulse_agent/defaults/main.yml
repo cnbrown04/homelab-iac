@@ -1,0 +1,14 @@
+---
+# The agent of Pulse. It sends the SMART data and the temperatures of the host
+# to Pulse in typhon. Keep this version the same as the image of
+# typhon-cluster/apps/pulse/deployment.yaml. The agent does not update itself.
+# renovate: datasource=github-releases depName=rcourtman/Pulse
+pulse_agent_version: v6.6.0
+
+# The LoadBalancer pulse-agents in typhon. Only the Proxmox nodes can connect.
+# The agent accepts plain HTTP to a private IP.
+pulse_agent_url: http://10.0.20.202:7655
+
+# Each host has its own token, from "Install on a host" in Pulse. They are in
+# group_vars/proxmox_nodes/secrets.sops.yml.
+pulse_agent_token: "{{ pulse_agent_tokens[inventory_hostname] | default('') }}"
