@@ -45,7 +45,8 @@
     mode: "0644"
   notify: Update the initramfs
 
-# The rule takes effect at the next boot.
+# The rule creates the VFs at the next boot. The handler gives the VFs that
+# exist now to vfio-pci.
 - name: Create the VFs at boot
   ansible.builtin.template:
     src: sriov.rules.j2
@@ -53,6 +54,7 @@
     owner: root
     group: root
     mode: "0644"
+  notify: Apply the rule to the VFs
 
 # A VF exists only after the PF driver creates it. Before that, the mapping
 # has no IOMMU group and no subsystem ID, and the VM does not start. Run the

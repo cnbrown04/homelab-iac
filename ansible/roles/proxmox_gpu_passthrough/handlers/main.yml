@@ -5,3 +5,18 @@
   ansible.builtin.command:
     cmd: update-initramfs -u -k all
   changed_when: true
+
+# An "add" event for each VF runs the second rule again. The first rule does
+# not match a VF.
+- name: Apply the rule to the VFs
+  ansible.builtin.shell:
+    cmd: |
+      set -eu
+      udevadm control --reload
+      {% for pf in proxmox_gpu_passthrough_sriov %}
+      for vf in /sys/bus/pci/devices/{{ pf.path }}/virtfn*; do
+        [ -e "$vf" ] || continue
+        udevadm trigger --action=add --settle "$(readlink -f "$vf")"
+      done
+      {% endfor %}
+  changed_when: true

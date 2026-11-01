@@ -1,6 +1,10 @@
 # Ansible writes this file. See the role proxmox_gpu_passthrough.
-# When the driver binds the PF, the rule stops the host drivers from taking
-# the VFs, then creates the VFs.
+# When the driver binds the PF, the first rule stops the host drivers from
+# taking the VFs, then creates the VFs. With autoprobe off, the kernel binds a
+# VF only to the driver in its driver_override. So the second rule gives each
+# VF to vfio-pci. Proxmox binds the VF when the VM starts.
+# The VFs of an iGPU are in the same slot as the PF.
 {% for pf in proxmox_gpu_passthrough_sriov %}
 ACTION=="add|bind", SUBSYSTEM=="pci", KERNEL=="{{ pf.path }}", DRIVER=="{{ pf.driver }}", ATTR{sriov_drivers_autoprobe}="0", ATTR{sriov_numvfs}="{{ pf.vfs }}"
+ACTION=="add", SUBSYSTEM=="pci", KERNEL=="{{ pf.path[:-1] }}*", TEST=="physfn", ATTR{driver_override}="vfio-pci"
 {% endfor %}
