@@ -621,6 +621,10 @@ pages:
                 url: https://flux.buildwithcaleb.com
                 check-url: http://flux-operator.flux-system.svc.cluster.local:9080/
                 icon: di:flux-cd
+              - title: Pulse
+                url: https://pulse.buildwithcaleb.com
+                check-url: http://pulse.pulse.svc.cluster.local:7655/api/health
+                icon: di:pulse
               - title: Termix
                 url: https://termix.buildwithcaleb.com
                 check-url: http://termix.termix.svc.cluster.local:8080/health
@@ -779,6 +783,7 @@ pages:
               - Jackett/Jackett
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
+              - rcourtman/Pulse
               - karakeep-app/karakeep
               - we-promise/sure
               - chrisvel/tududi

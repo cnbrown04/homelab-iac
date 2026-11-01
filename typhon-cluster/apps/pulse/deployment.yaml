@@ -1,0 +1,72 @@
+# Pulse, the monitor of Proxmox. It reads each Proxmox node through the API,
+# with a read-only token. Pangolin puts its SSO login in front of it, and
+# Pulse keeps its own admin login.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulse
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Pulse
+    glance/icon: di:pulse
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pulse
+  template:
+    metadata:
+      labels:
+        app: pulse
+    spec:
+      # The image has the user pulse (1000). As a user that is not root, the
+      # entrypoint starts Pulse at once and changes no owner. No fsGroup.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pulse
+          image: docker.io/rcourtman/pulse:v6.6.0
+          env:
+            - name: PULSE_PUBLIC_URL
+              value: https://pulse.buildwithcaleb.com
+          ports:
+            - name: http
+              containerPort: 7655
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: tmp
+          emptyDir: {}

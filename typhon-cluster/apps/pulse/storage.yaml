@@ -1,0 +1,13 @@
+# The data of Pulse: the settings, the encrypted credentials, and the SQLite
+# history of the metrics, on the disk of a worker. SQLite must not go on NFS.
+# No backup: Pulse makes the history again, and the settings are few.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

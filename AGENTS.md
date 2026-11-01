@@ -285,6 +285,13 @@ the cluster.
     in front of its Pocket ID login. The secret `flux-web-config` holds its
     OIDC client. Members of the Pocket ID group `homelab_admin` get the role
     `flux-web-admin`.
+- Pulse is at `pulse.buildwithcaleb.com`, with the Pangolin login in front of
+  its own admin login. It monitors `pantheon` and `atlas` through the API.
+  - Each node gives Pulse the token `pulse@pve!pulse`, with the role
+    `PVEAuditor` on `/` only. The owner made it by hand, as for Glance. Do not
+    use the setup script of Pulse: it also gives `PVEDatastoreAdmin` on
+    `/storage`, which can delete backups.
+  - Its data is on `local-path`, with no backup.
 - A NetworkPolicy with `namespaceSelector: {}` does not let the Gateway in.
   The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
   with `fromEntities: [ingress]`.
