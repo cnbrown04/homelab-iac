@@ -84,12 +84,16 @@ jobs:
             echo "::group::$path"
             # A SOPS Secret has the extra key "sops", so the strict schema
             # rejects it. The workflow lint.yml checks the encryption.
+            # kubeconform cannot compile some schemas of the catalog, for
+            # example the CiliumNetworkPolicy of 1 November 2026. Then it
+            # uses the schema of the pinned commit, before that change.
             if ! kubectl kustomize "$path" | kubeconform \
                 -strict -summary -output text \
                 -kubernetes-version "$KUBERNETES_VERSION" \
                 -skip Secret \
                 -schema-location default \
                 -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+                -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/6ec4c804fcb9b0a90fec9dd468aa57b984be150a/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
                 -; then
               echo "::error::$path is not valid."
               failed=1
