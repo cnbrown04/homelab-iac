@@ -670,6 +670,22 @@ pages:
                 allow-insecure: true
                 icon: di:proxmox
 
+          # Intel AMT on the HP minis, for power control. AMT 16.1 listens on
+          # TLS only, with a self-signed certificate. The tailnet does not
+          # reach AMT, so the links work on the LAN only.
+          - type: monitor
+            title: AMT
+            cache: 1m
+            sites:
+              - title: hyperion
+                url: https://10.0.1.222:16993
+                allow-insecure: true
+                icon: si:intel
+              - title: theia
+                url: https://10.0.1.221:16993
+                allow-insecure: true
+                icon: si:intel
+
           # The file server mnemosyne on gaia, outside the cluster. OpenCloud
           # listens on the loopback address only, so the check goes through
           # Pangolin.

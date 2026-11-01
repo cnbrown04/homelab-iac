@@ -132,6 +132,11 @@ Always refer to a machine by its hostname, not by its provider.
 | `daedalus` | Development VM on `tartarus` (VMID `300`), Ubuntu 24.04. | `10.0.1.17` | MagicDNS |
 | `argus` | SIEM VM on `tartarus` (VMID `400`), Ubuntu 24.04. Runs Wazuh. | `10.0.1.18` | MagicDNS |
 
+`theia` and `hyperion` have Intel AMT (Standard Manageability, no KVM), for
+power control only. The web UI is at `https://10.0.1.221:16993` (`theia`) and
+`https://10.0.1.222:16993` (`hyperion`), with the user `admin`. AMT uses TLS
+only, and the tailnet does not reach it.
+
 Proxmox VE is 9.2 on Debian trixie. The `pantheon` cluster runs the Talos
 Kubernetes cluster `typhon`.
 The web UI of each node is at `https://<host>.vnet.buildwithcaleb.com`, with a
