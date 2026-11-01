@@ -1,16 +1,21 @@
 ---
-# The iGPU of hyperion (UHD 770) goes to the typhon worker typhon-w-3, for the
-# transcodes of Jellyfin. The host has no display driver after the reboot.
+# The iGPU of hyperion (UHD 770) uses SR-IOV. The host keeps the PF with xe,
+# so the HDMI port shows the console of the host. The typhon worker typhon-w-3
+# gets the VF 0000:00:02.1, for the transcodes of Jellyfin. The VF has the
+# same ID as the PF.
 proxmox_gpu_passthrough_devices:
   - mapping: hyperion-igpu
-    path: "0000:00:02.0"
+    path: "0000:00:02.1"
     id: "8086:4680"
-    iommugroup: 0
-    subsystem_id: "103c:8ac6"
-# i915 drives the iGPU now. xe can also take it on a new kernel.
-proxmox_gpu_passthrough_blacklist:
-  - i915
-  - xe
+    vf: true
+# xe is the PF driver of SR-IOV. i915 must not take the iGPU.
+proxmox_gpu_passthrough_module_options:
+  - i915 force_probe=!4680
+  - xe force_probe=4680
+proxmox_gpu_passthrough_sriov:
+  - path: "0000:00:02.0"
+    driver: xe
+    vfs: 1
 # The user of the OpenTofu token for pantheon attaches the mapping to the VM.
 proxmox_gpu_passthrough_users:
   - tofu@pve

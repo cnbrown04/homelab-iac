@@ -1,13 +1,25 @@
 ---
 # The PCI devices that the host gives to one VM each. Each item is
-# { mapping, path, id, iommugroup, subsystem_id }. lspci -nn -v -s <path>
-# shows the IDs. For example { mapping: hyperion-igpu, path: "0000:00:02.0",
-# id: "8086:4680", iommugroup: 0, subsystem_id: "103c:8ac6" }.
-# The role binds each device to vfio-pci and creates a cluster PCI mapping.
+# { mapping, path, id }, and optionally vf: true. lspci -nn -s <path> shows
+# the ID. For example { mapping: hyperion-igpu, path: "0000:00:02.1",
+# id: "8086:4680", vf: true }.
+# The role creates a cluster PCI mapping for each device. It reads the IOMMU
+# group and the subsystem ID from sysfs, because Proxmox checks them when a VM
+# starts. The role binds each device to vfio-pci at boot, but not a VF: a VF
+# can have the same ID as its PF. Proxmox binds a VF when the VM starts.
 proxmox_gpu_passthrough_devices: []
 
 # The host drivers that must not take the devices.
 proxmox_gpu_passthrough_blacklist: []
+
+# The options of the host drivers, one "<module> <options>" each. For
+# example "xe force_probe=4680".
+proxmox_gpu_passthrough_module_options: []
+
+# The SR-IOV devices. Each item is { path, driver, vfs }. When the driver
+# binds the physical function (PF), a udev rule creates the VFs. The host
+# drivers do not take the VFs, so the VFs stay free for the VMs.
+proxmox_gpu_passthrough_sriov: []
 
 # The users that can attach the mapped devices to a VM, for example tofu@pve.
 # Without a mapping, only root@pam can attach a device. Give the rule to the

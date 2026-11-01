@@ -153,7 +153,7 @@ the cluster.
 | `typhon-cp-1` | `501` | `gaia` | `10.0.20.11` |
 | `typhon-w-1` | `511` | `gaia` | `10.0.20.21` |
 | `typhon-w-2` | `512` | `gaia` | `10.0.20.22` |
-| `typhon-w-3` | `513` | `hyperion` | `10.0.20.23`, with the iGPU of `hyperion` |
+| `typhon-w-3` | `513` | `hyperion` | `10.0.20.23`, with a VF of the iGPU of `hyperion` |
 | `typhon-w-4` | `514` | `hyperion` | `10.0.20.24` |
 
 - The cluster has one control plane. `gaia` holds the NFS storage, so `gaia`
@@ -185,6 +185,12 @@ the cluster.
     delete the pod and the claim `config`. The init container copies it.
 - Jellyfin is at `jellyfin.buildwithcaleb.com`, with no Pangolin login. It
   runs on `typhon-w-3` only, for the iGPU of `hyperion`.
+  - The iGPU uses SR-IOV. The host keeps the PF with `xe`, so the HDMI port
+    of `hyperion` shows the host console. `typhon-w-3` gets the VF
+    `0000:00:02.1`. Jellyfin asks for `gpu.intel.com/xe`.
+  - A udev rule makes the VF when `xe` binds the PF. After a reboot of
+    `hyperion`, run the role `proxmox_gpu_passthrough` if the IOMMU group of
+    the VF changes. The mapping must match it, or the VM does not start.
   - The libraries are in `/lethe/data/media`, mounted at `/media`. The
     transcodes go to the dataset `lethe/data/media/transcode`, which user
     1000 owns. The metadata is in `/lethe/k8s/jellyfin/metadata`. The SQLite

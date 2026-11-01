@@ -10,8 +10,10 @@ locals {
   talos_schematics = {
     # siderolabs/qemu-guest-agent
     base = "ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515"
-    # siderolabs/i915, siderolabs/intel-ucode, siderolabs/qemu-guest-agent
-    intel_gpu = "95d432d6bb450a67e801a6ae77c96a67e38820b62ba4159ae7e997e1695207f7"
+    # siderolabs/i915, siderolabs/intel-ucode, siderolabs/qemu-guest-agent,
+    # siderolabs/xe, and the kernel arguments i915.force_probe=!4680 and
+    # xe.force_probe=4680
+    intel_gpu = "0f1f5afabac7624ba0e08250e90c30920cb1ee7a6e872a610e756b3a49e5f037"
   }
 
   # The schematic of each node that runs a Talos VM.

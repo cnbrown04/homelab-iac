@@ -49,8 +49,9 @@ locals {
       disks          = [{ interface = "scsi0", datastore_id = "local-lvm", size = 32, import_from = proxmox_download_file.talos["gaia"].id }]
       initialization = merge(local.typhon_network, { ipv4_address = "10.0.20.22/24" })
     })
-    # The iGPU of hyperion, for the transcodes of Jellyfin. Ansible creates the
-    # mapping. See the role proxmox_gpu_passthrough.
+    # A VF of the iGPU of hyperion, for the transcodes of Jellyfin. Ansible
+    # creates the VF and the mapping. See the role proxmox_gpu_passthrough. A
+    # VF has no option ROM, so rombar is off.
     typhon-w-3 = merge(local.typhon, {
       node_name      = "hyperion"
       vm_id          = 513
@@ -59,7 +60,7 @@ locals {
       memory_mb      = 6144
       disks          = [{ interface = "scsi0", datastore_id = "local-lvm", size = 32, import_from = proxmox_download_file.talos["hyperion"].id }]
       initialization = merge(local.typhon_network, { ipv4_address = "10.0.20.23/24" })
-      pci_mappings   = [{ mapping = "hyperion-igpu" }]
+      pci_mappings   = [{ mapping = "hyperion-igpu", rombar = false }]
     })
     typhon-w-4 = merge(local.typhon, {
       node_name      = "hyperion"

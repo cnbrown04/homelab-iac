@@ -5,13 +5,23 @@
       - item.mapping is match('^[a-z0-9-]+$')
       - item.path is match('^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]$')
       - item.id is match('^[0-9a-f]{4}:[0-9a-f]{4}$')
-      - item.iommugroup is integer
-      - item.subsystem_id is match('^[0-9a-f]{4}:[0-9a-f]{4}$')
-    fail_msg: "A device needs a mapping name, a PCI path, a vendor:device ID, an IOMMU group, and a subsystem ID."
+    fail_msg: "A device needs a mapping name, a PCI path, and a vendor:device ID."
     quiet: true
   loop: "{{ proxmox_gpu_passthrough_devices }}"
   loop_control:
     label: "{{ item.mapping | default('?') }}"
+
+- name: Check the SR-IOV settings
+  ansible.builtin.assert:
+    that:
+      - item.path is match('^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\.[0-7]$')
+      - item.driver is match('^[a-z0-9_]+$')
+      - item.vfs is integer and item.vfs > 0
+    fail_msg: "An SR-IOV device needs a PCI path, a driver, and a number of VFs."
+    quiet: true
+  loop: "{{ proxmox_gpu_passthrough_sriov }}"
+  loop_control:
+    label: "{{ item.path | default('?') }}"
 
 - name: Load the VFIO modules at boot
   ansible.builtin.copy:
@@ -34,6 +44,41 @@
     group: root
     mode: "0644"
   notify: Update the initramfs
+
+# The rule takes effect at the next boot.
+- name: Create the VFs at boot
+  ansible.builtin.template:
+    src: sriov.rules.j2
+    dest: /etc/udev/rules.d/70-proxmox-gpu-sriov.rules
+    owner: root
+    group: root
+    mode: "0644"
+
+# A VF exists only after the PF driver creates it. Before that, the mapping
+# has no IOMMU group and no subsystem ID, and the VM does not start. Run the
+# role again after the reboot.
+- name: Read the IOMMU group and the subsystem ID of each device
+  ansible.builtin.shell:
+    cmd: |
+      set -eu
+      d=/sys/bus/pci/devices/{{ item.path }}
+      [ -e "$d/iommu_group" ] || exit 0
+      printf '%s %s:%s\n' "$(basename "$(readlink "$d/iommu_group")")" \
+        "$(sed 's/^0x//' "$d/subsystem_vendor")" "$(sed 's/^0x//' "$d/subsystem_device")"
+  register: proxmox_gpu_passthrough_sysfs
+  changed_when: false
+  check_mode: false
+  loop: "{{ proxmox_gpu_passthrough_devices }}"
+  loop_control:
+    label: "{{ item.mapping }}"
+
+- name: Tell the owner about a device that does not exist yet
+  ansible.builtin.debug:
+    msg: "{{ item.item.path }} does not exist yet. Reboot the host, then run the role again."
+  loop: "{{ proxmox_gpu_passthrough_sysfs.results }}"
+  loop_control:
+    label: "{{ item.item.mapping }}"
+  when: item.stdout | trim | length == 0
 
 # The mappings are data of the cluster, in /etc/pve. Each node can write them.
 - name: Read the PCI mappings

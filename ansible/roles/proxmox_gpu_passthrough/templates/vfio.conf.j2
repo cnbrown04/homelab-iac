@@ -1,6 +1,12 @@
 # Ansible writes this file. See the role proxmox_gpu_passthrough.
-options vfio-pci ids={{ proxmox_gpu_passthrough_devices | map(attribute='id') | unique | join(',') }}
+{% set vfio_ids = proxmox_gpu_passthrough_devices | rejectattr('vf', 'defined') | map(attribute='id') | unique | list %}
+{% if vfio_ids | length > 0 %}
+options vfio-pci ids={{ vfio_ids | join(',') }}
+{% endif %}
 {% for driver in proxmox_gpu_passthrough_blacklist %}
 softdep {{ driver }} pre: vfio-pci
 blacklist {{ driver }}
+{% endfor %}
+{% for option in proxmox_gpu_passthrough_module_options %}
+options {{ option }}
 {% endfor %}

@@ -1,0 +1,6 @@
+# Ansible writes this file. See the role proxmox_gpu_passthrough.
+# When the driver binds the PF, the rule stops the host drivers from taking
+# the VFs, then creates the VFs.
+{% for pf in proxmox_gpu_passthrough_sriov %}
+ACTION=="add|bind", SUBSYSTEM=="pci", KERNEL=="{{ pf.path }}", DRIVER=="{{ pf.driver }}", ATTR{sriov_drivers_autoprobe}="0", ATTR{sriov_numvfs}="{{ pf.vfs }}"
+{% endfor %}

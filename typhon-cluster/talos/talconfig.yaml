@@ -119,7 +119,10 @@ nodes:
           - network: 0.0.0.0/0
             gateway: 10.0.20.1
 
-  # The iGPU of hyperion, for the transcodes of Jellyfin.
+  # A VF of the iGPU of hyperion, for the transcodes of Jellyfin. Only xe
+  # drives a VF, and xe takes the UHD 770 only with force_probe. The GuC and
+  # DMC firmware of the UHD 770 is in the i915 extension, not in the xe
+  # extension. So the node has both, and i915 must not take the iGPU.
   - hostname: typhon-w-3
     ipAddress: 10.0.20.23
     controlPlane: false
@@ -131,11 +134,15 @@ nodes:
       homelab/gpu: intel
     schematic: &intel_gpu
       customization:
+        extraKernelArgs:
+          - i915.force_probe=!4680
+          - xe.force_probe=4680
         systemExtensions:
           officialExtensions:
             - siderolabs/i915
             - siderolabs/intel-ucode
             - siderolabs/qemu-guest-agent
+            - siderolabs/xe
     nameservers: [10.0.20.1]
     networkInterfaces:
       - deviceSelector:
