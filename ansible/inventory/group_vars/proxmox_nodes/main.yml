@@ -40,4 +40,5 @@ reboot_if_needed_times:
   atlas: "03:40"
   hyperion: "04:00"
   gaia: "04:30"
+reboot_if_needed_proxmox_kernel: true
 reboot_if_needed_calendar: "Wed *-*-* {{ reboot_if_needed_times[inventory_hostname] }}:00 America/Chicago"

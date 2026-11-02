@@ -2,6 +2,11 @@
 [Unit]
 Description=Reboot if an update needs it
 
+# A oneshot service has no start timeout. If the kernel install fails, the
+# service fails and the host does not reboot.
 [Service]
 Type=oneshot
+{% if reboot_if_needed_proxmox_kernel | bool %}
+ExecStartPre=/usr/local/sbin/proxmox-kernel-upgrade
+{% endif %}
 ExecStart=/usr/local/sbin/reboot-if-needed {{ reboot_if_needed_packages | join(' ') }}

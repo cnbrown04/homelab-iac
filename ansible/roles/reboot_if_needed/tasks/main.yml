@@ -19,6 +19,21 @@
     group: root
     mode: "0755"
 
+- name: Install the script of the Proxmox kernel
+  ansible.builtin.copy:
+    src: proxmox-kernel-upgrade
+    dest: /usr/local/sbin/proxmox-kernel-upgrade
+    owner: root
+    group: root
+    mode: "0755"
+  when: reboot_if_needed_proxmox_kernel | bool
+
+- name: Delete the script of the Proxmox kernel
+  ansible.builtin.file:
+    path: /usr/local/sbin/proxmox-kernel-upgrade
+    state: absent
+  when: not (reboot_if_needed_proxmox_kernel | bool)
+
 - name: Write the units of the reboot check
   ansible.builtin.template:
     src: "reboot-if-needed.{{ item }}.j2"

@@ -545,9 +545,10 @@ the cluster.
   node of `pantheon` does not reboot while a node of the cluster is down.
 - The reboot of a Proxmox node stops its VMs. Each reboot of `hyperion` can
   change the IOMMU group of the VF. Then run `proxmox_gpu_passthrough`.
-- unattended-upgrades on a Proxmox node installs only Debian-Security. A new
-  Proxmox kernel comes only from a manual upgrade, so the check then
-  reboots the node on the next Wednesday.
+- unattended-upgrades on a Proxmox node installs only Debian-Security. So
+  the check on a Proxmox node first installs the newest Proxmox kernel
+  (`reboot_if_needed_proxmox_kernel`). Only `proxmox-default-kernel` and
+  `proxmox-kernel-<series>` change. The rest of Proxmox VE stays manual.
 - The Talos nodes have no check. A Talos kernel comes only with
   `talosctl upgrade`, which drains and reboots each node itself.
 
@@ -864,7 +865,9 @@ mise run plan:pantheon
   fixed kernel yet. The role `ip_options_filter` on `hermes` drops each IPv4
   TCP packet with IP options. When Ubuntu ships the fix in `linux`
   6.8.0-149 or later, reboot `hermes` into it, then delete the role. The
-  Proxmox nodes need `proxmox-kernel` 7.0.14-25 or later.
+  Proxmox nodes need `proxmox-kernel` 7.0.14-25 or later. The check of
+  `reboot_if_needed` installs 7.0.14-26 or later on Wednesday 4 November
+  2026, and reboots each node. After that, run `uname -r` on each node.
 
 ### Do not
 

@@ -11,3 +11,9 @@ reboot_if_needed_packages:
   - dbus
   - intel-microcode
   - amd64-microcode
+
+# Install the newest Proxmox kernel just before the check. unattended-upgrades
+# installs only Debian-Security, and the Proxmox kernel comes from the
+# repository of Proxmox. Only the kernel packages change, not the rest of
+# Proxmox VE.
+reboot_if_needed_proxmox_kernel: false
