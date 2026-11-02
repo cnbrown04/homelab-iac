@@ -777,6 +777,15 @@ mise run plan:pantheon
   health endpoint must listen on the pod IP.
 - tailscaled sets the mode of its state folder. Put the state in a folder in
   the volume, not at the root, because the user does not own the root.
+- The module `vm` sets `reboot_after_update = false`. A change that needs a
+  reboot stays pending in Proxmox, and the apply gives a warning. Reboot each
+  VM in turn with `qm reboot <vmid>`, which starts a new QEMU process. A
+  reboot inside the guest, for example `talosctl reboot`, keeps the old
+  process, so the change stays pending.
+- Each VM has the balloon device (`floating` = `dedicated`), so the guest
+  reports its memory to Proxmox. The balloon never shrinks the VM. Proxmox
+  counts the page cache as used (Proxmox bug 7493, and Talos issue 14670 for
+  the balloon in Talos), so the value is higher than `MemAvailable` shows.
 - Do not use the Ubuntu 26.04 cloud image. Its initramfs (dracut) starts
   DHCP, so cloud-init cannot set the static IP. Use 24.04.
 - A change to `import_from` does not replace a VM. To make a VM again from a

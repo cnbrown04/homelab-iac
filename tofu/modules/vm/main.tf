@@ -36,9 +36,19 @@ resource "proxmox_virtual_environment_vm" "this" {
     type  = var.cpu_type
   }
 
+  # floating = dedicated adds the balloon device, but the balloon never
+  # shrinks the VM. The guest sends its memory use through the device, so the
+  # Proxmox UI shows the memory of the guest and not the RAM of the QEMU
+  # process. Proxmox counts the page cache as used (Proxmox bug 7493).
   memory {
     dedicated = var.memory_mb
+    floating  = var.memory_mb
   }
+
+  # The provider must not power off a VM to apply a change, because one apply
+  # can change all the VMs at the same time. Such a change stays pending, and
+  # the owner reboots each VM in turn.
+  reboot_after_update = false
 
   dynamic "efi_disk" {
     for_each = var.efi_disk == null ? [] : [var.efi_disk]
