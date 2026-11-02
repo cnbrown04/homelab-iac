@@ -36,6 +36,11 @@ spec:
           env:
             - name: PULSE_PUBLIC_URL
               value: https://pulse.buildwithcaleb.com
+            # local-path gives root the folder /data, and Pulse refuses a
+            # metrics folder that it does not own. Pulse makes this subfolder
+            # itself, so it owns it. Without it, Pulse keeps no history.
+            - name: PULSE_METRICS_DB_PATH
+              value: /data/metrics/metrics.db
           ports:
             - name: http
               containerPort: 7655
