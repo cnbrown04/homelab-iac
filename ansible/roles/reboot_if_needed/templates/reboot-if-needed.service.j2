@@ -1,0 +1,7 @@
+# Ansible manages this file. See the role reboot_if_needed.
+[Unit]
+Description=Reboot if an update needs it
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/reboot-if-needed {{ reboot_if_needed_packages | join(' ') }}

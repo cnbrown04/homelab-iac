@@ -1,0 +1,13 @@
+# Ansible manages this file. See the role reboot_if_needed.
+[Unit]
+Description=Weekly check for a necessary reboot
+
+# Persistent is off. A host that was off at the time does not reboot at its
+# next start.
+[Timer]
+OnCalendar={{ reboot_if_needed_calendar }}
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

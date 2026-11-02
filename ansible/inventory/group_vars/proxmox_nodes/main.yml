@@ -29,3 +29,15 @@ proxmox_web_cloudflare_token: "{{ proxmox_cloudflare_dns_token }}"
 proxmox_web_oidc_issuer: https://auth.buildwithcaleb.com
 proxmox_web_oidc_client_id: "{{ proxmox_oidc_client_id }}"
 proxmox_web_oidc_client_secret: "{{ proxmox_oidc_client_secret }}"
+
+# The weekly check for a necessary reboot, on Wednesday night. The VMs and
+# hermes do their check on Sunday night. The nodes go in turn, and gaia goes
+# last, because it holds the NFS storage and the control plane of typhon. The
+# VMs on a node stop with the node. See the role reboot_if_needed.
+reboot_if_needed_times:
+  tartarus: "03:00"
+  theia: "03:20"
+  atlas: "03:40"
+  hyperion: "04:00"
+  gaia: "04:30"
+reboot_if_needed_calendar: "Wed *-*-* {{ reboot_if_needed_times[inventory_hostname] }}:00 America/Chicago"

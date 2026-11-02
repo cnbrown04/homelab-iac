@@ -33,3 +33,6 @@ opencloud_oidc_issuer: https://auth.buildwithcaleb.com
 
 # The Newt site mnemosyne in Pangolin. secrets.sops.yml holds newt_secret.
 newt_id: 55nffwaowymropt
+
+# The weekly check for a necessary reboot. See the role reboot_if_needed.
+reboot_if_needed_calendar: "Sun *-*-* 03:00:00 America/Chicago"

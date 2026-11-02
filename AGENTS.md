@@ -531,6 +531,26 @@ the cluster.
   `homelab-hermes-backup`. `/etc/restic/backup.env` holds the settings. Start
   a backup with `sudo systemctl start backup.service`.
 
+### The automatic reboots
+
+- A host reboots on its own only when an installed update needs a reboot.
+  The owner chose this on 1 November 2026. Do not add a reboot at a fixed
+  interval.
+- The role `reboot_if_needed` runs a weekly check on each Proxmox node, VM,
+  and `hermes`. It reboots for a newer kernel, for `/run/reboot-required`,
+  or for a package in `reboot_if_needed_packages` that changed after the
+  boot.
+- The VMs and `hermes` do their check on Sunday from 03:00 CT. The Proxmox
+  nodes do their check on Wednesday from 03:00 CT, with `gaia` last. A
+  node of `pantheon` does not reboot while a node of the cluster is down.
+- The reboot of a Proxmox node stops its VMs. Each reboot of `hyperion` can
+  change the IOMMU group of the VF. Then run `proxmox_gpu_passthrough`.
+- unattended-upgrades on a Proxmox node installs only Debian-Security. A new
+  Proxmox kernel comes only from a manual upgrade, so the check then
+  reboots the node on the next Wednesday.
+- The Talos nodes have no check. A Talos kernel comes only with
+  `talosctl upgrade`, which drains and reboots each node itself.
+
 ### Decisions
 
 These decisions are closed. Ask the owner before you re-open one.

@@ -432,3 +432,8 @@ backup_paths:
   - /opt/stacks/pocket-id/data
 backup_excludes:
   - /opt/stacks/pangolin/config/traefik/logs
+
+# The weekly check for a necessary reboot, after the VMs. A reboot stops each
+# public service and the control server of the tailnet for about 2 minutes.
+# See the role reboot_if_needed.
+reboot_if_needed_calendar: "Sun *-*-* 03:40:00 America/Chicago"

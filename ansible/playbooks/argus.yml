@@ -21,6 +21,8 @@
       tags: [security]
     - role: unattended_upgrades
       tags: [security]
+    - role: reboot_if_needed
+      tags: [security]
     - role: tailscale
       tags: [tailscale]
     # The manager watches its own host, so argus gets no agent.

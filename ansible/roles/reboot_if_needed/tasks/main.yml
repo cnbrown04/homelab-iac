@@ -1,0 +1,39 @@
+---
+- name: Check the time of the reboot check
+  ansible.builtin.assert:
+    that:
+      - reboot_if_needed_calendar | length > 0
+    fail_msg: "Set reboot_if_needed_calendar for {{ inventory_hostname }}."
+
+- name: Check the format of the time
+  ansible.builtin.command:
+    argv: [systemd-analyze, calendar, "{{ reboot_if_needed_calendar }}"]
+  changed_when: false
+  check_mode: false
+
+- name: Install the reboot script
+  ansible.builtin.copy:
+    src: reboot-if-needed
+    dest: /usr/local/sbin/reboot-if-needed
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the units of the reboot check
+  ansible.builtin.template:
+    src: "reboot-if-needed.{{ item }}.j2"
+    dest: "/etc/systemd/system/reboot-if-needed.{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: [service, timer]
+  register: reboot_if_needed_units
+
+# The service must not start here. Only the timer starts it.
+- name: Enable the timer of the reboot check
+  ansible.builtin.systemd_service:
+    name: reboot-if-needed.timer
+    enabled: true
+    state: started
+    daemon_reload: "{{ reboot_if_needed_units is changed }}"
+  when: not (ansible_check_mode and reboot_if_needed_units is changed)

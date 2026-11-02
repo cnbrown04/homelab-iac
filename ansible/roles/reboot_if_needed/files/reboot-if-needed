@@ -1,0 +1,66 @@
+#!/bin/bash
+# Ansible writes this file. See the role reboot_if_needed.
+# Reboot the host only if an installed update needs a reboot. The arguments
+# are the packages that need a reboot after a change.
+set -euo pipefail
+
+log() {
+  logger -t reboot-if-needed -- "$*"
+  echo "$*"
+}
+
+reasons=()
+boot=$(awk '/^btime/ { print $2 }' /proc/stat)
+running=$(uname -r)
+
+# Ubuntu writes this file when a package needs a reboot.
+if [[ -e /run/reboot-required ]]; then
+  pkgs=$(sort -u /run/reboot-required.pkgs 2>/dev/null | tr '\n' ' ' || true)
+  reasons+=("/run/reboot-required (${pkgs:-no list})")
+fi
+
+# A newer kernel is installed. The owner can pin a kernel with
+# proxmox-boot-tool. Then the newest kernel does not boot.
+if [[ ! -e /etc/kernel/proxmox-boot-pin ]]; then
+  newest=$(find /boot -maxdepth 1 -name 'vmlinuz-*' -printf '%f\n' |
+    sed 's/^vmlinuz-//' | sort -V | tail -n 1)
+  if [[ -n $newest && $newest != "$running" ]]; then
+    reasons+=("the kernel $newest is installed, and $running runs")
+  fi
+fi
+
+# A package changed after the boot. dpkg writes the file list of a package
+# at each install, so its time is the time of the install. The package of
+# the running kernel is in the list, because Debian can update a kernel and
+# keep its name.
+kernel_pkg=$(dpkg -S "/boot/vmlinuz-$running" 2>/dev/null | cut -d: -f1 || true)
+for pkg in "$@" $kernel_pkg; do
+  for list in "/var/lib/dpkg/info/$pkg.list" "/var/lib/dpkg/info/$pkg:amd64.list"; do
+    if [[ -e $list && $(stat -c %Y "$list") -gt $boot ]]; then
+      reasons+=("the package $pkg changed after the boot")
+    fi
+  done
+done
+
+if [[ ${#reasons[@]} -eq 0 ]]; then
+  log "No update needs a reboot."
+  exit 0
+fi
+for reason in "${reasons[@]}"; do
+  log "A reboot is necessary: $reason."
+done
+
+# A node of pantheon reboots only when each node of the cluster is up. If a
+# node did not come back from its reboot, the cluster then keeps its quorum.
+if [[ -e /etc/pve/corosync.conf ]]; then
+  status=$(pvecm status)
+  expected=$(awk -F: '/Expected votes/ { gsub(/ /, "", $2); print $2 }' <<<"$status")
+  total=$(awk -F: '/Total votes/ { gsub(/ /, "", $2); print $2 }' <<<"$status")
+  if [[ -z $expected || $expected != "$total" ]]; then
+    log "The cluster has ${total:-0} of ${expected:-?} votes. No reboot."
+    exit 1
+  fi
+fi
+
+log "Reboot now."
+systemctl reboot

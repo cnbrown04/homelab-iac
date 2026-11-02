@@ -19,3 +19,6 @@ wazuh_server_oidc_client_id: 770d7265-0ee4-4e40-a29f-4c6c52c209aa
 
 # The Newt site argus in Pangolin. secrets.sops.yml holds newt_secret.
 newt_id: lfw3ixjucmolhjv
+
+# The weekly check for a necessary reboot. See the role reboot_if_needed.
+reboot_if_needed_calendar: "Sun *-*-* 03:20:00 America/Chicago"

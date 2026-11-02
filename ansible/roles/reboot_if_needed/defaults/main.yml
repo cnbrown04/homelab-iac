@@ -1,0 +1,13 @@
+---
+# The time of the weekly check, as a systemd OnCalendar value. The host
+# reboots at this time only if an update needs a reboot. Each host gets its
+# own time in the inventory, so two hosts do not reboot together.
+reboot_if_needed_calendar: ""
+
+# A reboot is necessary when one of these packages changed after the boot.
+# The processes keep the old code until a reboot.
+reboot_if_needed_packages:
+  - libc6
+  - dbus
+  - intel-microcode
+  - amd64-microcode

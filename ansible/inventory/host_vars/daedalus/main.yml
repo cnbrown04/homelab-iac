@@ -93,3 +93,6 @@ dev_tools_ghostty_terminfo: true
 # The neovim and tmux configs of the desktop, from roles/dev_tools/files/dotfiles.
 dev_tools_nvim_config: true
 dev_tools_tmux_config: true
+
+# The weekly check for a necessary reboot. See the role reboot_if_needed.
+reboot_if_needed_calendar: "Sun *-*-* 03:10:00 America/Chicago"
