@@ -36,7 +36,8 @@ spec:
             - --url=http://pulse.pulse.svc.cluster.local:7655
             - --agent-id=typhon
             - --kubeconfig=/etc/pulse-agent/config
-            - --state-dir=/state
+            # The agent makes this folder itself, so it owns it and can set its mode.
+            - --state-dir=/state/agent
             - --command-authority=monitoring-only
             - --enable-host=false
             - --enable-docker=false
