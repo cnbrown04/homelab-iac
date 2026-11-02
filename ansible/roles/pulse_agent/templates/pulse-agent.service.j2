@@ -6,13 +6,15 @@ After=network-online.target
 StartLimitIntervalSec=0
 
 # The agent runs as pulse-agent, not root. Its only root access is sudo for
-# smartctl-read. Commands from Pulse, Docker, the Proxmox token setup, SSH to
-# the other nodes, and the self-update are off.
+# smartctl-read, if SMART is on. Commands from Pulse, Docker, the Proxmox
+# token setup, SSH to the other nodes, and the self-update are off.
 [Service]
 Type=simple
 User=pulse-agent
 Group=pulse-agent
+{% if pulse_agent_smart | bool %}
 Environment=PULSE_SMARTCTL_PATH=/usr/local/libexec/pulse-agent/smartctl
+{% endif %}
 ExecStart=/usr/local/bin/pulse-agent \
   --url {{ pulse_agent_url }} \
   --token-file /etc/pulse-agent/token \
@@ -30,9 +32,13 @@ RestartSec=5s
 UMask=0077
 StateDirectory=pulse-agent
 StateDirectoryMode=0700
-# sudo needs new privileges, so NoNewPrivileges stays off. The rest of the
-# system folders are read-only for the agent.
+{% if pulse_agent_smart | bool %}
+# sudo needs new privileges, so NoNewPrivileges stays off.
 NoNewPrivileges=false
+{% else %}
+NoNewPrivileges=true
+{% endif %}
+# The system folders are read-only for the agent.
 ProtectSystem=full
 ProtectHome=read-only
 PrivateTmp=true

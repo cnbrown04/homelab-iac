@@ -10,3 +10,7 @@ tailscale_extra_up_args:
 # With a subnet, the role turns on IPv4 forwarding. The policy of Headscale
 # must approve each route.
 tailscale_advertise_routes: []
+
+# Use the subnet routes of the other nodes. hermes uses the route of gaia to
+# reach Pulse in typhon. The policy of Headscale still limits each connection.
+tailscale_accept_routes: false

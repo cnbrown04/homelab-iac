@@ -29,12 +29,18 @@ ssh_key_sources:
 docker_users:
   - caleb
 
-# hermes joins the tailnet only to reach Wazuh on argus. The policy gives
-# tag:hermes TCP 1514 and 1515 on tag:siem, and nothing more. See
+# hermes joins the tailnet only to reach Wazuh on argus and Pulse in typhon.
+# The policy gives tag:hermes TCP 1514 and 1515 on tag:siem, TCP 7655 on
+# 10.0.20.202 through the route of gaia, and nothing more. See
 # playbooks/hermes_tailnet.yml.
 tailscale_login_server: https://vpn.buildwithcaleb.com
 tailscale_tags:
   - tag:hermes
+tailscale_accept_routes: true
+
+# The disks of the VPS are virtual, so the Pulse agent gets no SMART and no
+# sudo rule.
+pulse_agent_smart: false
 
 # The tailnet address of argus. Public DNS sends *.vnet.buildwithcaleb.com to
 # hermes, so the agent cannot use the MagicDNS name.

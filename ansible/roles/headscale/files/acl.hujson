@@ -51,5 +51,13 @@
       "dst": ["tag:siem"],
       "ip": ["tcp:1514", "tcp:1515"],
     },
+
+    // The Pulse agent on hermes sends its reports to the LoadBalancer of
+    // Pulse in typhon, through the route of gaia. Only that address and port.
+    {
+      "src": ["tag:hermes"],
+      "dst": ["10.0.20.202/32"],
+      "ip": ["tcp:7655"],
+    },
   ],
 }

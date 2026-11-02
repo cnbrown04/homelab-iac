@@ -306,6 +306,9 @@ the cluster.
     nodes can connect.
   - Each node has its own agent token, from "Install on a host" in Pulse, in
     `pulse_agent_tokens`. Keep `pulse_agent_version` the same as the image.
+  - The agent on `hermes` reaches Pulse through the tailnet and the route of
+    `gaia`. It has no SMART and no sudo rule (`pulse_agent_smart: false`).
+    The pipeline of `hermes` applies it.
 - A NetworkPolicy with `namespaceSelector: {}` does not let the Gateway in.
   The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
   with `fromEntities: [ingress]`.
@@ -427,9 +430,13 @@ the cluster.
   `1514`, and enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus`
   has no agent, because the manager watches its own host. Talos nodes get no
   agent.
-- `hermes` joins the tailnet as `tag:hermes` only for Wazuh. Its agent uses
-  the tailnet address of `argus`, `100.64.0.112`. The policy gives
-  `tag:hermes` TCP `1514` and `1515` on `tag:siem`, and nothing more.
+- `hermes` joins the tailnet as `tag:hermes` only for Wazuh and Pulse. Its
+  Wazuh agent uses the tailnet address of `argus`, `100.64.0.112`. The policy
+  gives `tag:hermes` TCP `1514` and `1515` on `tag:siem`, TCP `7655` on
+  `10.0.20.202`, and nothing more.
+  - `hermes` accepts the subnet routes (`tailscale_accept_routes`), so it
+    reaches Pulse through the route of `gaia`. `gaia` uses SNAT, so Pulse sees
+    `10.0.20.5`.
   - `playbooks/hermes_tailnet.yml` runs after `headscale.yml`, because
     Headscale must have the tag in its policy before it makes the join key.
     The pipeline of `hermes` applies it.
@@ -675,7 +682,7 @@ mise run plan:pantheon
   | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens, the PlanetScale service token |
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb`, the enrollment password of Wazuh |
   | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client, the token of the Pulse agent of each node |
-  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
+  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner, the token of the Pulse agent |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user, the secret of the Newt site `mnemosyne` |
   | `ansible/inventory/host_vars/daedalus/secrets.sops.yml` | The logins of Claude Code and opencode for `caleb` |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |

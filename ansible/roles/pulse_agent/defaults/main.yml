@@ -5,10 +5,15 @@
 # renovate: datasource=github-releases depName=rcourtman/Pulse
 pulse_agent_version: v6.6.0
 
-# The LoadBalancer pulse-agents in typhon. Only the Proxmox nodes can connect.
+# The LoadBalancer pulse-agents in typhon. Only the Proxmox nodes can connect,
+# and hermes through the subnet route of gaia.
 # The agent accepts plain HTTP to a private IP.
 pulse_agent_url: http://10.0.20.202:7655
 
 # Each host has its own token, from "Install on a host" in Pulse. They are in
-# group_vars/proxmox_nodes/secrets.sops.yml.
+# group_vars/proxmox_nodes/secrets.sops.yml and host_vars/hermes/secrets.sops.yml.
 pulse_agent_token: "{{ pulse_agent_tokens[inventory_hostname] | default('') }}"
+
+# Give the agent SMART through a sudo rule for smartctl-read. Turn it off on a
+# host with no real disks.
+pulse_agent_smart: true

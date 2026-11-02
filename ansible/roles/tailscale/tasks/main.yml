@@ -138,3 +138,15 @@
     tailscale_needs_join | bool
     or ((tailscale_prefs.stdout | from_json).AdvertiseRoutes | default([], true) | sort)
        != (tailscale_advertise_routes | sort)
+
+- name: Set the use of the subnet routes
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - set
+      - --accept-routes={{ tailscale_accept_routes | bool | lower }}
+  changed_when: true
+  when: >-
+    tailscale_needs_join | bool
+    or ((tailscale_prefs.stdout | from_json).RouteAll | default(false) | bool)
+       != (tailscale_accept_routes | bool)

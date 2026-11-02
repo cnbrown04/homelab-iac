@@ -6,11 +6,6 @@
     fail_msg: "Put the token of {{ inventory_hostname }} in pulse_agent_tokens in SOPS."
   no_log: true
 
-- name: Install smartmontools and sudo
-  ansible.builtin.apt:
-    name: [smartmontools, sudo]
-    state: present
-
 # A system user with no login and no home. It owns only its state folder.
 - name: Create the user pulse-agent
   ansible.builtin.user:
@@ -52,31 +47,48 @@
   notify: Restart the Pulse agent
   when: not (ansible_check_mode and pulse_agent_user is changed)
 
-- name: Create the folder of the smartctl scripts
+# SMART needs root. A host with no real disks, for example a VPS, gets no
+# sudo rule.
+- name: Give the agent the SMART data
+  when: pulse_agent_smart | bool
+  block:
+    - name: Install smartmontools and sudo
+      ansible.builtin.apt:
+        name: [smartmontools, sudo]
+        state: present
+
+    - name: Create the folder of the smartctl scripts
+      ansible.builtin.file:
+        path: /usr/local/libexec/pulse-agent
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Write the smartctl scripts
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/usr/local/libexec/pulse-agent/{{ item }}"
+        owner: root
+        group: root
+        mode: "0755"
+      loop: [smartctl, smartctl-read]
+
+    - name: Let pulse-agent run smartctl-read as root
+      ansible.builtin.copy:
+        src: sudoers
+        dest: /etc/sudoers.d/pulse-agent
+        owner: root
+        group: root
+        mode: "0440"
+        validate: visudo -cf %s
+
+- name: Delete the sudo rule and the smartctl scripts
   ansible.builtin.file:
-    path: /usr/local/libexec/pulse-agent
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Write the smartctl scripts
-  ansible.builtin.copy:
-    src: "{{ item }}"
-    dest: "/usr/local/libexec/pulse-agent/{{ item }}"
-    owner: root
-    group: root
-    mode: "0755"
-  loop: [smartctl, smartctl-read]
-
-- name: Let pulse-agent run smartctl-read as root
-  ansible.builtin.copy:
-    src: sudoers
-    dest: /etc/sudoers.d/pulse-agent
-    owner: root
-    group: root
-    mode: "0440"
-    validate: visudo -cf %s
+    path: "{{ item }}"
+    state: absent
+  loop: [/etc/sudoers.d/pulse-agent, /usr/local/libexec/pulse-agent]
+  when: not (pulse_agent_smart | bool)
 
 - name: Write the service
   ansible.builtin.template:
