@@ -543,8 +543,9 @@ the cluster.
 - The VMs and `hermes` do their check on Sunday from 03:00 CT. The Proxmox
   nodes do their check on Wednesday from 03:00 CT, with `gaia` last. A
   node of `pantheon` does not reboot while a node of the cluster is down.
-- The reboot of a Proxmox node stops its VMs. Each reboot of `hyperion` can
-  change the IOMMU group of the VF. Then run `proxmox_gpu_passthrough`.
+- The reboot of a Proxmox node stops its VMs, and `onboot` starts them
+  again. The VF of `hyperion` kept the IOMMU group `10` in each boot, so
+  `typhon-w-3` starts with no manual step.
 - unattended-upgrades on a Proxmox node installs only Debian-Security. So
   the check on a Proxmox node first installs the newest Proxmox kernel
   (`reboot_if_needed_proxmox_kernel`). Only `proxmox-default-kernel` and
