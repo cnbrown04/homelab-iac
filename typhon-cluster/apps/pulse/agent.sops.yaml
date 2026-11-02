@@ -1,0 +1,33 @@
+# The token of the Kubernetes agent, with the scope kubernetes:report. Make it
+# in Pulse, then put it here with sops set.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: pulse-agent
+type: Opaque
+stringData:
+    PULSE_TOKEN: ENC[AES256_GCM,data:qf1WRj2bCcqD8SEUYCPmPOH7R535fACIHON5FhdXowHZscjn5csMaATHHkGpa7iP+9AAyMOKOgaWI4CeO6OyhQ==,iv:OZYokGvDLx0VaB+iuzBGBv4sauFyWT+2VsmotesoSiA=,tag:25tEXiFKE3QEWnN+ICzotQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBreTVkc1g4ZXZ1a3UybzlX
+            bVNVWERtT29wSHpRWWNwUmtRSWtPaXFNQzAwCndNYVNGMWRJUXBQV05JVXo3L2Rv
+            SEMzWVU0eTlNaGZJVjdyWHdkUTJYMDAKLS0tIEx4aHVYbHYwRyszeEErOWRQMDNP
+            dnRvZDhzMkhxU20rNk5XMVlCR3ZLWjgKRlsJQOprpL+8Y6QYbhFJ5YCCY/v+x0y9
+            3lnoLQAFnTyh9KxNoPEw7qkIUXLiyw2rJ75K65euqVynjTGIjjWNTA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAvUDNpN0Z1OTRYdVE2c0Zs
+            MUN2YWIvaTlCZ2xleXduQVBmQ1RtWGRoTWk0CmlSYzB3bVVLb0FPZUQwS01LTDJv
+            YUl6ZEEzMjlLc3ZYd09mdjl0dUxidU0KLS0tIFphek9jMHJQbDlwaWd0a1BvWndv
+            Qjd1REhsMmR1bzVLRzR6aWc3dmFSY00KB0r1qp3nVx60I1tyEPfFG2s2X8H30OCW
+            b3kWM69wk8RujWbUx9a5P0UanDNtWUs7+AKQmwvIMuiFJ3yBNubz4w==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-02T02:00:54Z"
+    mac: ENC[AES256_GCM,data:sUWcxkE+egHG/7/PmGDqaa+WLHjhTwB6Bb6VI9ZDQYR8AWNltMfdWPIesqwRqLgY4vkCLB8RIOOtG542azjUkKDmb9yXRHYGi6vVSz/b0zy450awvmF05IcX8s9Wa9YKeIstL5DeHkgx70/TY8NIW3D4RBqwZZ2Lkouhqk/n3X8=,iv:mY/mxEoFX7cf8O2ITkeBlXrpCAzLFB6X34dbV4Z6icg=,tag:H1q8XkTEMiIc4lsDSG46zg==,type:str]
+    version: 3.13.3

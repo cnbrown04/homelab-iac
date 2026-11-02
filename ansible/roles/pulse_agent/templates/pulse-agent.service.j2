@@ -6,8 +6,9 @@ After=network-online.target
 StartLimitIntervalSec=0
 
 # The agent runs as pulse-agent, not root. Its only root access is sudo for
-# smartctl-read, if SMART is on. Commands from Pulse, Docker, the Proxmox
-# token setup, SSH to the other nodes, and the self-update are off.
+# smartctl-read, if SMART is on. It reads Docker only through the read-only
+# proxy, if Docker is on. Commands from Pulse, the Proxmox token setup, SSH to
+# the other nodes, and the self-update are off.
 [Service]
 Type=simple
 User=pulse-agent
@@ -15,13 +16,22 @@ Group=pulse-agent
 {% if pulse_agent_smart | bool %}
 Environment=PULSE_SMARTCTL_PATH=/usr/local/libexec/pulse-agent/smartctl
 {% endif %}
+{% if pulse_agent_docker | bool %}
+Environment=DOCKER_HOST=unix:///run/pulse-docker/docker.sock
+{% endif %}
 ExecStart=/usr/local/bin/pulse-agent \
   --url {{ pulse_agent_url }} \
   --token-file /etc/pulse-agent/token \
   --state-dir /var/lib/pulse-agent \
   --command-authority monitoring-only \
   --enable-proxmox=false \
+{% if pulse_agent_docker | bool %}
+  --enable-docker \
+  --disable-docker-update-checks \
+  --disable-registry-credentials \
+{% else %}
   --enable-docker=false \
+{% endif %}
   --enable-kubernetes=false \
   --disable-auto-update \
   --disable-cluster-peer-sensors \

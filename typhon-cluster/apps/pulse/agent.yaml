@@ -1,0 +1,81 @@
+# The Kubernetes agent of Pulse. It reports the inventory of typhon and the
+# CPU and memory of the nodes and pods, from metrics.k8s.io. It has no host
+# access: no host mounts, no host network, and no root. It is the pulse-agent
+# binary in the image of the Pulse server.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulse-agent
+  annotations:
+    glance/name: Pulse agent
+    glance/icon: di:pulse
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pulse-agent
+  template:
+    metadata:
+      labels:
+        app: pulse-agent
+    spec:
+      serviceAccountName: pulse-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pulse-agent
+          image: docker.io/rcourtman/pulse:v6.6.0
+          command: [/usr/local/bin/pulse-agent]
+          args:
+            - --url=http://pulse.pulse.svc.cluster.local:7655
+            - --agent-id=typhon
+            - --kubeconfig=/etc/pulse-agent/config
+            - --state-dir=/state
+            - --command-authority=monitoring-only
+            - --enable-host=false
+            - --enable-docker=false
+            - --enable-proxmox=false
+            - --enable-kubernetes
+            - --kube-include-all-pods
+            - --kube-include-all-deployments
+            - --disable-auto-update
+            - --health-addr=
+          env:
+            - name: PULSE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: pulse-agent
+                  key: PULSE_TOKEN
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: kubeconfig
+              mountPath: /etc/pulse-agent
+              readOnly: true
+            - name: state
+              mountPath: /state
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: kubeconfig
+          configMap:
+            name: pulse-agent-kubeconfig
+        - name: state
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

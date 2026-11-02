@@ -17,3 +17,7 @@ pulse_agent_token: "{{ pulse_agent_tokens[inventory_hostname] | default('') }}"
 # Give the agent SMART through a sudo rule for smartctl-read. Turn it off on a
 # host with no real disks.
 pulse_agent_smart: true
+
+# Give the agent the Docker data through the read-only proxy in
+# ansible/stacks/docker-proxy. The agent never gets the Docker socket itself.
+pulse_agent_docker: false

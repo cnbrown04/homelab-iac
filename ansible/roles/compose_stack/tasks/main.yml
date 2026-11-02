@@ -15,6 +15,7 @@
     owner: "{{ compose_stack_owner }}"
     group: "{{ compose_stack_group }}"
     mode: "0750"
+  register: compose_stack_directory
 
 - name: Copy the Compose stack files
   ansible.builtin.copy:
@@ -52,3 +53,5 @@
     project_src: "{{ compose_stack_root }}/{{ compose_stack_name }}"
     state: present
     pull: missing
+  # In check mode, a new stack has no folder yet, so the task skips.
+  when: not (ansible_check_mode and compose_stack_directory is changed)

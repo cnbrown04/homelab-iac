@@ -1,0 +1,31 @@
+# A read-only proxy of the Docker API for the Pulse agent. The agent is not in
+# the group docker, because that group is root. The proxy allows GET and HEAD
+# on the paths below, and refuses each other request, for example a start, a
+# stop, a pull, or an exec. The role pulse_agent deploys it.
+name: docker-proxy
+services:
+  docker-proxy:
+    image: docker.io/wollomatic/socket-proxy:1.13.2
+    container_name: docker-proxy
+    restart: unless-stopped
+    # The group of the Docker socket. The role pulse_agent writes it to .env.
+    user: "65534:${DOCKER_GID}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    # The proxy listens on a Unix socket only, so it needs no network.
+    network_mode: none
+    command:
+      - -loglevel=info
+      # Only nobody and the group pulse-agent can open the folder of the socket.
+      - -proxysocketendpoint=/run/pulse-docker/docker.sock
+      - -proxysocketendpointfilemode=0666
+      - -allowGET=(/v[0-9.]+)?/(_ping|version|info|system/df|containers/json|containers/[^/]+/(json|stats)|images/json|images/.+/json|networks|volumes|services|tasks|nodes)
+      - -allowHEAD=(/v[0-9.]+)?/_ping
+      - -watchdoginterval=3600
+      - -stoponwatchdog
+      - -shutdowngracetime=5
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /run/pulse-docker:/run/pulse-docker

@@ -309,6 +309,18 @@ the cluster.
   - The agent on `hermes` reaches Pulse through the tailnet and the route of
     `gaia`. It has no SMART and no sudo rule (`pulse_agent_smart: false`).
     The pipeline of `hermes` applies it.
+  - The agent on `hermes` reads Docker through the stack `docker-proxy`
+    (wollomatic/socket-proxy). The proxy allows only GET and HEAD on the read
+    paths that the agent uses, and listens on `/run/pulse-docker/docker.sock`.
+    Only `nobody` and the group `pulse-agent` can open that folder. Do not put
+    `pulse-agent` in the group `docker`, because that group is root.
+  - The agent sends the env vars of each container to Pulse. It masks a value
+    only when the name has a word such as `password`, `secret`, `key`, or
+    `token`. Give a secret of a new container a name with one of these words.
+  - The Kubernetes agent of `typhon` is the Deployment `pulse-agent` in the
+    namespace `pulse`. It has a read-only ClusterRole with no Secrets and no
+    `nodes/proxy`, and no host access. Its token, with the scope
+    `kubernetes:report`, is in `typhon-cluster/apps/pulse/agent.sops.yaml`.
 - A NetworkPolicy with `namespaceSelector: {}` does not let the Gateway in.
   The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
   with `fromEntities: [ingress]`.

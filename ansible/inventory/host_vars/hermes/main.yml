@@ -42,6 +42,9 @@ tailscale_accept_routes: true
 # sudo rule.
 pulse_agent_smart: false
 
+# The Pulse agent reads Docker through the read-only proxy (stack docker-proxy).
+pulse_agent_docker: true
+
 # The tailnet address of argus. Public DNS sends *.vnet.buildwithcaleb.com to
 # hermes, so the agent cannot use the MagicDNS name.
 wazuh_agent_manager_address: 100.64.0.112

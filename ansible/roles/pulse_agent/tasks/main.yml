@@ -90,6 +90,43 @@
   loop: [/etc/sudoers.d/pulse-agent, /usr/local/libexec/pulse-agent]
   when: not (pulse_agent_smart | bool)
 
+# The agent reads Docker through a read-only proxy. The socket of the proxy is
+# in /run/pulse-docker, which only nobody (the proxy) and the group
+# pulse-agent can open.
+- name: Give the agent the Docker data
+  when: pulse_agent_docker | bool
+  block:
+    - name: Read the group of the Docker socket
+      ansible.builtin.getent:
+        database: group
+        key: docker
+
+    - name: Create the folder of the proxy socket at each boot
+      ansible.builtin.copy:
+        content: "d /run/pulse-docker 0750 nobody pulse-agent -\n"
+        dest: /etc/tmpfiles.d/pulse-docker.conf
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Create the folder of the proxy socket
+      ansible.builtin.file:
+        path: /run/pulse-docker
+        state: directory
+        owner: nobody
+        group: pulse-agent
+        mode: "0750"
+      when: not (ansible_check_mode and pulse_agent_user is changed)
+
+    - name: Deploy the Docker proxy
+      ansible.builtin.include_role:
+        name: compose_stack
+      vars:
+        compose_stack_name: docker-proxy
+        compose_stack_source: "{{ playbook_dir }}/../stacks/docker-proxy"
+        compose_stack_environment:
+          DOCKER_GID: "{{ ansible_facts['getent_group']['docker'][1] }}"
+
 - name: Write the service
   ansible.builtin.template:
     src: pulse-agent.service.j2
