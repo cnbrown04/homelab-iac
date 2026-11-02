@@ -820,7 +820,7 @@ mise run plan:pantheon
   `envoy-xds-mode`, the agent kept `ads`, Envoy changed to `split`, and no
   new pod got a network.
 - The annotation `glance/icon` of glance-k8s takes `di:`, `si:`, or a URL.
-  It does not know `sh:`, so give a selfh.st icon as its full URL. Glance
+  It does not know `sh:`, so give a selfh.st icon as its full URL. Dynacat
   itself knows `sh:` and `auto-invert`.
 - The level `restricted` refuses a probe with `host`. A sidecar that gives a
   health endpoint must listen on the pod IP.
@@ -936,14 +936,22 @@ last, put it in this file.
 The owner writes the documentation of the homelab by hand. Do not add a
 document to the repository unless the owner asks for it.
 
-## 7. Keep Glance current
+## 7. Keep the dashboard current
 
-Glance at `home.buildwithcaleb.com` shows the state of the homelab. Its
-config is `typhon-cluster/apps/glance/glance.yml`. Each change to the homelab
-must also change Glance in the same change.
+The dashboard at `home.buildwithcaleb.com` shows the state of the homelab.
+It is Dynacat, a fork of Glance. The folder, the namespace, the Deployment,
+and the annotations keep the name `glance`. Its config is
+`typhon-cluster/apps/glance/dynacat.yml`. Each change to the homelab must
+also change the dashboard in the same change.
+
+- Dynacat reads the config of Glance. The editor in the page is off
+  (`ENABLE_EDITOR=false`), because git holds the config. Change the file,
+  not the page.
+- Dynacat needs a writable `/app/.cache`, so the pod has an `emptyDir`
+  there. Without it, Dynacat does not start.
 
 - When you add, move, or delete an app, a host, or a service, update each
-  page of Glance that shows it.
+  page of the dashboard that shows it.
 - On the page "Services", give each app a site in a `monitor` widget. Give
   each site a `check-url` that the cluster can reach.
 - Add the repository of each app to the `releases` widget of its page.

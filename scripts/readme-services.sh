@@ -54,7 +54,7 @@ GUESTS=(
 TYPHON="typhon|talos|Talos Kubernetes on the VMs of @gaia and @hyperion"
 TYPHON_NODES=(gaia hyperion)
 TYPHON_GROUPS=(
-  "Platform|Flux:flux-cd,Glance:glance,Termix:termix,Pulse:pulse"
+  "Platform|Flux:flux-cd,Dynacat:dynacat,Termix:termix,Pulse:pulse"
   "Media|Jellyfin:jellyfin,Audiobookshelf:audiobookshelf,Seerr:seerr"
   "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"

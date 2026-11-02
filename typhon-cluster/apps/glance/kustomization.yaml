@@ -9,8 +9,8 @@ resources:
   - glance-k8s.yaml
   - service.yaml
   - httproute.yaml
-# A change to glance.yml gives the ConfigMap a new name, so the pod restarts.
+# A change to dynacat.yml gives the ConfigMap a new name, so the pod restarts.
 configMapGenerator:
   - name: glance-config
     files:
-      - glance.yml
+      - dynacat.yml

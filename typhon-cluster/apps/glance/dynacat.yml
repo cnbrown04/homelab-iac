@@ -1,4 +1,5 @@
-# The config of Glance. See https://github.com/glanceapp/glance/blob/main/docs/configuration.md.
+# The config of Dynacat, a fork of Glance. See
+# https://github.com/Panonim/dynacat/blob/main/docs/docs/configuration.md.
 server:
   port: 8080
   # Pangolin and the Gateway are in front of Glance.
@@ -560,6 +561,7 @@ pages:
               - louislam/dockge
               - wazuh/wazuh
               - wollomatic/socket-proxy
+              - Panonim/dynacat
 
   # The services: each app, each node, and the releases of the apps.
   - name: Services
