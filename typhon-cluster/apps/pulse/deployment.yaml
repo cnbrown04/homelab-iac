@@ -41,6 +41,12 @@ spec:
             # itself, so it owns it. Without it, Pulse keeps no history.
             - name: PULSE_METRICS_DB_PATH
               value: /data/metrics/metrics.db
+            # Pulse reads X-Forwarded-Proto only from a trusted proxy. The
+            # Gateway connects from its ingress IP on each node, which changes
+            # at a reboot, so trust the pod range of the cluster. Without it,
+            # the OIDC callback URL has http and not https.
+            - name: PULSE_TRUSTED_PROXY_CIDRS
+              value: 10.244.0.0/16
           ports:
             - name: http
               containerPort: 7655

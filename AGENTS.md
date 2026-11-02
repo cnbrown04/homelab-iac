@@ -286,7 +286,15 @@ the cluster.
     OIDC client. Members of the Pocket ID group `homelab_admin` get the role
     `flux-web-admin`.
 - Pulse is at `pulse.buildwithcaleb.com`, with the Pangolin login in front of
-  its own admin login. It monitors `pantheon` and `atlas` through the API.
+  its Pocket ID login. It monitors `pantheon` and `atlas` through the API.
+  - The owner set OIDC in Settings, Security, Single Sign-On of Pulse, not
+    with `OIDC_*` env vars. The Pocket ID client `pulse` is for
+    `homelab_admin` only. Pulse maps `homelab_admin` to its role `admin`.
+  - The local admin login stays for when Pocket ID is down. Do not set
+    `PULSE_AUTH_HIDE_LOCAL_LOGIN`.
+  - `PULSE_TRUSTED_PROXY_CIDRS` is the pod range `10.244.0.0/16`. The Gateway
+    connects from its ingress IP on each node, and that IP changes at a
+    reboot. Without the setting, Pulse uses http in the OIDC callback URL.
   - Each node gives Pulse the token `pulse@pve!pulse`, with the role
     `PVEAuditor` on `/` only. The owner made it by hand, as for Glance. Do not
     use the setup script of Pulse: it also gives `PVEDatastoreAdmin` on
