@@ -949,6 +949,13 @@ also change the dashboard in the same change.
   not the page.
 - Dynacat needs a writable `/app/.cache`, so the pod has an `emptyDir`
   there. Without it, Dynacat does not start.
+- Each GitHub widget uses the token `github-token` from `secrets.sops.yaml`.
+  It is a fine-grained token with read access to public repositories only.
+  Without a token, GitHub allows 60 requests in an hour for the IP of the
+  home, and the widgets need more at each start.
+- YouTube can refuse the feeds to the IP of the home (404), while the feeds
+  work from `hermes`. Then the widget `videos` is empty. It is not an error
+  of the config.
 
 - When you add, move, or delete an app, a host, or a service, update each
   page of the dashboard that shows it.

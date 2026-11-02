@@ -6,7 +6,8 @@
 #
 # The script copies typhon-cluster/apps/glance/dynacat.yml to .glance-preview/
 # and changes the copy:
-#   - Each ${secret:...} gets a placeholder value.
+#   - Each ${secret:...} gets a placeholder value. The GitHub token goes
+#     away, because GitHub refuses a wrong token.
 #   - The Proxmox API, the Kubernetes API, and each check of a service in the
 #     cluster go to scripts/glance-preview-mock.py, which gives fake data.
 # GitHub, the feeds, and the public services give real data.
@@ -19,6 +20,8 @@ dir=.glance-preview
 glance_port=8091
 mock_port=8092
 mock="http://127.0.0.1:${mock_port}"
+# The same as the cluster: the editor in the page is off.
+export ENABLE_EDITOR=false
 
 # Use the version of Dynacat that the cluster runs.
 version=$(grep -o 'panonim/dynacat:[0-9.]*' typhon-cluster/apps/glance/deployment.yaml | cut -d: -f2)
@@ -38,6 +41,7 @@ fi
 
 render() {
   sed -E \
+    -e '/token: \$\{secret:github-token\}/d' \
     -e 's/\$\{secret:[a-z-]+\}/local-preview/g' \
     -e "s/^  port: 8080$/  port: ${glance_port}/" \
     -e 's/^  proxied: true$/  proxied: false/' \

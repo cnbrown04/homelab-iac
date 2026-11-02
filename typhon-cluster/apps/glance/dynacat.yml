@@ -5,6 +5,10 @@ server:
   # Pangolin and the Gateway are in front of Glance.
   proxied: true
 
+# No logo in the top left of the page.
+branding:
+  hide-logo: true
+
 # Catppuccin Macchiato (dark) and Latte (light), from docs/themes.md of
 # Glance. They replace the two default themes of the theme picker. The picker
 # also shows the base theme as "default", and the style in document.head
@@ -524,6 +528,7 @@ pages:
               - type: repository
                 title: Repository
                 repository: cnbrown04/homelab-iac
+                token: ${secret:github-token}
                 cache: 1h
                 pull-requests-limit: 5
                 issues-limit: 3
@@ -543,6 +548,10 @@ pages:
             template: *proxmox-storage
 
           - type: releases
+            # Without a token, GitHub allows 60 requests in an hour for the IP
+            # of the home. The two widgets ask for about 35 repositories at
+            # each start. A token allows 5000.
+            token: ${secret:github-token}
             cache: 6h
             show-source-icon: true
             limit: 10
@@ -772,6 +781,10 @@ pages:
           # GitHub allows 60 requests an hour with no token. The cache keeps
           # this widget far below that.
           - type: releases
+            # Without a token, GitHub allows 60 requests in an hour for the IP
+            # of the home. The two widgets ask for about 35 repositories at
+            # each start. A token allows 5000.
+            token: ${secret:github-token}
             cache: 6h
             show-source-icon: true
             limit: 10
