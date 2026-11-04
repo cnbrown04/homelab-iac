@@ -94,7 +94,9 @@ document:
     })();
 
     // The large clock of the page Home. Glance loads the widgets after
-    // this script, so each tick finds the clocks again.
+    // this script, so each tick finds the clocks again. Dynacat also
+    // replaces the HTML of a widget every few seconds, with the "--"
+    // placeholders of the template. The observer fills a new clock at once.
     (function () {
       function pad(n) { return n < 10 ? "0" + n : String(n); }
       function tick() {
@@ -110,12 +112,15 @@ document:
         };
         clocks.forEach(function (clock) {
           clock.querySelectorAll("[data-part]").forEach(function (part) {
-            part.textContent = parts[part.getAttribute("data-part")];
+            var value = parts[part.getAttribute("data-part")];
+            // Write only a change, so the observer does not loop.
+            if (part.textContent !== value) part.textContent = value;
           });
         });
       }
       tick();
       setInterval(tick, 1000);
+      new MutationObserver(tick).observe(document.documentElement, { childList: true, subtree: true });
     })();
     </script>
 
