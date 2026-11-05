@@ -3,7 +3,7 @@
 # to Pulse in typhon. Keep this version the same as the image of
 # typhon-cluster/apps/pulse/deployment.yaml. The agent does not update itself.
 # renovate: datasource=github-releases depName=rcourtman/Pulse
-pulse_agent_version: v6.6.0
+pulse_agent_version: v6.7.0
 
 # The LoadBalancer pulse-agents in typhon. Only the Proxmox nodes can connect,
 # and hermes through the subnet route of gaia.
