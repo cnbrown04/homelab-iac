@@ -32,7 +32,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: pulse
-          image: docker.io/rcourtman/pulse:v6.6.0
+          image: docker.io/rcourtman/pulse:6.7.0
           env:
             - name: PULSE_PUBLIC_URL
               value: https://pulse.buildwithcaleb.com
