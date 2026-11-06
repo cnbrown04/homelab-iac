@@ -57,7 +57,7 @@ locals {
       vm_id          = 513
       tags           = ["typhon", "talos", "worker"]
       cpu_cores      = 8
-      memory_mb      = 8192
+      memory_mb      = 6144
       disks          = [{ interface = "scsi0", datastore_id = "local-lvm", size = 32, import_from = proxmox_download_file.talos["hyperion"].id }]
       initialization = merge(local.typhon_network, { ipv4_address = "10.0.20.23/24" })
       pci_mappings   = [{ mapping = "hyperion-igpu", rombar = false }]
@@ -138,7 +138,7 @@ locals {
       tags        = ["siem", "ubuntu"]
       cpu_type    = "host"
       cpu_cores   = 4
-      memory_mb   = 12288
+      memory_mb   = 8192
       # The image has no guest agent. Ansible installs it.
       agent_wait_for_ip = false
       disks             = [{ interface = "scsi0", datastore_id = "local-lvm", size = 100, import_from = proxmox_download_file.ubuntu["tartarus"].id }]
