@@ -211,6 +211,18 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # File Browser has no login of its own. Keep SSO on.
+    filebrowser:
+      name: File Browser
+      mode: http
+      full-domain: filebrowser.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     # Seerr users log in with their Jellyfin accounts, so SSO is off.
     seerr:
       name: Seerr

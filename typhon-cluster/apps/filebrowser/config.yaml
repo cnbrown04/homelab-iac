@@ -1,0 +1,23 @@
+# The config of FileBrowser Quantum.
+http:
+  port: 8080
+server:
+  # Renovate bumps the version.
+  disableUpdateCheck: true
+  # The thumbnails and the temporary files. They need not stay.
+  cacheDir: /home/filebrowser/cache
+  sources:
+    - path: /media
+      name: media
+      config:
+        defaultEnabled: true
+        rules:
+          # Jellyfin writes its transcodes here. Show them, but do not index
+          # them.
+          - folderPath: /transcode
+            viewable: true
+auth:
+  methods:
+    # No login page. The Pangolin login (Pocket ID) is the only login, so the
+    # Pangolin resource must keep SSO on.
+    noauth: true

@@ -229,6 +229,12 @@ the cluster.
 - Jackett is at `jackett.buildwithcaleb.com`, with the Pangolin login.
   Chaptarr uses it. Its config is JSON, not SQLite, so it is on NFS in
   `/lethe/k8s/jackett/Jackett`.
+- File Browser (FileBrowser Quantum) is at `filebrowser.buildwithcaleb.com`,
+  with the Pangolin login. It has no login of its own (`noauth`), so its
+  Pangolin resource must keep SSO on. It mounts `/lethe/data/media` at
+  `/media`, as user 1000. Its SQLite database is on `local-path`.
+  - A move keeps a hard link, but a copy makes a new file. After a change,
+    run Refresh & Scan in Sonarr, Radarr, or Chaptarr.
 - Seerr is at `seerr.buildwithcaleb.com`, with no Pangolin login. Its users
   log in with their Jellyfin accounts. It reaches Jellyfin, Sonarr, and Radarr
   by their service names. Its SQLite database and `settings.json` are on

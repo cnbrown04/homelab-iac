@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - audiobookshelf
   - chaptarr
+  - filebrowser
   - glance
   - jackett
   - jellyfin

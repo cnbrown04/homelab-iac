@@ -56,7 +56,7 @@ TYPHON_NODES=(gaia hyperion)
 TYPHON_GROUPS=(
   "Platform|Flux:flux-cd,Dynacat:dynacat,Termix:termix,Pulse:pulse"
   "Media|Jellyfin:jellyfin,Audiobookshelf:audiobookshelf,Seerr:seerr"
-  "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr"
+  "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr,File Browser:filebrowser-quantum"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"
   "Apps|Karakeep:selfhst/karakeep,Sure:selfhst/sure-finance"
   "Testing|Tududi:selfhst/tududi"

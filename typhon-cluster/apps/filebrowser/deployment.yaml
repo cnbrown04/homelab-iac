@@ -1,0 +1,81 @@
+# File Browser (FileBrowser Quantum), a web UI for the files in /media.
+# Pangolin puts its SSO login in front of it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: File Browser
+    glance/icon: di:filebrowser-quantum
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+    spec:
+      # User 1000 owns the media. No fsGroup: the kubelet would change the
+      # owner of each file in the media.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: filebrowser
+          # The slim image has no ffmpeg, so a video gets no thumbnail.
+          image: ghcr.io/gtsteffaniak/filebrowser:2.0.2-stable-slim
+          env:
+            - name: FILEBROWSER_CONFIG
+              value: /config/config.yaml
+          ports:
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: data
+              mountPath: /home/filebrowser/data
+            - name: cache
+              mountPath: /home/filebrowser/cache
+            - name: media
+              mountPath: /media
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: filebrowser-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+        - name: cache
+          emptyDir: {}
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+        - name: tmp
+          emptyDir: {}

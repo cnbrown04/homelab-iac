@@ -629,6 +629,10 @@ pages:
                 url: https://qbittorrent.buildwithcaleb.com
                 check-url: http://qbittorrent.qbittorrent.svc.cluster.local:8080/
                 icon: di:qbittorrent
+              - title: File Browser
+                url: https://filebrowser.buildwithcaleb.com
+                check-url: http://filebrowser.filebrowser.svc.cluster.local/health
+                icon: di:filebrowser-quantum
 
           - type: monitor
             title: Tools
@@ -804,6 +808,7 @@ pages:
               - qbittorrent/qBittorrent
               - qdm12/gluetun
               - Jackett/Jackett
+              - gtsteffaniak/filebrowser
               - opencloud-eu/opencloud
               - Termix-SSH/Termix
               - rcourtman/Pulse

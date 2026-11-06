@@ -1,0 +1,50 @@
+# The volumes of File Browser:
+# - media: /lethe/data/media on gaia, at /media, the same as Sonarr, Radarr,
+#   and Chaptarr. A move in one volume is a rename, so a hard link stays a
+#   hard link. A copy makes a new file.
+# - data: the SQLite database of the users, the settings, and the index, on
+#   the disk of a worker. SQLite must not go on NFS.
+# The static volume keeps its data when the claim goes away.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filebrowser-media
+spec:
+  capacity:
+    storage: 4Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: filebrowser
+    name: media
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: filebrowser-media
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/data/media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: filebrowser-media
+  resources:
+    requests:
+      storage: 4Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
