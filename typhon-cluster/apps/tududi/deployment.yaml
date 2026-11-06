@@ -11,7 +11,7 @@ metadata:
     glance/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/tududi.svg
 spec:
   replicas: 1
-  # SQLite and a local-path volume allow one pod only.
+  # The local-path volume of the uploads allows one pod only.
   strategy:
     type: Recreate
   selector:
@@ -33,18 +33,16 @@ spec:
           type: RuntimeDefault
       containers:
         - name: tududi
-          image: docker.io/chrisvel/tududi:1.15.0
+          image: docker.io/chrisvel/tududi:2.0.0
           command:
             - sh
             - -c
             - |
-              mkdir -p /data/db /data/uploads /data/backups
+              mkdir -p /data/uploads /data/backups
               exec dumb-init -- /app/backend/cmd/start.sh
           env:
             - name: HOME
               value: /tmp
-            - name: DB_FILE
-              value: /data/db/production.sqlite3
             - name: TUDUDI_UPLOAD_PATH
               value: /data/uploads
             - name: TUDUDI_BACKUP_PATH
@@ -78,8 +76,9 @@ spec:
             # account in Profile, Security.
             - name: OIDC_AUTO_PROVISION
               value: "false"
-          # tududi.sops.yaml gives TUDUDI_SESSION_SECRET, TUDUDI_USER_EMAIL,
-          # TUDUDI_USER_PASSWORD, and OIDC_CLIENT_SECRET.
+          # tududi.sops.yaml gives DATABASE_URL, TUDUDI_SESSION_SECRET,
+          # TUDUDI_USER_EMAIL, TUDUDI_USER_PASSWORD, and OIDC_CLIENT_SECRET.
+          # DATABASE_URL is the PlanetScale Postgres of tofu/targets/asphodel.
           envFrom:
             - secretRef:
                 name: tududi

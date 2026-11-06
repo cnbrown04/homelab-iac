@@ -1,5 +1,5 @@
-# The volume of Tududi, on the disk of a worker. SQLite must not go on NFS.
-# - db/: the SQLite database, and a copy of it from before each start.
+# The volume of Tududi, on the disk of a worker. The database is on PlanetScale.
+# - db/: the SQLite database of Tududi 1.x. Tududi 2.0 does not read it.
 # - uploads/: the attachments.
 # - backups/: the backups that the owner makes in the UI.
 apiVersion: v1

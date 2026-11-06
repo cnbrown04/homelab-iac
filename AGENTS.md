@@ -273,8 +273,10 @@ the cluster.
     then cannot read its data.
   - Tududi makes no account at a Pocket ID login. Link Pocket ID in Profile,
     Security. Tududi makes the user of `tududi.sops.yaml` at each start.
-  - Each app keeps its data in the cluster, on `local-path`. Sure has a
-    Postgres pod, not PlanetScale. No app has NFS or a backup.
+  - Karakeep and Sure keep their data in the cluster, on `local-path`. Sure
+    has a Postgres pod, not PlanetScale. Tududi 2.0 uses PostgreSQL only, so
+    its database is `tududi` on PlanetScale. Its uploads stay on
+    `local-path`. No app has NFS or a backup of its own.
   - Each pod runs as a user that is not root, so each namespace is
     `restricted`. Karakeep and Tududi start their own processes, not the
     entrypoint of the image.

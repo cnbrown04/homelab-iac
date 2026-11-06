@@ -10,7 +10,9 @@ locals {
 
   # One entry for each app. The key is the name of the database and of the
   # role.
-  apps = {}
+  apps = {
+    tududi = {}
+  }
 }
 
 resource "planetscale_postgres_branch" "main" {
