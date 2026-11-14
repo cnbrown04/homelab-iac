@@ -55,7 +55,7 @@ spec:
               mountPath: /seed
       containers:
         - name: chaptarr
-          image: docker.io/chaptarr/chaptarr:0.9.965
+          image: docker.io/chaptarr/chaptarr:0.9.1000
           env:
             # No login page. The Pangolin login (Pocket ID) is the only login,
             # so the Pangolin resource must keep SSO on. The API still needs

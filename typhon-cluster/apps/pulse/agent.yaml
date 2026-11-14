@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: pulse-agent
-          image: docker.io/rcourtman/pulse:6.7.0
+          image: docker.io/rcourtman/pulse:6.8.0
           command: [/usr/local/bin/pulse-agent]
           args:
             - --url=http://pulse.pulse.svc.cluster.local:7655
