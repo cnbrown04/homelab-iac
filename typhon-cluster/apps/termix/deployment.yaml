@@ -40,7 +40,7 @@ spec:
         # A sidecar: it runs for the life of the pod. Termix starts after the
         # node is on the tailnet.
         - name: tailscale
-          image: ghcr.io/tailscale/tailscale:v1.104.4
+          image: ghcr.io/tailscale/tailscale:v1.104.7
           restartPolicy: Always
           env:
             - name: TS_USERSPACE
@@ -100,7 +100,7 @@ spec:
               mountPath: /tmp
       containers:
         - name: termix
-          image: ghcr.io/lukegus/termix:26.11.0
+          image: ghcr.io/lukegus/termix:26.11.1
           env:
             - name: PORT
               value: "8080"

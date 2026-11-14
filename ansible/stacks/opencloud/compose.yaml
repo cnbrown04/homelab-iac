@@ -1,7 +1,7 @@
 name: opencloud
 services:
   opencloud:
-    image: docker.io/opencloudeu/opencloud:7.2.4
+    image: docker.io/opencloudeu/opencloud:7.2.5
     container_name: opencloud
     restart: unless-stopped
     # User 3000 owns each file in the shares. Samba forces the same user.
@@ -66,7 +66,7 @@ services:
   # Traefik gets the certificate with the Cloudflare DNS-01 challenge.
   # Ansible writes the route and the token in the folder traefik.
   traefik:
-    image: docker.io/traefik:v3.7.17
+    image: docker.io/traefik:v3.7.19
     container_name: opencloud-traefik
     restart: unless-stopped
     user: "65534:65534"

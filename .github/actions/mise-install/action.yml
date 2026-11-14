@@ -39,7 +39,7 @@ runs:
         echo "hash=$hash" >> "$GITHUB_OUTPUT"
 
     - name: Install the tools
-      uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+      uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
       with:
         install_args: ${{ inputs.tools }}
         cache_key: "{{cache_key_prefix}}-{{platform}}-{{install_args_hash}}-${{ steps.hash.outputs.hash }}"

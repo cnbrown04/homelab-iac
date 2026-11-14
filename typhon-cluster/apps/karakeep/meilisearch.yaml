@@ -24,7 +24,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: meilisearch
-          image: docker.io/getmeili/meilisearch:v1.56.1
+          image: docker.io/getmeili/meilisearch:v1.56.2
           env:
             - name: MEILI_ENV
               value: production
