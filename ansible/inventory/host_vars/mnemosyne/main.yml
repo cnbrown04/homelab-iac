@@ -30,6 +30,10 @@ samba_users:
 # oc://ios.opencloud.eu.
 opencloud_url: https://files.buildwithcaleb.com
 opencloud_oidc_issuer: https://auth.buildwithcaleb.com
+# The local path: a UniFi DNS record gives this address for
+# files.buildwithcaleb.com, and Traefik answers on port 443. secrets.sops.yml
+# holds opencloud_cloudflare_dns_token.
+opencloud_local_address: 10.0.1.16
 
 # The Newt site mnemosyne in Pangolin. secrets.sops.yml holds newt_secret.
 newt_id: 55nffwaowymropt

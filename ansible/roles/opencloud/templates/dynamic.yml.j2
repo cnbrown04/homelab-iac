@@ -1,0 +1,14 @@
+# The route of the local path. Traefik reads the file again after a change.
+http:
+  routers:
+    opencloud:
+      rule: Host(`{{ opencloud_url | urlsplit('hostname') }}`)
+      entryPoints: [websecure]
+      service: opencloud
+      tls:
+        certResolver: cloudflare
+  services:
+    opencloud:
+      loadBalancer:
+        servers:
+          - url: http://opencloud:9200

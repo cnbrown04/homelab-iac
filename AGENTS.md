@@ -376,6 +376,10 @@ the cluster.
 - OpenCloud is at `files.buildwithcaleb.com`, with no Pangolin login. It runs
   in Docker on `mnemosyne` (the role `opencloud`). Newt sends the requests
   from the Pangolin site `mnemosyne` to `127.0.0.1:9200`.
+  - At home, a DNS record in UniFi gives `10.0.1.16` for
+    `files.buildwithcaleb.com`. Traefik in the stack `opencloud` answers on
+    `10.0.1.16:443`, with a certificate from Cloudflare DNS-01. Away from
+    home, public DNS gives `hermes`. Do not put the record in Headscale.
   - It uses the PosixFS driver in collaborative mode. inotify tells it about
     each change of Samba, because Samba writes through the same kernel.
   - inotify does not see a change on `gaia` or through NFS. So do not export

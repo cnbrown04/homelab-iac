@@ -52,10 +52,45 @@ services:
       # The collaborative mode. inotify tells OpenCloud about each change of
       # Samba, because Samba writes through the same kernel.
       STORAGE_USERS_POSIX_WATCH_FS: "true"
-    # Newt on the host sends the requests. Nothing else reaches the port.
+    # Newt on the host sends the requests from Pangolin. Traefik sends the
+    # requests from the LAN through the Compose network.
     ports:
       - 127.0.0.1:9200:9200
     volumes:
       - ./config:/etc/opencloud
       - ./data:/var/lib/opencloud
       - ${OC_SHARE_ROOT}:/srv/shares
+
+  # The local path. The DNS of UniFi gives the LAN address of mnemosyne for
+  # the name of OpenCloud, so a client at home does not go through Pangolin.
+  # Traefik gets the certificate with the Cloudflare DNS-01 challenge.
+  # Ansible writes the route and the token in the folder traefik.
+  traefik:
+    image: docker.io/traefik:v3.7.17
+    container_name: opencloud-traefik
+    restart: unless-stopped
+    user: "65534:65534"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command:
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
+      - --log.level=INFO
+      - --entrypoints.websecure.address=:8443
+      # The default of 60 s stops a large upload. Pangolin uses 30 min too.
+      - --entrypoints.websecure.transport.respondingtimeouts.readtimeout=30m
+      - --providers.file.filename=/traefik/dynamic.yml
+      - --providers.file.watch=true
+      - --certificatesresolvers.cloudflare.acme.storage=/traefik/acme.json
+      - --certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare
+      # UniFi has a local record for the name, so use public resolvers.
+      - --certificatesresolvers.cloudflare.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+    environment:
+      CF_DNS_API_TOKEN_FILE: /traefik/cloudflare-token
+    # Only the LAN address. The tailnet and Pangolin keep their own path.
+    ports:
+      - ${OC_LOCAL_ADDRESS}:443:8443
+    volumes:
+      - ./traefik:/traefik
+    depends_on: [opencloud]

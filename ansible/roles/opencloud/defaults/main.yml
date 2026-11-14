@@ -24,5 +24,14 @@ opencloud_role_mapping:
   - role_name: user
     claim_value: opencloud_users
 
+# The local path. Traefik listens on this LAN address on port 443, and the
+# DNS of UniFi gives this address for the name of OpenCloud.
+opencloud_local_address: ""
+# The Cloudflare token for the DNS-01 challenge of Traefik. Keep it in
+# secrets.sops.yml. It needs Zone Read and DNS Edit on the zone.
+opencloud_cloudflare_dns_token: ""
+# Traefik runs as nobody, and owns its folder.
+opencloud_traefik_user_id: 65534
+
 # inotify uses one watch for each folder in the shares.
 opencloud_inotify_max_user_watches: 524288

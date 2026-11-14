@@ -6,7 +6,9 @@
       - opencloud_oidc_issuer is match('^https://[^/]+$')
       - opencloud_oidc_client_id | length > 0
       - opencloud_role_mapping | length > 0
-    fail_msg: "Set the public URL and the issuer with no path, the client ID, and the role mapping."
+      - opencloud_local_address is match('^[0-9]+(\.[0-9]+){3}$')
+      - opencloud_cloudflare_dns_token | length > 0
+    fail_msg: "Set the public URL and the issuer with no path, the client ID, the role mapping, the LAN address, and the Cloudflare token."
 
 # The watcher of the collaborative mode needs one watch for each folder.
 - name: Give inotify enough watches for the shares
@@ -39,6 +41,36 @@
   loop: [proxy.yaml, csp.yaml]
   notify: Restart OpenCloud
 
+# Traefik keeps the certificate in acme.json in this folder.
+- name: Create the folder of Traefik
+  ansible.builtin.file:
+    path: "{{ opencloud_stack_root }}/opencloud/traefik"
+    state: directory
+    owner: "{{ opencloud_traefik_user_id }}"
+    group: "{{ opencloud_traefik_user_id }}"
+    mode: "0700"
+
+# Traefik reads the route again after a change, so it needs no restart.
+- name: Write the route of Traefik
+  ansible.builtin.template:
+    src: dynamic.yml.j2
+    dest: "{{ opencloud_stack_root }}/opencloud/traefik/dynamic.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+# Only Traefik gets the token. OpenCloud reads .env, so the token is not in
+# that file.
+- name: Write the Cloudflare token of Traefik
+  ansible.builtin.copy:
+    content: "{{ opencloud_cloudflare_dns_token }}"
+    dest: "{{ opencloud_stack_root }}/opencloud/traefik/cloudflare-token"
+    owner: "{{ opencloud_traefik_user_id }}"
+    group: "{{ opencloud_traefik_user_id }}"
+    mode: "0400"
+  no_log: true
+  notify: Restart the Traefik of OpenCloud
+
 # A check run on a new host does not install Docker. Then the deploy skips.
 - name: Find Docker
   ansible.builtin.stat:
@@ -58,6 +90,7 @@
       OC_GID: "{{ opencloud_group_id }}"
       OC_SHARE_ROOT: "{{ opencloud_share_root }}"
       OC_URL: "{{ opencloud_url }}"
+      OC_LOCAL_ADDRESS: "{{ opencloud_local_address }}"
       OC_OIDC_ISSUER: "{{ opencloud_oidc_issuer }}"
       # One client for the web, desktop, and mobile apps.
       OC_OIDC_CLIENT_ID: "{{ opencloud_oidc_client_id }}"

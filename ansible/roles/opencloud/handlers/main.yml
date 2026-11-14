@@ -5,3 +5,11 @@
     project_src: "{{ opencloud_stack_root }}/opencloud"
     state: restarted
   when: not ansible_check_mode
+
+# Traefik reads the token only at the start.
+- name: Restart the Traefik of OpenCloud
+  community.docker.docker_compose_v2:
+    project_src: "{{ opencloud_stack_root }}/opencloud"
+    services: [traefik]
+    state: restarted
+  when: not ansible_check_mode
