@@ -80,6 +80,13 @@ services:
       - --entrypoints.websecure.address=:8443
       # The default of 60 s stops a large upload. Pangolin uses 30 min too.
       - --entrypoints.websecure.transport.respondingtimeouts.readtimeout=30m
+      # A file name can hold these characters, and the WebDAV path encodes
+      # them. Traefik rejects them by default. OpenCloud is the only backend.
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedslash=true
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedquestionmark=true
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedhash=true
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedpercent=true
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedsemicolon=true
       - --providers.file.filename=/traefik/dynamic.yml
       - --providers.file.watch=true
       - --certificatesresolvers.cloudflare.acme.storage=/traefik/acme.json
