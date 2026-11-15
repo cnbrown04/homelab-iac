@@ -19,6 +19,13 @@ samba_file_owner_id: 3000
 samba_users: []
 samba_user_passwords: {}
 
+# The project spaces of OpenCloud that Samba also shares, as
+# { name: <share>, id: <space ID>, users: [<name>] }. PosixFS keeps a space
+# in projects/<space ID>. OpenCloud makes the folder, so this role does not
+# make it. Samba does not use the members of the space in OpenCloud. Only
+# the users in the list can open the share.
+samba_spaces: []
+
 # Samba comes from this suite. Debian stable has an older Samba.
 samba_apt_release: "{{ ansible_facts['distribution_release'] }}-backports"
 

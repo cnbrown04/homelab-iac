@@ -73,3 +73,16 @@
    directory mask = 0777
 
 {% endfor %}
+{% for space in samba_spaces %}
+# The project space {{ space.name }} of OpenCloud.
+[{{ space.name }}]
+   path = {{ samba_share_root }}/projects/{{ space.id }}
+   valid users = {{ space.users | join(' ') }}
+   read only = no
+   force user = {{ samba_file_owner }}
+   force group = {{ samba_file_owner }}
+   smb3 unix extensions = yes
+   create mask = 0777
+   directory mask = 0777
+
+{% endfor %}

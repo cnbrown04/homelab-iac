@@ -21,6 +21,15 @@ samba_virtiofs_tag: lethe-shares
 samba_users:
   - caleb
 
+# The project spaces of OpenCloud that Samba also shares. The space must
+# exist in OpenCloud first.
+samba_spaces:
+  # The space "Personal Stuff".
+  - name: Personal
+    id: 16052d97-d5dd-45fa-b170-81eb10d8604f
+    users:
+      - caleb
+
 # The web, desktop, and mobile apps of OpenCloud use one Pocket ID client: a
 # public client with PKCE and the custom client ID opencloud. Its callback
 # URLs are https://files.buildwithcaleb.com/,

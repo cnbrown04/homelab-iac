@@ -369,6 +369,9 @@ the cluster.
   stay on `gaia`.
 - Each user has the folder `/lethe/shares/users/<name>`. Samba shares it as
   `<name>`, and OpenCloud shows it. Use the Pocket ID user name.
+- Samba also shares each project space of OpenCloud in `samba_spaces`.
+  PosixFS keeps a space in `/lethe/shares/projects/<space ID>`. The space
+  `Personal` has private data, so do not read its files.
 - User 3000 (`shares`) owns each file. Samba forces this user, and OpenCloud
   runs as it.
 - The shares use the SMB3 POSIX extensions, for development work. A Linux

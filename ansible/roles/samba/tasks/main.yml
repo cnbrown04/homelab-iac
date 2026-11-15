@@ -5,9 +5,14 @@
       - samba_virtiofs_tag | length > 0
       - samba_users | select('match', '^[a-z_][a-z0-9_-]*$') | list | length == samba_users | length
       - samba_users | reject('in', samba_user_passwords) | list | length == 0
+      - samba_spaces | map(attribute='name') | select('match', '^[A-Za-z0-9_-]+$') | list | length == samba_spaces | length
+      - samba_spaces | map(attribute='name') | map('lower') | reject('in', samba_users) | list | length == samba_spaces | length
+      - samba_spaces | map(attribute='id') | select('match', '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') | list | length == samba_spaces | length
+      - samba_spaces | map(attribute='users') | flatten | reject('in', samba_users) | list | length == 0
     fail_msg: >-
       Set the virtiofs tag, user names in lowercase, and a password for each
-      user in samba_user_passwords.
+      user in samba_user_passwords. Give each space a share name that is not
+      a user name, the UUID of the space, and users from samba_users.
   no_log: true
 
 - name: Install the QEMU guest agent
