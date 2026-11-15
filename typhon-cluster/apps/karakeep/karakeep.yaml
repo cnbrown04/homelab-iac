@@ -35,7 +35,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: migrate
-          image: ghcr.io/karakeep-app/karakeep:0.34.1
+          image: ghcr.io/karakeep-app/karakeep:0.35.0
           command: [node, index.js]
           workingDir: /db_migrations
           env: &env
@@ -86,7 +86,7 @@ spec:
               mountPath: /tmp
       containers:
         - name: web
-          image: ghcr.io/karakeep-app/karakeep:0.34.1
+          image: ghcr.io/karakeep-app/karakeep:0.35.0
           command: [node, server.js]
           workingDir: /app/apps/web
           env: *env
@@ -108,7 +108,7 @@ spec:
           volumeMounts: *mounts
         # The crawler, the search indexer, and the other background jobs.
         - name: workers
-          image: ghcr.io/karakeep-app/karakeep:0.34.1
+          image: ghcr.io/karakeep-app/karakeep:0.35.0
           command: [node, dist/index.js]
           workingDir: /app/apps/workers
           env: *env
