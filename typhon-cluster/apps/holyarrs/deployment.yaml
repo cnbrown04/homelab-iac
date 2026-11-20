@@ -23,6 +23,9 @@ spec:
       labels:
         app: holyarrs
     spec:
+      # The service holyarrs gives the variable HOLYARRS_PORT to each pod.
+      # HolyArrs reads it as its port, and does not start.
+      enableServiceLinks: false
       # User 1000 owns the media. The image starts as root and changes user,
       # but a start as a fixed user skips that step. No fsGroup: the kubelet
       # would change the owner of each file in the media.
