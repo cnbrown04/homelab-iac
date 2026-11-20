@@ -24,8 +24,6 @@
       tags: [tailscale]
     - role: wazuh_agent
       tags: [wazuh_agent]
-    - role: pulse_agent
-      tags: [pulse_agent]
     - role: proxmox_web
       tags: [proxmox_web]
     - role: zfs_nfs

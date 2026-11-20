@@ -1,8 +1,7 @@
 ---
 # hermes joins the tailnet as tag:hermes. Then the Wazuh agent sends its events
-# to argus. The role pulse_agent deletes the old Pulse agent. This play
-# comes after headscale.yml, because Headscale must have the policy with
-# tag:hermes before it makes the join key.
+# to argus. This play comes after headscale.yml, because Headscale must have
+# the policy with tag:hermes before it makes the join key.
 - name: Join hermes to the tailnet and send its events to Wazuh
   hosts: hermes
   # The roles use the facts of min and network only. The hardware facts are
@@ -13,5 +12,3 @@
       tags: [tailscale]
     - role: wazuh_agent
       tags: [wazuh_agent]
-    - role: pulse_agent
-      tags: [pulse_agent]

@@ -836,10 +836,6 @@ mise run plan:pantheon
   Proxmox nodes need `proxmox-kernel` 7.0.14-25 or later. The check of
   `reboot_if_needed` installs 7.0.14-26 or later on Wednesday 4 November
   2026, and reboots each node. After that, run `uname -r` on each node.
-- The owner deleted Pulse on 19 November 2026. The role `pulse_agent` now
-  deletes the agent, the Docker proxy, and the user `pulse-agent`. After it
-  runs on each Proxmox node and on `hermes`, delete the role and its lines in
-  `proxmox_nodes.yml` and `hermes_tailnet.yml`.
 
 ### Do not
 
