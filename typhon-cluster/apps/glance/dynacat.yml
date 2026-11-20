@@ -633,6 +633,10 @@ pages:
                 url: https://filebrowser.buildwithcaleb.com
                 check-url: http://filebrowser.filebrowser.svc.cluster.local/health
                 icon: di:filebrowser-quantum
+              - title: HolyArrs
+                url: https://holyarrs.buildwithcaleb.com
+                check-url: http://holyarrs.holyarrs.svc.cluster.local/healthz
+                icon: sh:holyarrs
 
           - type: monitor
             title: Tools
@@ -808,6 +812,7 @@ pages:
               - karakeep-app/karakeep
               - we-promise/sure
               - chrisvel/tududi
+              - HolyArrs/HolyArrs
               - siderolabs/talos
               - fosrl/pangolin
               - juanfont/headscale

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: holyarrs
+spec:
+  selector:
+    app: holyarrs
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

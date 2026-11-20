@@ -59,7 +59,7 @@ TYPHON_GROUPS=(
   "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr,File Browser:filebrowser-quantum"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"
   "Apps|Karakeep:selfhst/karakeep,Sure:selfhst/sure-finance"
-  "Testing|Tududi:selfhst/tududi"
+  "Testing|Tududi:selfhst/tududi,HolyArrs:selfhst/holyarrs"
 )
 
 # The hosts out of the cluster: the name, the logo, the subtitle, and the apps

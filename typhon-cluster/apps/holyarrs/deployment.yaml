@@ -1,0 +1,82 @@
+# HolyArrs, on trial. One app in place of Sonarr, Radarr, Prowlarr, and
+# Seerr. It reads the old apps when it imports, and does not change them.
+# Pangolin puts its SSO login in front of it, because the first visitor
+# makes the owner account.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: holyarrs
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: HolyArrs
+    glance/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/holyarrs.svg
+spec:
+  replicas: 1
+  # SQLite and a local-path volume allow one pod only.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: holyarrs
+  template:
+    metadata:
+      labels:
+        app: holyarrs
+    spec:
+      # User 1000 owns the media. The image starts as root and changes user,
+      # but a start as a fixed user skips that step. No fsGroup: the kubelet
+      # would change the owner of each file in the media.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: holyarrs
+          image: docker.io/holyarrs/holyarrs:1.2.0
+          env:
+            - name: TZ
+              value: America/Chicago
+            # The Host header must be an IP, or a name in this list. The
+            # monitor of the dashboard uses the name of the service.
+            - name: HOLYARRS_ALLOWED_HOSTS
+              value: holyarrs.buildwithcaleb.com,holyarrs.holyarrs.svc.cluster.local
+            # qBittorrent saves to /media/downloads, with the same mount.
+            - name: HOLYARRS_SAVE_PATH
+              value: /media/downloads
+          ports:
+            - name: http
+              containerPort: 6262
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            # Under about 2.5 GiB, HolyArrs starts its low-memory mode.
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /media
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+        - name: tmp
+          emptyDir: {}

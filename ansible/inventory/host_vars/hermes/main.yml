@@ -301,6 +301,19 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
+    # HolyArrs has its own login, but the first visitor makes the owner
+    # account. Keep SSO on.
+    holyarrs:
+      name: HolyArrs
+      mode: http
+      full-domain: holyarrs.buildwithcaleb.com
+      auth:
+        sso-enabled: true
+      targets:
+        - site: "{{ pangolin_typhon_site }}"
+          method: http
+          hostname: "{{ pangolin_typhon_target }}"
+          port: 80
     # Home Assistant has its own login. Its mobile app cannot pass the Pangolin
     # login, so SSO is off.
     home-assistant:

@@ -226,6 +226,14 @@ the cluster.
   and qBittorrent binds to `tun0` only while the forwarded port is up. The pod
   uses the DNS of gluetun. Do not add `FIREWALL_OUTBOUND_SUBNETS`.
   `typhon-cluster/apps/qbittorrent/gluetun.sops.yaml` holds the WireGuard key.
+- HolyArrs is at `holyarrs.buildwithcaleb.com`, with the Pangolin login in
+  front of its own login. The owner tests it as one app in place of Sonarr,
+  Radarr, Prowlarr, and Seerr.
+  - The first visitor makes the owner account, so its Pangolin resource must
+    keep SSO on.
+  - It mounts `/lethe/data/media` at `/media`, as user 1000. Its SQLite
+    databases, its backups, and its master key `holyarrs.key` are on
+    `local-path`. Keep a copy of the key out of the cluster.
 - Jackett is at `jackett.buildwithcaleb.com`, with the Pangolin login.
   Chaptarr uses it. Its config is JSON, not SQLite, so it is on NFS in
   `/lethe/k8s/jackett/Jackett`.
