@@ -11,6 +11,6 @@ tailscale_extra_up_args:
 # must approve each route.
 tailscale_advertise_routes: []
 
-# Use the subnet routes of the other nodes. hermes uses the route of gaia to
-# reach Pulse in typhon. The policy of Headscale still limits each connection.
+# Use the subnet routes of the other nodes. The policy of Headscale still limits
+# each connection.
 tailscale_accept_routes: false

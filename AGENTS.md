@@ -293,50 +293,6 @@ the cluster.
     in front of its Pocket ID login. The secret `flux-web-config` holds its
     OIDC client. Members of the Pocket ID group `homelab_admin` get the role
     `flux-web-admin`.
-- Pulse is at `pulse.buildwithcaleb.com`, with the Pangolin login in front of
-  its Pocket ID login. It monitors `pantheon` and `atlas` through the API.
-  - The owner set OIDC in Settings, Security, Single Sign-On of Pulse, not
-    with `OIDC_*` env vars. The Pocket ID client `pulse` is for
-    `homelab_admin` only. Pulse maps `homelab_admin` to its role `admin`.
-  - The local admin login stays for when Pocket ID is down. Do not set
-    `PULSE_AUTH_HIDE_LOCAL_LOGIN`.
-  - `PULSE_TRUSTED_PROXY_CIDRS` is the pod range `10.244.0.0/16`. The Gateway
-    connects from its ingress IP on each node, and that IP changes at a
-    reboot. Without the setting, Pulse uses http in the OIDC callback URL.
-  - Each node gives Pulse the token `pulse@pve!pulse`, with the role
-    `PVEAuditor` on `/` only. The owner made it by hand, as for Glance. Do not
-    use the setup script of Pulse: it also gives `PVEDatastoreAdmin` on
-    `/storage`, which can delete backups.
-  - Its data is on `local-path`, with no backup.
-  - The role `pulse_agent` puts the Pulse agent on each Proxmox node, for the
-    SMART data and the temperatures. The agent runs as the user
-    `pulse-agent`, not root. Its only root access is sudo for
-    `/usr/local/libexec/pulse-agent/smartctl-read`, which allows only the
-    read-only options of `smartctl`.
-  - The agent has no commands from Pulse, no Docker, no SSH to the other
-    nodes, and no self-update. Do not use the installer of Pulse, and do not
-    turn on `--enable-proxmox`: the agent then makes a Proxmox token with
-    `PVEDatastoreAdmin` on `/storage`.
-  - The agent sends its reports to the LoadBalancer `pulse-agents` at
-    `http://10.0.20.202:7655`, not through Pangolin. Only the IPs of the
-    nodes can connect.
-  - Each node has its own agent token, from "Install on a host" in Pulse, in
-    `pulse_agent_tokens`. Keep `pulse_agent_version` the same as the image.
-  - The agent on `hermes` reaches Pulse through the tailnet and the route of
-    `gaia`. It has no SMART and no sudo rule (`pulse_agent_smart: false`).
-    The pipeline of `hermes` applies it.
-  - The agent on `hermes` reads Docker through the stack `docker-proxy`
-    (wollomatic/socket-proxy). The proxy allows only GET and HEAD on the read
-    paths that the agent uses, and listens on `/run/pulse-docker/docker.sock`.
-    Only `nobody` and the group `pulse-agent` can open that folder. Do not put
-    `pulse-agent` in the group `docker`, because that group is root.
-  - The agent sends the env vars of each container to Pulse. It masks a value
-    only when the name has a word such as `password`, `secret`, `key`, or
-    `token`. Give a secret of a new container a name with one of these words.
-  - The Kubernetes agent of `typhon` is the Deployment `pulse-agent` in the
-    namespace `pulse`. It has a read-only ClusterRole with no Secrets and no
-    `nodes/proxy`, and no host access. Its token, with the scope
-    `kubernetes:report`, is in `typhon-cluster/apps/pulse/agent.sops.yaml`.
 - A NetworkPolicy with `namespaceSelector: {}` does not let the Gateway in.
   The Gateway uses the Cilium identity `ingress`. Add a CiliumNetworkPolicy
   with `fromEntities: [ingress]`.
@@ -465,13 +421,9 @@ the cluster.
   `1514`, and enrolls on TCP `1515` with `wazuh_enrollment_password`. `argus`
   has no agent, because the manager watches its own host. Talos nodes get no
   agent.
-- `hermes` joins the tailnet as `tag:hermes` only for Wazuh and Pulse. Its
-  Wazuh agent uses the tailnet address of `argus`, `100.64.0.112`. The policy
-  gives `tag:hermes` TCP `1514` and `1515` on `tag:siem`, TCP `7655` on
-  `10.0.20.202`, and nothing more.
-  - `hermes` accepts the subnet routes (`tailscale_accept_routes`), so it
-    reaches Pulse through the route of `gaia`. `gaia` uses SNAT, so Pulse sees
-    `10.0.20.5`.
+- `hermes` joins the tailnet as `tag:hermes` only for Wazuh. Its Wazuh agent
+  uses the tailnet address of `argus`, `100.64.0.112`. The policy gives
+  `tag:hermes` TCP `1514` and `1515` on `tag:siem`, and nothing more.
   - `playbooks/hermes_tailnet.yml` runs after `headscale.yml`, because
     Headscale must have the tag in its policy before it makes the join key.
     The pipeline of `hermes` applies it.
@@ -738,8 +690,8 @@ mise run plan:pantheon
   | --- | --- |
   | `secrets/tofu.sops.yaml` | R2 keys, state passphrase, Proxmox API tokens, the PlanetScale service token |
   | `ansible/inventory/group_vars/all/secrets.sops.yml` | The hash of the sudo password of `caleb`, the enrollment password of Wazuh |
-  | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client, the token of the Pulse agent of each node |
-  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner, the token of the Pulse agent |
+  | `ansible/inventory/group_vars/proxmox_nodes/secrets.sops.yml` | The Cloudflare DNS token, the Proxmox OIDC client |
+  | `ansible/inventory/host_vars/hermes/secrets.sops.yml` | The secrets of the services on `hermes`, the backup keys, the home IP of the owner |
   | `ansible/inventory/host_vars/mnemosyne/secrets.sops.yml` | The password of each Samba user, the secret of the Newt site `mnemosyne` |
   | `ansible/inventory/host_vars/daedalus/secrets.sops.yml` | The logins of Claude Code and opencode for `caleb` |
   | `secrets/typhon-age-key.sops.yaml` | The private age key of `typhon`. Flux uses it as the secret `sops-age`. |
@@ -884,6 +836,10 @@ mise run plan:pantheon
   Proxmox nodes need `proxmox-kernel` 7.0.14-25 or later. The check of
   `reboot_if_needed` installs 7.0.14-26 or later on Wednesday 4 November
   2026, and reboots each node. After that, run `uname -r` on each node.
+- The owner deleted Pulse on 19 November 2026. The role `pulse_agent` now
+  deletes the agent, the Docker proxy, and the user `pulse-agent`. After it
+  runs on each Proxmox node and on `hermes`, delete the role and its lines in
+  `proxmox_nodes.yml` and `hermes_tailnet.yml`.
 
 ### Do not
 

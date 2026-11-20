@@ -1,146 +1,52 @@
 ---
-- name: Check the Pulse agent settings
-  ansible.builtin.assert:
-    that:
-      - pulse_agent_token | length > 0
-    fail_msg: "Put the token of {{ inventory_hostname }} in pulse_agent_tokens in SOPS."
-  no_log: true
+# The owner deleted Pulse on 19 November 2026. This role deletes the Pulse
+# agent and the Docker proxy from a host. After a run on each host, delete the
+# role and its lines in the playbooks.
+- name: Read the unit of the Pulse agent
+  ansible.builtin.stat:
+    path: /etc/systemd/system/pulse-agent.service
+  register: pulse_agent_unit
 
-# A system user with no login and no home. It owns only its state folder.
-- name: Create the user pulse-agent
-  ansible.builtin.user:
-    name: pulse-agent
-    system: true
-    shell: /usr/sbin/nologin
-    home: /var/lib/pulse-agent
-    create_home: false
-  register: pulse_agent_user
+- name: Stop and disable the Pulse agent
+  ansible.builtin.systemd_service:
+    name: pulse-agent.service
+    state: stopped
+    enabled: false
+  when: pulse_agent_unit.stat.exists
 
-# root owns the binary, so the agent cannot replace it.
-- name: Download the Pulse agent
-  ansible.builtin.get_url:
-    url: "https://github.com/rcourtman/Pulse/releases/download/{{ pulse_agent_version }}/pulse-agent-linux-amd64"
-    checksum: "sha256:https://github.com/rcourtman/Pulse/releases/download/{{ pulse_agent_version }}/pulse-agent-linux-amd64.sha256"
-    dest: /usr/local/bin/pulse-agent
-    owner: root
-    group: root
-    mode: "0755"
-  notify: Restart the Pulse agent
+- name: Read the folder of the Docker proxy stack
+  ansible.builtin.stat:
+    path: /opt/stacks/docker-proxy/compose.yaml
+  register: pulse_agent_docker_proxy
 
-- name: Create the folder of the token
-  ansible.builtin.file:
-    path: /etc/pulse-agent
-    state: directory
-    owner: root
-    group: pulse-agent
-    mode: "0750"
-  when: not (ansible_check_mode and pulse_agent_user is changed)
+- name: Stop the Docker proxy stack
+  community.docker.docker_compose_v2:
+    project_src: /opt/stacks/docker-proxy
+    state: absent
+  when: pulse_agent_docker_proxy.stat.exists
 
-- name: Write the token
-  ansible.builtin.copy:
-    content: "{{ pulse_agent_token }}\n"
-    dest: /etc/pulse-agent/token
-    owner: root
-    group: pulse-agent
-    mode: "0640"
-  no_log: true
-  notify: Restart the Pulse agent
-  when: not (ansible_check_mode and pulse_agent_user is changed)
-
-# SMART needs root. A host with no real disks, for example a VPS, gets no
-# sudo rule.
-- name: Give the agent the SMART data
-  when: pulse_agent_smart | bool
-  block:
-    - name: Install smartmontools and sudo
-      ansible.builtin.apt:
-        name: [smartmontools, sudo]
-        state: present
-
-    - name: Create the folder of the smartctl scripts
-      ansible.builtin.file:
-        path: /usr/local/libexec/pulse-agent
-        state: directory
-        owner: root
-        group: root
-        mode: "0755"
-
-    - name: Write the smartctl scripts
-      ansible.builtin.copy:
-        src: "{{ item }}"
-        dest: "/usr/local/libexec/pulse-agent/{{ item }}"
-        owner: root
-        group: root
-        mode: "0755"
-      loop: [smartctl, smartctl-read]
-
-    - name: Let pulse-agent run smartctl-read as root
-      ansible.builtin.copy:
-        src: sudoers
-        dest: /etc/sudoers.d/pulse-agent
-        owner: root
-        group: root
-        mode: "0440"
-        validate: visudo -cf %s
-
-- name: Delete the sudo rule and the smartctl scripts
+- name: Delete the files of the Pulse agent and the Docker proxy
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-  loop: [/etc/sudoers.d/pulse-agent, /usr/local/libexec/pulse-agent]
-  when: not (pulse_agent_smart | bool)
+  loop:
+    - /etc/systemd/system/pulse-agent.service
+    - /usr/local/bin/pulse-agent
+    - /etc/pulse-agent
+    - /var/lib/pulse-agent
+    - /etc/sudoers.d/pulse-agent
+    - /usr/local/libexec/pulse-agent
+    - /etc/tmpfiles.d/pulse-docker.conf
+    - /run/pulse-docker
+    - /opt/stacks/docker-proxy
+  register: pulse_agent_files
 
-# The agent reads Docker through a read-only proxy. The socket of the proxy is
-# in /run/pulse-docker, which only nobody (the proxy) and the group
-# pulse-agent can open.
-- name: Give the agent the Docker data
-  when: pulse_agent_docker | bool
-  block:
-    - name: Read the group of the Docker socket
-      ansible.builtin.getent:
-        database: group
-        key: docker
-
-    - name: Create the folder of the proxy socket at each boot
-      ansible.builtin.copy:
-        content: "d /run/pulse-docker 0750 nobody pulse-agent -\n"
-        dest: /etc/tmpfiles.d/pulse-docker.conf
-        owner: root
-        group: root
-        mode: "0644"
-
-    - name: Create the folder of the proxy socket
-      ansible.builtin.file:
-        path: /run/pulse-docker
-        state: directory
-        owner: nobody
-        group: pulse-agent
-        mode: "0750"
-      when: not (ansible_check_mode and pulse_agent_user is changed)
-
-    - name: Deploy the Docker proxy
-      ansible.builtin.include_role:
-        name: compose_stack
-      vars:
-        compose_stack_name: docker-proxy
-        compose_stack_source: "{{ playbook_dir }}/../stacks/docker-proxy"
-        compose_stack_environment:
-          DOCKER_GID: "{{ ansible_facts['getent_group']['docker'][1] }}"
-
-- name: Write the service
-  ansible.builtin.template:
-    src: pulse-agent.service.j2
-    dest: /etc/systemd/system/pulse-agent.service
-    owner: root
-    group: root
-    mode: "0644"
-  notify: Restart the Pulse agent
-
-# In check mode, the user and the unit file do not exist yet.
-- name: Start and enable the Pulse agent
+- name: Reload systemd
   ansible.builtin.systemd_service:
-    name: pulse-agent.service
-    state: started
-    enabled: true
     daemon_reload: true
-  when: not (ansible_check_mode and pulse_agent_user is changed)
+  when: pulse_agent_files is changed and not ansible_check_mode
+
+- name: Delete the user pulse-agent
+  ansible.builtin.user:
+    name: pulse-agent
+    state: absent

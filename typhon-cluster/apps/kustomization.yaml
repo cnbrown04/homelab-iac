@@ -10,7 +10,6 @@ resources:
   - jellyfin
   - karakeep
   - prowlarr
-  - pulse
   - qbittorrent
   - radarr
   - seerr
