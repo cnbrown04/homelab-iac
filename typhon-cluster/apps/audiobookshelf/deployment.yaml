@@ -57,7 +57,7 @@ spec:
               mountPath: /metadata
       containers:
         - name: audiobookshelf
-          image: ghcr.io/advplyr/audiobookshelf:2.37.2
+          image: ghcr.io/advplyr/audiobookshelf:2.38.0
           env:
             # A user that is not root cannot open port 80.
             - name: PORT
