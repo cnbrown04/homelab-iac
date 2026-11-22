@@ -295,18 +295,17 @@ pages:
               - url: https://selfh.st/weekly/rss/
 
           # The top 10 of Hacker News and of Lobsters, side by side. -1 shows
-          # all items, with no button to show more. The front page of Hacker
-          # News (top) mixes points and age. best has the posts with the most
-          # points of about the last two days, in the order of the points.
+          # all items, with no button to show more. Both use the front page.
+          # The best list of Hacker News changes slowly. With tags, Lobsters
+          # gives the newest posts of the tags and ignores sort-by.
           - type: split-column
             max-columns: 2
             widgets:
               - type: hacker-news
-                sort-by: best
+                sort-by: top
                 limit: 10
                 collapse-after: -1
               - type: lobsters
-                tags: [devops, linux, networking]
                 sort-by: hot
                 limit: 10
                 collapse-after: -1
