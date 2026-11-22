@@ -53,9 +53,9 @@ document:
     .bookmark-bar img { width: 1.4rem; height: 1.4rem; }
     /* A black icon, for example GitHub, is white on the dark theme. */
     [data-scheme="dark"] .bookmark-bar img.mono { filter: invert(1); }
-    .weekly-issue .rss-detailed-thumbnail > * { height: 14rem; }
-    .weekly-issue .rss-detailed-description { -webkit-line-clamp: 4; line-clamp: 4; }
-    .weekly-issue .attachments { display: none; }
+    .newsletter-issue .rss-detailed-thumbnail > * { height: 14rem; }
+    .newsletter-issue .rss-detailed-description { -webkit-line-clamp: 4; line-clamp: 4; }
+    .newsletter-issue .attachments { display: none; }
     /* glance-k8s draws a server icon for each node. The mask shows the Talos
        logo in its place, in the color of the state of the node. */
     .typhon-nodes .server-icon path { display: none; }
@@ -121,6 +121,23 @@ document:
       tick();
       setInterval(tick, 1000);
       new MutationObserver(tick).observe(document.documentElement, { childList: true, subtree: true });
+    })();
+    // The tabs of the newsletters. Each 30 seconds, the script clicks the
+    // next tab. It does not change the tab while the pointer is on the
+    // widget. Each tick finds the widget again, because Glance loads it
+    // after this script.
+    (function () {
+      setInterval(function () {
+        document.querySelectorAll(".newsletters").forEach(function (group) {
+          if (group.matches(":hover")) return;
+          var tabs = group.querySelectorAll(".widget-group-title");
+          if (tabs.length < 2) return;
+          var current = Array.prototype.findIndex.call(tabs, function (tab) {
+            return tab.classList.contains("widget-group-title-current");
+          });
+          tabs[(current + 1) % tabs.length].click();
+        });
+      }, 30000);
     })();
     </script>
 
@@ -282,17 +299,40 @@ pages:
             search-engine: duckduckgo
             autofocus: true
 
-          # The newest issue of Self-Host Weekly, as one large card. This feed
-          # has only the issues of the newsletter, not the blog.
-          - type: rss
-            title: Self-Host Weekly
-            title-url: https://selfh.st/weekly/
-            css-class: weekly-issue
-            style: detailed-list
-            limit: 1
-            cache: 6h
-            feeds:
-              - url: https://selfh.st/weekly/rss/
+          # The newest issue of each newsletter, as one large card. The tabs
+          # change each 30 seconds (the script in document.head), but not
+          # while the pointer is on the widget. noted.lol is a blog, so it
+          # shows its newest post.
+          - type: group
+            css-class: newsletters
+            define: &newsletter
+              type: rss
+              css-class: newsletter-issue
+              style: detailed-list
+              limit: 1
+              cache: 6h
+            widgets:
+              # This feed has only the issues of the newsletter, not the blog.
+              - <<: *newsletter
+                title: Self-Host Weekly
+                title-url: https://selfh.st/weekly/
+                feeds:
+                  - url: https://selfh.st/weekly/rss/
+              - <<: *newsletter
+                title: noted.lol
+                title-url: https://noted.lol/
+                feeds:
+                  - url: https://noted.lol/rss/
+              - <<: *newsletter
+                title: SRE Weekly
+                title-url: https://sreweekly.com/
+                feeds:
+                  - url: https://sreweekly.com/feed/
+              - <<: *newsletter
+                title: LWKD
+                title-url: https://lwkd.info/
+                feeds:
+                  - url: https://lwkd.info/feed.xml
 
           # The top 10 of Hacker News and of Lobsters, side by side. -1 shows
           # all items, with no button to show more. Both use the front page.
