@@ -302,7 +302,7 @@ pages:
           # The newest issue of each newsletter, as one large card. The tabs
           # change each 30 seconds (the script in document.head), but not
           # while the pointer is on the widget. noted.lol is a blog, so it
-          # shows its newest post.
+          # shows its newest post. Terminal Trove shows its newest tool.
           - type: group
             css-class: newsletters
             define: &newsletter
@@ -324,10 +324,10 @@ pages:
                 feeds:
                   - url: https://noted.lol/rss/
               - <<: *newsletter
-                title: SRE Weekly
-                title-url: https://sreweekly.com/
+                title: Terminal Trove
+                title-url: https://terminaltrove.com/
                 feeds:
-                  - url: https://sreweekly.com/feed/
+                  - url: https://terminaltrove.com/new.xml
               - <<: *newsletter
                 title: LWKD
                 title-url: https://lwkd.info/
