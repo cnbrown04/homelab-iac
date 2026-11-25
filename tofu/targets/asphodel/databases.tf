@@ -50,9 +50,8 @@ resource "postgresql_database" "app" {
   name = each.key
   # A database of PlanetScale can have connections from other roles. A drop
   # by mistake loses the data of an app.
-  # TODO: false only for the delete of tududi. Set it to true after the apply.
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
 
