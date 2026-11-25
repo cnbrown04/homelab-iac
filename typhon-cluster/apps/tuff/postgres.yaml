@@ -1,0 +1,84 @@
+# The Postgres of Tuff. Only Tuff reaches it. Its user tracker is a superuser,
+# because the migrations of Tuff make the roles tracker_app, tracker_worker, and
+# tracker_auth. The image of Tuff has pg_dump 17, so keep Postgres on 17. The
+# Alpine image runs as postgres (70). PGDATA is a folder in the volume, because
+# initdb must own it. The app and the worker each keep a pool of connections,
+# so max_connections is 200, the same as the Compose file of Tuff.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres:17.12-alpine
+          args: [postgres, -c, max_connections=200]
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_USER
+              value: tracker
+            - name: POSTGRES_DB
+              value: tracker
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tuff
+                  key: POSTGRES_PASSWORD
+          ports:
+            - name: postgres
+              containerPort: 5432
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, tracker, -d, tracker]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: run
+              mountPath: /var/run/postgresql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres
+        - name: run
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres

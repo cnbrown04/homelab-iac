@@ -10,9 +10,7 @@ locals {
 
   # One entry for each app. The key is the name of the database and of the
   # role.
-  apps = {
-    tududi = {}
-  }
+  apps = {}
 }
 
 resource "planetscale_postgres_branch" "main" {
@@ -52,8 +50,9 @@ resource "postgresql_database" "app" {
   name = each.key
   # A database of PlanetScale can have connections from other roles. A drop
   # by mistake loses the data of an app.
+  # TODO: false only for the delete of tududi. Set it to true after the apply.
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 

@@ -1,0 +1,132 @@
+# Tuff, the project manager: tasks, docs, and chat. The Pangolin login is in
+# front of its own login. Tuff has no generic OIDC, so it offers its password
+# login and "Sign in with GitHub".
+# - The app migrates the database at each start. Before a migration, it
+#   writes a dump to /backups, and it does not start if the dump fails.
+# - The worker sends the mail, fires the webhooks, and deletes the old rows.
+#   It shares the uploads with the app, so the two are containers in one pod.
+# - Realtime expects one container of the app, so keep one replica.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tuff
+  # The widget of glance-k8s shows each Deployment with glance/name.
+  annotations:
+    glance/name: Tuff
+    glance/icon: https://cdn.jsdelivr.net/gh/usetuff/tuff@v1.1.0/web/public/icon.svg
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: tuff
+  template:
+    metadata:
+      labels:
+        app: tuff
+    spec:
+      # The image runs as node (1000).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: ghcr.io/usetuff/tuff:1.1.0
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: APP_URL
+              value: https://tuff.buildwithcaleb.com
+            - name: STORAGE_DIR
+              value: /data/storage
+            - name: WEB_DIR
+              value: /app/web/dist
+            - name: BACKUP_DIR
+              value: /backups
+            - name: PORT
+              value: "8787"
+            - name: MIGRATE_ON_START
+              value: "1"
+          # tuff.sops.yaml gives DATABASE_URL, DATABASE_URL_APP,
+          # DATABASE_URL_WORKER, JWT_SECRET, ENCRYPTION_KEY, SETUP_TOKEN,
+          # GITHUB_SIGNIN_CLIENT_ID, and GITHUB_SIGNIN_CLIENT_SECRET.
+          envFrom: &env-from
+            - secretRef:
+                name: tuff
+          ports:
+            - name: http
+              containerPort: 8787
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          # The dump and the migrations run before the app answers. The
+          # Compose file of Tuff gives them 5 minutes.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts: &mounts
+            - name: data
+              mountPath: /data/storage
+              subPath: storage
+            - name: data
+              mountPath: /backups
+              subPath: backups
+        # The worker waits for the migrations of the app. On the first start,
+        # it restarts until the app gives its role a password.
+        - name: worker
+          image: ghcr.io/usetuff/tuff:1.1.0
+          command: [node, --conditions=compiled, server/dist/worker.js]
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: APP_URL
+              value: https://tuff.buildwithcaleb.com
+            - name: STORAGE_DIR
+              value: /data/storage
+          envFrom: *env-from
+          securityContext: *container-security
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data/storage
+              subPath: storage
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tuff
+spec:
+  selector:
+    app: tuff
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

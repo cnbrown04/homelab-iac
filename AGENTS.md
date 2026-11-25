@@ -265,31 +265,41 @@ the cluster.
   - `typhon-cluster/apps/termix/tailscale.sops.yaml` holds the join key. The
     sidecar uses it for the first login only, and keeps its state on the
     claim `tailscale`.
-- Karakeep, Sure, and Tududi are at `<app>.buildwithcaleb.com`, with no
-  Pangolin login. Karakeep is the bookmark manager. Karakeep and Sure stay.
-  The owner still tests Tududi.
+- Karakeep and Sure are at `<app>.buildwithcaleb.com`, with no Pangolin
+  login. Karakeep is the bookmark manager. Karakeep and Sure stay.
   - Each app logs in with Pocket ID, with the client ID `<app>`. The login
-    button and the Tududi slug use the name of the SSO, `Cerberus`. Only
-    `homelab_admin` can use the clients. The owner made them by hand. The
-    password login stays for when Pocket ID is down, and no app makes a new
-    account.
+    button uses the name of the SSO, `Cerberus`. Only `homelab_admin` can use
+    the clients. The owner made them by hand. The password login stays for
+    when Pocket ID is down, and no app makes a new account.
   - Karakeep has a public client with PKCE. The first Pocket ID login links
     the account with the same email. `DISABLE_SIGNUPS` is on.
   - The first Pocket ID login of Sure asks for the Sure password one time
     (`AUTH_JIT_MODE=link_only`). Sure makes its encryption keys from
     `SECRET_KEY_BASE`. Do not set `ACTIVE_RECORD_ENCRYPTION_*`, because Sure
     then cannot read its data.
-  - Tududi makes no account at a Pocket ID login. Link Pocket ID in Profile,
-    Security. Tududi makes the user of `tududi.sops.yaml` at each start.
   - Karakeep and Sure keep their data in the cluster, on `local-path`. Sure
-    has a Postgres pod, not PlanetScale. Tududi 2.0 uses PostgreSQL only, so
-    its database is `tududi` on PlanetScale. Its uploads stay on
-    `local-path`. No app has NFS or a backup of its own.
+    has a Postgres pod, not PlanetScale. No app has NFS or a backup of its
+    own.
   - Each pod runs as a user that is not root, so each namespace is
-    `restricted`. Karakeep and Tududi start their own processes, not the
-    entrypoint of the image.
+    `restricted`. Karakeep starts its own processes, not the entrypoint of
+    the image.
   - Karakeep runs the migration, the web app, and the workers in one pod, with
     Meilisearch and Chrome in their own pods.
+- Tuff is at `tuff.buildwithcaleb.com`, with the Pangolin login in front of
+  its own login. The owner tests it. It replaced Tududi on 23 November 2026.
+  - Tuff has no generic OIDC, so it cannot use Pocket ID. It has its
+    password login and "Sign in with GitHub", with an OAuth App of the
+    owner. GitHub does not link by email. Link GitHub in the settings of the
+    account.
+  - The first visitor of `https://tuff.buildwithcaleb.com/setup?token=<SETUP_TOKEN>`
+    becomes the owner. Then sign-up is closed, and a person joins with an
+    invitation. Tuff has no mail, so it shows each invitation link.
+  - The app and the worker are two containers in one pod. Keep one replica,
+    because realtime expects one app.
+  - Postgres 17 is a pod, not PlanetScale, because the migrations need a
+    superuser. Keep it on 17, because the image of Tuff has `pg_dump` 17.
+  - The uploads and the dumps before each migration are in
+    `/lethe/k8s/tuff/{storage,backups}`. User 1000 owns them.
 - The Flux Operator manages the Flux controllers through the FluxInstance
   `flux` in `typhon-cluster/infrastructure/configs/flux/`. It has no
   `spec.sync`, because `typhon-cluster/flux/sync.yaml` keeps the source. The

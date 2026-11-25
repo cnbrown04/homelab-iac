@@ -1,0 +1,49 @@
+# The secrets of Tuff. Each password is a random value of letters and digits,
+# because Tuff writes it into a URL as it is.
+# - POSTGRES_PASSWORD is the password of the superuser tracker. DATABASE_URL
+#   uses it for the migrations. Tuff gives tracker_app and tracker_worker the
+#   passwords in their URLs at each start.
+# - JWT_SECRET signs the sessions. ENCRYPTION_KEY encrypts the second factors
+#   and the tokens of the integrations.
+# - SETUP_TOKEN opens the setup page one time, until the server has an owner.
+# - GITHUB_SIGNIN_CLIENT_ID and GITHUB_SIGNIN_CLIENT_SECRET are the GitHub
+#   OAuth App of "Sign in with GitHub". When they are empty, the button is off.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: tuff
+type: Opaque
+stringData:
+    POSTGRES_PASSWORD: ENC[AES256_GCM,data:0yc8oW1bUXwLbhLIpXeIcTiWkX+48YaEi2oKGcxQkoBgcA+EWI/kpqwSFeW0R9FT,iv:MLmQSeQpjE1jT4TBSa5XFR7Bw+tetsXE/MhB2gGTBkk=,tag:CDPfwFyJu4LYzjBoMkdp8w==,type:str]
+    DATABASE_URL: ENC[AES256_GCM,data:fNALbQn9XtemNDT4lIbv6o2iKWCzV+/jClEFfxP+zXxAzqc3ct7gn1cL5kDOKVLY6JHDutgj6Zq3sCoOg6+faAXRHDwvEXqDRW5keMa6jfqafe0Gl4IG+kM=,iv:u40Oa2hHHe80Q7TwY3YExZQ2N62s5iuyPj8g6mXuehM=,tag:a5Y5Oy/XiZNdcXdh1OeFUw==,type:str]
+    DATABASE_URL_APP: ENC[AES256_GCM,data:Sxptl+XuiVv+aR+/7LKeKozKd+0b6RD29w76jyVhev5YnH0a2ChpJzpuZjmw4hFnf3+X94G5BF1DnRYm9BVYdvn1kjMP47Q//mf32+yd7Dgdhe1Z3KFa4eFKWgEZ,iv:a8U0H3yme8GBKwwOxP41D4TVxa55Ky+BSdhE62BJlkc=,tag:F3RWsL/j/nu6kDfqR4SZqA==,type:str]
+    DATABASE_URL_WORKER: ENC[AES256_GCM,data:YHxPjcwUFW+8tKDBwB4qzIULziKJphWVAmNulCvifkgyzYTEWd8KhIeBmt+QVNKW7Prw+/pu0iptsyWvd4DI+9YTmvewS+qNaTHde1ujTsSl8DHLalAQ89cd043X22be,iv:IgvWX9r8X9otU7qlBW95ShsBE/QfPrnU6InN1HoGO3I=,tag:ge0Zdcdg44VDuOYSmwUylA==,type:str]
+    JWT_SECRET: ENC[AES256_GCM,data:808zvJATvrtPCG+Hwpbw00KttyCMmzyWVSrvfeUDWfWOu710d7ACF2D7xSMTDuxsKOmIaZrPSI+z2RtOu/HC+A==,iv:JF3Tfbp9yEntjAzxETb37nXhO9naswerFM2sfwRsckQ=,tag:qmWAB349X78nlkvweslSDQ==,type:str]
+    ENCRYPTION_KEY: ENC[AES256_GCM,data:CDcGfMWmmBgq2WcyfzYQdD3NaR8w8kpUEH3dVs/YF3yfoUydUpwal1I2yptKL6lg9z5UkuTUaI1KS5KqOYZihA==,iv:2xm8RinSj68l47AZCwzC9sdPbvhcd7QSL5CCFYhxgq8=,tag:VPIs2E5NjVyYvv4WsxF9qQ==,type:str]
+    SETUP_TOKEN: ENC[AES256_GCM,data:dGJ1UlO0d23xgrGIr6HWEahyUbUEJ0IR8/ZNubytwj4mN72Du6SoflS7HVvomjMO0Vrkqu/G+c75lH3SFmC8Vg==,iv:ikEqBJGlnpvxhpbyFGTKyP95i7clsIviqzx4F+7m4Y4=,tag:QPW1ikgJrqfQ5gaHT545Qw==,type:str]
+    GITHUB_SIGNIN_CLIENT_ID: ENC[AES256_GCM,data:y6CM4LsYc6gtGnDDz1WkrZBSOWk=,iv:05LYR0PYu8bPYrxzGFUTcCxEtB/46Q3SOOUxcHa99fA=,tag:aQgitbVp/nftq3eR6JuP/w==,type:str]
+    GITHUB_SIGNIN_CLIENT_SECRET: ENC[AES256_GCM,data:p/viitjiNrh7X0Di/xJiTjGeFlMuoaH2oTrlLAJN2MAsQ/AeNnyYsg==,iv:qWT1tKJE8KY3Iv91Dc2G+HHv+w/uT9+DXhgC5raUIbc=,tag:3fzpS/4ZX7pF8mRQNO5NRA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3QUptL3AybkQ5UHM5ZVpi
+            ditLS3lTNndUK2V4bURhKzlRVEFnV1NnUFM0CjByYW45U081N2RzUFloWlA3UW9K
+            dGszZmRZRkRlY0I3bFNCdHg1cjB1MVkKLS0tIHVjZUxrK2w3UVdHUzEwTm1nYUs5
+            R1pLRDJCVG5UcU1VZTdxWmF5WVZGTG8KmC8SIWEcg9KlR0tb5+b4o58eAgCKKAH3
+            /tuEw58Q/LX0T2DL/BJJ15l/0ccUS+PO5FjTpkOlN12pQiQrm96yuQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1dj7cjpt7nmnm89sn5e6evshkkc6zacga8eazkce5eww789clw9jq5tlp4d
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBKS3VYL1BsOXdKQWtDeDNt
+            bW92KzVIM2JCUFVGR1FaL3ZYajJMNlVTK0NNCkkyMU0rbUFtcXpOUDBybEQ4SXI1
+            a21NRFAzTENqWk54My9sTi9XTjU3M0UKLS0tIFFVcUx1U1pCK3BqRG1XbE55dUZL
+            UlpkOVFCbTZ5ZlJrSVE3YnZWd3hNaGcKGUg7I+/dWKFkB/LhrOF6B23ae7Pz6H0q
+            uYVIUK8v4nU+RUUncI0NZ9thbRvVLnAbjvBnKWIpRM+dO+2jbrHutg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1zzl2a35end05nnw7ajecjyk3zz46azqjnhq09h63k9yjhznua3yqvqmcwk
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-25T03:15:18Z"
+    mac: ENC[AES256_GCM,data:mHdwOTxqbIkT6YUT1oJi5IsMFn/t67lLPR8eQotagFVe7Qaf2i6cm35K45j31g1vPLIfrU7U3D3V9OlRV6oATmm4VYkKEN5VXUNeMqA1MHYROccPCH7B7Z9mWktoHr7BBaAXQyuCJX9yxqWR+qaHpFPUYYDiXmzn0/ab0ClksTc=,iv:bxG2s6iUz7J6PceURvLD12RQ/MyiuGJA7Z4BCrAagAA=,tag:Hfrc24UXtR8wa193errvyw==,type:str]
+    version: 3.13.3

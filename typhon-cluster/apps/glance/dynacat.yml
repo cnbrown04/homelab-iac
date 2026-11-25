@@ -697,10 +697,10 @@ pages:
                 url: https://sure.buildwithcaleb.com
                 check-url: http://sure.sure.svc.cluster.local/up
                 icon: sh:sure-finance
-              - title: Tududi
-                url: https://tududi.buildwithcaleb.com
-                check-url: http://tududi.tududi.svc.cluster.local/api/health
-                icon: sh:tududi
+              - title: Tuff
+                url: https://tuff.buildwithcaleb.com
+                check-url: http://tuff.tuff.svc.cluster.local/health
+                icon: https://cdn.jsdelivr.net/gh/usetuff/tuff@v1.1.0/web/public/icon.svg
 
           # check-url tests the service on the network of the homelab, where
           # the cluster can reach it.
@@ -850,7 +850,7 @@ pages:
               - Termix-SSH/Termix
               - karakeep-app/karakeep
               - we-promise/sure
-              - chrisvel/tududi
+              - usetuff/tuff
               - HolyArrs/HolyArrs
               - siderolabs/talos
               - fosrl/pangolin

@@ -1,0 +1,49 @@
+# The volumes of Tuff.
+# - postgres: the Postgres database, on the disk of a worker.
+# - data: /lethe/k8s/tuff on gaia, through NFS. storage/ holds the uploads.
+#   backups/ holds the dump that Tuff makes before each migration, for 30
+#   days. User 1000 must own the two folders. The volume keeps its data when
+#   the claim goes away.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tuff-data
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: tuff
+    name: data
+  mountOptions: [nfsvers=4.2, hard, noatime]
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: tuff-data
+    volumeAttributes:
+      server: 10.0.20.5
+      share: /lethe/k8s/tuff
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: tuff-data
+  resources:
+    requests:
+      storage: 10Gi

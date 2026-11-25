@@ -1,14 +1,14 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: tududi
+  name: tuff
 spec:
   parentRefs:
     - name: main
       namespace: gateway
   hostnames:
-    - tududi.buildwithcaleb.com
+    - tuff.buildwithcaleb.com
   rules:
     - backendRefs:
-        - name: tududi
+        - name: tuff
           port: 80

@@ -265,7 +265,7 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    # Karakeep, Sure, and Tududi log in with Pocket ID, and signups
+    # Karakeep and Sure log in with Pocket ID, and signups
     # are off. Their browser extensions and mobile apps cannot pass the
     # Pangolin login, so SSO is off.
     karakeep:
@@ -290,12 +290,15 @@ pangolin_blueprint_resources:
           method: http
           hostname: "{{ pangolin_typhon_target }}"
           port: 80
-    tududi:
-      name: Tududi
+    # Tuff has its own login and "Sign in with GitHub". It cannot use Pocket
+    # ID, so the Pangolin login is in front. The first visitor of the setup
+    # link becomes the owner. Keep SSO on.
+    tuff:
+      name: Tuff
       mode: http
-      full-domain: tududi.buildwithcaleb.com
+      full-domain: tuff.buildwithcaleb.com
       auth:
-        sso-enabled: false
+        sso-enabled: true
       targets:
         - site: "{{ pangolin_typhon_site }}"
           method: http
