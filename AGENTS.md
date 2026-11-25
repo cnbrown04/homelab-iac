@@ -483,6 +483,12 @@ the cluster.
   The public keys are on GitHub, so `owner_user` puts them on each host.
   - `iac-admin` keeps its key in 1Password. With a FIDO2 key, each run of
     Ansible needs a touch for each host.
+  - Each key has always-uv on, so a login needs the FIDO2 PIN and one tap.
+    Make a Token2 key with `-O verify-required`. Without it, the Token2 asks
+    for a tap before it refuses the first signature, so a login needs two
+    taps.
+  - git signs with the PIV keys of the same devices, through gpg-agent. The
+    dotfiles of the owner hold that setup, not this repository.
 - Each user has a different key. Do not give one key to two users.
   - `iac-admin` has the key in `ansible/iac-admin-key.pub`. Its private key
     is in 1Password. `hermes` also has the pipeline key.
