@@ -9,629 +9,104 @@ if [ -z "${BASH_VERSION:-}" ]; then
   exit 1
 fi
 #
-# vps-harden.sh — protect a new VPS against an attacker.
+# vps-harden.sh — the first bootstrap of a new VPS.
 #
-# This script is a one-time bootstrap. Run it on a new host, one time, before
-# Ansible takes control. Ansible owns the configuration after the first run.
-# See AGENTS.md, decision 2.
+# The script runs du_setup (https://github.com/buildplan/du_setup, MIT) one
+# time, before Ansible takes control. Ansible owns the configuration after the
+# first run. See AGENTS.md, decision 2.
 #
-# The script uses whiptail, the text interface of Debian and Ubuntu.
+# The script downloads du_setup at a fixed commit and checks its SHA-256. It
+# reads the SSH keys of the owner from GitHub. Then it runs du_setup with no
+# question (--quiet), with the settings below.
+#
+# du_setup does only the work that must come before Ansible: the user caleb
+# with sudo and the keys, SSH with keys only on port 22, UFW, and automatic
+# updates. Ansible installs Fail2ban, CrowdSec, Docker, Tailscale, and the
+# kernel settings, so du_setup does not.
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/cnbrown04/homelab-iac/main/scripts/vps-harden.sh | sudo bash
 #
-# The script also runs from a file:
-#   sudo ./vps-harden.sh
+# To set the hostname, give DU_HOSTNAME:
+#   curl -fsSL <the URL> | sudo DU_HOSTNAME=iris bash
+#
+# To upgrade du_setup, change DU_SETUP_COMMIT and DU_SETUP_SHA256 together.
+# Read the diff of du_setup.sh between the two commits first.
 #
 set -euo pipefail
 
-readonly LOG_FILE="/var/log/vps-harden.log"
-readonly SSHD_DROPIN="/etc/ssh/sshd_config.d/99-hardening.conf"
-readonly SYSCTL_FILE="/etc/sysctl.d/99-hardening.conf"
-readonly BACKTITLE="VPS hardening"
+readonly DU_SETUP_COMMIT="5d2a534742f1058111cdfe21c840dbab257db0ae" # v0.82.2
+readonly DU_SETUP_SHA256="a94482a4bae7fc13e278b0e3fe1e6adc4fa34000f2e5741d08a4aea2afae1560"
+readonly DU_SETUP_URL="https://raw.githubusercontent.com/buildplan/du_setup/${DU_SETUP_COMMIT}/du_setup.sh"
 
-# The answers from the operator. The script collects them before it makes a
-# change, so the work runs without a question.
-ADMIN_USER=""
-ADMIN_KEY=""
-SSH_PORT=""
-NEW_SSH_PORT=""
-EXTRA_PORTS=""
-TRUSTED_IP=""
-TASKS=""
-RESULTS=""
-TUI_RESULT=""
-SSH_ALLOWED_USER=""
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-log() {
-  printf '%s  %s\n' "$(date --iso-8601=seconds)" "$*" >> "$LOG_FILE"
-}
-
-# Record the result of one task. The script shows the list at the end.
-record() {
-  RESULTS+="$1"$'\n'
-  log "$1"
-}
+# The same user and key URL as owner_user in group_vars/all/main.yml.
+readonly OWNER_USER="caleb"
+readonly OWNER_KEYS_URL="https://github.com/cnbrown04.keys"
 
 die() {
-  local message="$1"
-  log "FAILURE: ${message}"
-  if command -v whiptail > /dev/null 2>&1; then
-    # The box is a help, and not a need. A failure here must not hide the text.
-    tui --title "Failure" --msgbox "${message}" 12 70 || true
-  fi
-  printf 'Failure: %s\n' "${message}" >&2
+  echo "Failure: $*" >&2
   exit 1
 }
 
-# Run a command. Send the output to the log file only.
-run() {
-  log "RUN: $*"
-  if ! "$@" >> "$LOG_FILE" 2>&1; then
-    die "The command failed: $*
+[[ "${EUID}" -eq 0 ]] || die "run this script as root, for example with sudo."
+command -v curl > /dev/null 2>&1 || die "install curl first: apt-get install -y curl"
+command -v sha256sum > /dev/null 2>&1 || die "the command sha256sum is missing."
 
-Read ${LOG_FILE} for the output."
-  fi
-}
+work_dir="$(mktemp -d)"
+trap 'rm -rf "${work_dir}"' EXIT
 
-has_task() {
-  [[ " ${TASKS} " == *" $1 "* ]]
-}
+echo "Download du_setup at commit ${DU_SETUP_COMMIT}."
+curl -fsSL --proto '=https' -o "${work_dir}/du_setup.sh" "${DU_SETUP_URL}"
+printf '%s  %s\n' "${DU_SETUP_SHA256}" "${work_dir}/du_setup.sh" | sha256sum -c --quiet - \
+  || die "the SHA-256 of du_setup.sh is not correct. The script stops."
 
-# ---------------------------------------------------------------------------
-# Checks before the start
-# ---------------------------------------------------------------------------
+echo "Read the SSH keys of ${OWNER_USER} from ${OWNER_KEYS_URL}."
+keys="$(curl -fsSL --proto '=https' "${OWNER_KEYS_URL}")"
+# Keep only lines with a key type. A FIDO2 key starts with sk-.
+keys="$(grep -E '^(sk-)?(ssh|ecdsa)-' <<< "${keys}" || true)"
+[[ -n "${keys}" ]] || die "the URL gave no SSH key. The script stops, so it does not lock you out."
+# du_setup reads more than one key from DU_SSH_PUBLIC_KEY, with | between.
+keys="$(paste -sd '|' <<< "${keys}")"
 
-require_root() {
-  if [[ "${EUID}" -ne 0 ]]; then
-    printf 'Failure: run this script as root. Use sudo.\n' >&2
-    exit 1
-  fi
-}
-
-require_apt() {
-  if ! command -v apt-get > /dev/null 2>&1; then
-    printf 'Failure: this script needs Debian or Ubuntu. It uses apt-get.\n' >&2
-    exit 1
-  fi
-}
-
-# Run whiptail on the controlling terminal. Keep the menu out of command
-# substitutions, because the script can run from a pipe.
-tui() {
-  local output_file status
-  TUI_RESULT=""
-  output_file="$(mktemp /tmp/vps-harden.XXXXXX)" || return 1
-
-  if whiptail --output-fd 3 --backtitle "$BACKTITLE" "$@" \
-    </dev/tty >/dev/tty 2>/dev/tty 3>"${output_file}"; then
-    status=0
-  else
-    status=$?
-  fi
-
-  if (( status == 0 )); then
-    TUI_RESULT="$(<"${output_file}")"
-  fi
-  rm -f -- "${output_file}"
-  return "${status}"
-}
-
-require_terminal() {
-  if [[ ! -r /dev/tty || ! -w /dev/tty ]]; then
-    printf 'Failure: run this script from an interactive terminal.\n' >&2
-    exit 1
-  fi
-
-  if [[ -z "${TERM:-}" || "${TERM}" == "dumb" ]]; then
-    printf 'Failure: TERM must name a terminal that supports a text menu.\n' >&2
-    exit 1
-  fi
-}
-
-require_whiptail() {
-  if command -v whiptail > /dev/null 2>&1; then
-    return
-  fi
-  printf 'The program whiptail is absent. The script installs it now.\n'
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq
-  apt-get install -y -qq whiptail
-}
-
-# Find the port and the address of the current SSH session. The script keeps
-# this session alive.
-detect_session() {
-  SSH_PORT="$(awk '/^[Pp]ort[ \t]/ { print $2; exit }' /etc/ssh/sshd_config \
-    /etc/ssh/sshd_config.d/*.conf 2> /dev/null || true)"
-  [[ -n "${SSH_PORT}" ]] || SSH_PORT=22
-
-  if [[ -n "${SSH_CONNECTION:-}" ]]; then
-    TRUSTED_IP="$(printf '%s' "${SSH_CONNECTION}" | awk '{ print $1 }')"
-  elif [[ -n "${SSH_CLIENT:-}" ]]; then
-    TRUSTED_IP="$(printf '%s' "${SSH_CLIENT}" | awk '{ print $1 }')"
-  else
-    # sudo deletes SSH_CONNECTION from the environment. Ask the terminal.
-    TRUSTED_IP="$(who am i 2> /dev/null | sed -n 's/.*(\(.*\))$/\1/p')"
-  fi
-
-  # A name is not an address. Keep an address only.
-  [[ "${TRUSTED_IP}" =~ ^[0-9a-fA-F.:]+$ ]] || TRUSTED_IP=""
-}
-
-# ---------------------------------------------------------------------------
-# The questions
-# ---------------------------------------------------------------------------
-
-show_welcome() {
-  tui --title "Before you start" --yesno \
-"This script protects a VPS against an attacker.
-
-WARNING: a mistake in the configuration of SSH can lock you out of the
-host. Keep this session open until you test a new session.
-
-The script writes ${LOG_FILE}.
-
-Do you want to continue?" 18 72 || exit 0
-}
-
-choose_tasks() {
-  if ! tui --title "Tasks" --checklist \
-"Select each task. Use SPACE to select, and TAB to move to OK." 20 74 10 \
-    "updates"  "Install the updates, and turn on the automatic updates" ON \
-    "user"     "Create an admin user with an SSH key"                  ON \
-    "ssh"      "Protect SSH: no root login, and no password"           ON \
-    "ufw"      "Set up the firewall UFW"                               ON \
-    "fail2ban" "Install Fail2ban for SSH"                              ON \
-    "crowdsec" "Install CrowdSec and the bouncer for the firewall"     ON \
-    "sysctl"   "Protect the kernel with sysctl"                        ON; then
-    exit 0
-  fi
-
-  TASKS="${TUI_RESULT}"
-  TASKS="${TASKS//\"/}"
-  [[ -n "${TASKS}" ]] || die "You selected no task."
-}
-
-ask_admin_user() {
-  has_task user || return 0
-
-  if ! tui --title "The admin user" \
-    --inputbox "Give the name of the admin user. The user gets sudo." \
-    10 70 "admin"; then
-    exit 0
-  fi
-  ADMIN_USER="${TUI_RESULT}"
-
-  [[ "${ADMIN_USER}" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] \
-    || die "The name '${ADMIN_USER}' is not a correct name for a user."
-  [[ "${ADMIN_USER}" != "root" ]] || die "Do not use root as the admin user."
-
-  if ! tui --title "The public key" \
-    --inputbox \
-"Paste the public SSH key of the user.
-
-The key starts with ssh-ed25519 or ssh-rsa." 12 74 ""; then
-    exit 0
-  fi
-  ADMIN_KEY="${TUI_RESULT}"
-
-  local key_file
-  key_file="$(mktemp)"
-  printf '%s\n' "${ADMIN_KEY}" > "${key_file}"
-  if ! ssh-keygen -l -f "${key_file}" > /dev/null 2>&1; then
-    rm -f "${key_file}"
-    die "That text is not a correct public SSH key."
-  fi
-  rm -f "${key_file}"
-}
-
-ask_ssh_port() {
-  has_task ssh || return 0
-
-  if ! tui --title "The port of SSH" \
-    --inputbox \
-"The current port is ${SSH_PORT}.
-
-Keep this port, or give a new port. A high port makes less noise in the
-log, but it is not a protection." 13 74 "${SSH_PORT}"; then
-    exit 0
-  fi
-  NEW_SSH_PORT="${TUI_RESULT}"
-
-  if [[ ! "${NEW_SSH_PORT}" =~ ^[0-9]+$ ]] \
-    || (( NEW_SSH_PORT < 1 || NEW_SSH_PORT > 65535 )); then
-    die "The port ${NEW_SSH_PORT} is not valid."
-  fi
-}
-
-ask_extra_ports() {
-  has_task ufw || return 0
-
-  if ! tui --title "The open ports" \
-    --inputbox \
-"Give each other port that must stay open. Put a space between two ports.
-Add /udp for a port of UDP.
-
-The firewall blocks every other port. The port of SSH is always open.
-
-Example: 80/tcp 443/tcp 51820/udp" 15 74 "80/tcp 443/tcp"; then
-    exit 0
-  fi
-  EXTRA_PORTS="${TUI_RESULT}"
-}
-
-ask_trusted_ip() {
-  has_task fail2ban || has_task crowdsec || return 0
-
-  if ! tui --title "Your address" \
-    --inputbox \
-"Fail2ban and CrowdSec do not ban this address.
-
-The script found the address of this session. Correct it if it is wrong.
-Leave it empty if you want no exception." 14 74 "${TRUSTED_IP}"; then
-    exit 0
-  fi
-  TRUSTED_IP="${TUI_RESULT}"
-}
-
-confirm_start() {
-  local summary="The script does this work:
-
-"
-  has_task updates  && summary+="  - Install the updates.
-"
-  has_task user     && summary+="  - Create the user ${ADMIN_USER}.
-"
-  has_task ssh      && summary+="  - Protect SSH on port ${NEW_SSH_PORT}.
-"
-  has_task ufw      && summary+="  - Turn on UFW. Open: ${NEW_SSH_PORT:-${SSH_PORT}} ${EXTRA_PORTS}
-"
-  has_task fail2ban && summary+="  - Install Fail2ban.
-"
-  has_task crowdsec && summary+="  - Install CrowdSec.
-"
-  has_task sysctl   && summary+="  - Protect the kernel.
-"
-  summary+="
-Do you want to start?"
-
-  tui --title "Confirm" --yesno "${summary}" \
-    22 74 || exit 0
-}
-
-# ---------------------------------------------------------------------------
-# The tasks
-# ---------------------------------------------------------------------------
-
-task_updates() {
-  export DEBIAN_FRONTEND=noninteractive
-  run apt-get update -qq
-  run apt-get -y -qq upgrade
-  run apt-get install -y -qq unattended-upgrades apt-listchanges
-
-  cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Unattended-Upgrade "1";
-APT::Periodic::AutocleanInterval "7";
+# du_setup reads only DU_* lines from this file, and does not run it. An
+# environment variable, for example DU_HOSTNAME, wins over the file.
+config="${work_dir}/du_setup.env"
+install -m 600 /dev/null "${config}"
+cat > "${config}" <<EOF
+DU_USERNAME="${OWNER_USER}"
+DU_USE_EXISTING_USER="true"
+DU_SSH_PUBLIC_KEY="${keys}"
+DU_SSH_PORT="22"
+DU_TIMEZONE="Etc/UTC"
+DU_USER_PASSWORD=""
+DU_GENERATE_RANDOM_PASSWORD="true"
+DU_PASSWORDLESS_SUDO="false"
+DU_INSTALL_CUSTOM_BASHRC="false"
+DU_ALLOW_HTTP="false"
+DU_ALLOW_HTTPS="false"
+DU_ALLOW_TAILSCALE_UDP="false"
+DU_CUSTOM_UFW_PORTS=""
+DU_IDS="none"
+DU_ENABLE_AUTO_UPDATES="true"
+DU_ENABLE_SECURE_DNS="false"
+DU_ENABLE_KERNEL_HARDENING="false"
+DU_INSTALL_DOCKER="false"
+DU_DOCKER_UFW_HARDEN="false"
+DU_INSTALL_DTOP="false"
+DU_VPN="none"
+DU_CONFIGURE_SWAP="false"
+DU_RUN_SECURITY_AUDIT="false"
+DU_RUN_DEBSECAN="false"
+DU_AUTO_REBOOT="false"
 EOF
 
-  run systemctl enable --now unattended-upgrades
-  record "OK   updates: the host is current, and it updates itself."
-}
+echo "Run du_setup."
+bash "${work_dir}/du_setup.sh" --config "${config}" --quiet < /dev/null
 
-task_user() {
-  if id -u "${ADMIN_USER}" > /dev/null 2>&1; then
-    log "The user ${ADMIN_USER} exists. The script keeps it."
-  else
-    run adduser --disabled-password --gecos "" "${ADMIN_USER}"
-  fi
+cat <<EOF
 
-  local group="sudo"
-  getent group sudo > /dev/null 2>&1 || group="wheel"
-  run usermod -aG "${group}" "${ADMIN_USER}"
-
-  local home ssh_dir keys
-  home="$(getent passwd "${ADMIN_USER}" | cut -d: -f6)"
-  ssh_dir="${home}/.ssh"
-  keys="${ssh_dir}/authorized_keys"
-
-  install -d -m 700 -o "${ADMIN_USER}" -g "${ADMIN_USER}" "${ssh_dir}"
-  touch "${keys}"
-  # Add the key one time only. A second run of the script adds no copy.
-  if ! grep -qxF "${ADMIN_KEY}" "${keys}" 2> /dev/null; then
-    printf '%s\n' "${ADMIN_KEY}" >> "${keys}"
-  fi
-  chmod 600 "${keys}"
-  chown "${ADMIN_USER}:${ADMIN_USER}" "${keys}"
-
-  record "OK   user: ${ADMIN_USER} has sudo and the SSH key."
-}
-
-# Refuse to close the door if no key can open it.
-verify_key_exists() {
-  local user="$1" home keys
-  home="$(getent passwd "${user}" 2> /dev/null | cut -d: -f6)" || return 1
-  keys="${home}/.ssh/authorized_keys"
-  [[ -s "${keys}" ]]
-}
-
-task_ssh() {
-  local allow_user="${ADMIN_USER}"
-
-  if [[ -z "${allow_user}" ]]; then
-    # The operator did not create a user in this run. Find a user that has a
-    # key and sudo, or stop.
-    local candidate
-    for candidate in $(getent group sudo 2> /dev/null | cut -d: -f4 | tr ',' ' '); do
-      if verify_key_exists "${candidate}"; then
-        allow_user="${candidate}"
-        break
-      fi
-    done
-  fi
-
-  [[ -n "${allow_user}" ]] || die \
-"No user has an SSH key and sudo.
-
-The script stops. A change to SSH now locks you out of the host.
-Run the script again, and select the task 'user'."
-
-  verify_key_exists "${allow_user}" || die \
-"The user ${allow_user} has no key in authorized_keys.
-
-The script stops, because a change to SSH now locks you out."
-  SSH_ALLOWED_USER="${allow_user}"
-
-  # Open the new port in the firewall first. The reverse order locks you out.
-  if has_task ufw && command -v ufw > /dev/null 2>&1; then
-    run ufw allow "${NEW_SSH_PORT}/tcp"
-  fi
-
-  install -d -m 755 /etc/ssh/sshd_config.d
-
-  cat > "${SSHD_DROPIN}" <<EOF
-# The hardening of SSH. vps-harden.sh wrote this file.
-Port ${NEW_SSH_PORT}
-PermitRootLogin no
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-ChallengeResponseAuthentication no
-PubkeyAuthentication yes
-PermitEmptyPasswords no
-AuthenticationMethods publickey
-MaxAuthTries 3
-MaxSessions 4
-LoginGraceTime 30
-X11Forwarding no
-AllowAgentForwarding no
-AllowTcpForwarding no
-ClientAliveInterval 300
-ClientAliveCountMax 2
-AllowUsers ${allow_user}
+du_setup is complete. Do these steps before you close this session:
+1. From a second terminal, log in as ${OWNER_USER} with your key.
+2. Read the sudo password in /home/${OWNER_USER}/.du_initial_sudo_password.
+3. Run the first Ansible play with that password (see AGENTS.md).
 EOF
-
-  # An old version of sshd does not read the folder sshd_config.d. Add the
-  # line that includes the folder.
-  if ! grep -qE '^\s*Include\s+/etc/ssh/sshd_config\.d/\*\.conf' \
-    /etc/ssh/sshd_config; then
-    log "The main file has no Include line. The script adds it at the top."
-    cp /etc/ssh/sshd_config "/etc/ssh/sshd_config.bak.$(date +%s)"
-    sed -i '1i Include /etc/ssh/sshd_config.d/*.conf' /etc/ssh/sshd_config
-  fi
-
-  # Test the configuration before the restart. A bad file stops sshd.
-  if ! sshd -t >> "$LOG_FILE" 2>&1; then
-    rm -f "${SSHD_DROPIN}"
-    die "The new configuration of SSH is not valid. The script deleted it.
-
-Read ${LOG_FILE}."
-  fi
-
-  # A change of the port needs a restart, because the socket changes.
-  if systemctl list-unit-files 2> /dev/null | grep -q '^ssh\.socket'; then
-    run systemctl restart ssh.socket || true
-  fi
-  run systemctl restart ssh
-
-  record "OK   ssh: port ${NEW_SSH_PORT}, key only, and only ${allow_user}."
-}
-
-task_ufw() {
-  export DEBIAN_FRONTEND=noninteractive
-  run apt-get install -y -qq ufw
-
-  run ufw --force reset
-  run ufw default deny incoming
-  run ufw default allow outgoing
-
-  # Open the port of SSH before the firewall starts.
-  run ufw limit "${NEW_SSH_PORT:-${SSH_PORT}}/tcp"
-  if [[ -n "${NEW_SSH_PORT}" && "${NEW_SSH_PORT}" != "${SSH_PORT}" ]]; then
-    # Keep the old port open. The operator deletes it after the test.
-    run ufw limit "${SSH_PORT}/tcp"
-  fi
-
-  local port
-  for port in ${EXTRA_PORTS}; do
-    [[ "${port}" =~ ^[0-9]+(/(tcp|udp))?$ ]] || die "The port ${port} is not valid."
-    run ufw allow "${port}"
-  done
-
-  run ufw --force enable
-  record "OK   ufw: the firewall blocks each port that is not in the list."
-}
-
-task_fail2ban() {
-  export DEBIAN_FRONTEND=noninteractive
-  run apt-get install -y -qq fail2ban
-
-  local ignore="127.0.0.1/8 ::1"
-  [[ -n "${TRUSTED_IP}" ]] && ignore+=" ${TRUSTED_IP}"
-
-  cat > /etc/fail2ban/jail.local <<EOF
-# vps-harden.sh wrote this file.
-[DEFAULT]
-# The journal holds the log. A new Debian and a new Ubuntu keep no auth.log.
-backend = systemd
-ignoreip = ${ignore}
-bantime = 1h
-findtime = 10m
-maxretry = 5
-banaction = ufw
-
-[sshd]
-enabled = true
-port = ${NEW_SSH_PORT:-${SSH_PORT}}
-mode = aggressive
-EOF
-
-  run systemctl enable --now fail2ban
-  run systemctl restart fail2ban
-  record "OK   fail2ban: the jail for SSH bans an address after 5 failures."
-}
-
-task_crowdsec() {
-  export DEBIAN_FRONTEND=noninteractive
-
-  if ! command -v cscli > /dev/null 2>&1; then
-    run apt-get install -y -qq curl gnupg
-    # The repository of CrowdSec is not in Debian. This script adds it.
-    log "RUN: the install script of the repository of CrowdSec"
-    if ! curl -fsSL https://install.crowdsec.net | bash >> "$LOG_FILE" 2>&1; then
-      die "The script cannot add the repository of CrowdSec.
-
-Read ${LOG_FILE}."
-    fi
-    run apt-get update -qq
-    run apt-get install -y -qq crowdsec
-  fi
-
-  # The bouncer blocks the address. CrowdSec alone only makes a decision.
-  run apt-get install -y -qq crowdsec-firewall-bouncer-iptables
-
-  if [[ -n "${TRUSTED_IP}" ]]; then
-    install -d -m 755 /etc/crowdsec/parsers/s02-enrich
-    cat > /etc/crowdsec/parsers/s02-enrich/trusted-ip.yaml <<EOF
-# vps-harden.sh wrote this file. CrowdSec does not ban this address.
-name: local/trusted-ip
-description: "Do not ban the address of the operator"
-whitelist:
-  reason: "the address of the operator"
-  ip:
-    - "${TRUSTED_IP}"
-EOF
-  fi
-
-  run systemctl enable --now crowdsec
-  run systemctl restart crowdsec
-  run systemctl enable --now crowdsec-firewall-bouncer
-  record "OK   crowdsec: the agent and the bouncer run."
-}
-
-task_sysctl() {
-  cat > "${SYSCTL_FILE}" <<'EOF'
-# vps-harden.sh wrote this file.
-
-# The network
-net.ipv4.tcp_syncookies = 1
-net.ipv4.conf.all.rp_filter = 1
-net.ipv4.conf.default.rp_filter = 1
-net.ipv4.conf.all.accept_redirects = 0
-net.ipv4.conf.default.accept_redirects = 0
-net.ipv4.conf.all.secure_redirects = 0
-net.ipv4.conf.all.send_redirects = 0
-net.ipv4.conf.default.send_redirects = 0
-net.ipv4.conf.all.accept_source_route = 0
-net.ipv4.conf.default.accept_source_route = 0
-net.ipv4.conf.all.log_martians = 1
-net.ipv4.icmp_echo_ignore_broadcasts = 1
-net.ipv4.icmp_ignore_bogus_error_responses = 1
-net.ipv6.conf.all.accept_redirects = 0
-net.ipv6.conf.default.accept_redirects = 0
-net.ipv6.conf.all.accept_source_route = 0
-
-# The kernel
-kernel.randomize_va_space = 2
-kernel.dmesg_restrict = 1
-kernel.kptr_restrict = 2
-fs.protected_hardlinks = 1
-fs.protected_symlinks = 1
-fs.suid_dumpable = 0
-EOF
-
-  # A container has no permission for some keys. Do not stop the script.
-  if ! sysctl --system >> "$LOG_FILE" 2>&1; then
-    record "WARN sysctl: the kernel refused one key or more. Read the log."
-    return 0
-  fi
-  record "OK   sysctl: the kernel uses the protected values."
-}
-
-# ---------------------------------------------------------------------------
-# The end
-# ---------------------------------------------------------------------------
-
-show_results() {
-  local port="${NEW_SSH_PORT:-${SSH_PORT}}"
-  local user="${ADMIN_USER:-${SSH_ALLOWED_USER:-<your user>}}"
-  local firewall_note="The script did not change UFW."
-
-  if has_task ufw; then
-    firewall_note="Keep the UFW rule for port ${port}/tcp."
-    if [[ -n "${NEW_SSH_PORT}" && "${NEW_SSH_PORT}" != "${SSH_PORT}" ]]; then
-      firewall_note="After the test passes, delete the old rule: ufw delete limit ${SSH_PORT}/tcp"
-    fi
-  fi
-
-  tui --title "The result" --msgbox \
-"${RESULTS}
-WARNING: keep this session open.
-
-Open a second terminal and test the new session now:
-
-  ssh -p ${port} ${user}@<the address of the host>
-
-The test failed? Use this session to correct the host.
-${firewall_note}
-
-The log is ${LOG_FILE}." 26 76
-}
-
-main() {
-  require_root
-  require_apt
-  require_terminal
-  require_whiptail
-
-  touch "$LOG_FILE"
-  chmod 600 "$LOG_FILE"
-  log "=== The script started ==="
-
-  detect_session
-  show_welcome
-  choose_tasks
-  ask_admin_user
-  ask_ssh_port
-  ask_extra_ports
-  ask_trusted_ip
-  confirm_start
-
-  # The order is important. The user and the firewall come before SSH.
-  has_task updates  && task_updates
-  has_task user     && task_user
-  has_task ufw      && task_ufw
-  has_task ssh      && task_ssh
-  has_task fail2ban && task_fail2ban
-  has_task crowdsec && task_crowdsec
-  has_task sysctl   && task_sysctl
-
-  log "=== The script is complete ==="
-  show_results
-}
-
-main "$@"

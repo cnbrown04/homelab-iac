@@ -1,7 +1,6 @@
 ---
 # Each item is one line of the drop-in, in this order. Quote each value, so
-# YAML does not read "no" as false. These defaults are the settings of
-# scripts/vps-harden.sh.
+# YAML does not read "no" as false.
 ssh_hardening_options:
   Port: "22"
   PermitRootLogin: "no"

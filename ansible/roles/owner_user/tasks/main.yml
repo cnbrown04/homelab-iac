@@ -59,7 +59,8 @@
 - name: Check that the URL gave at least one key
   ansible.builtin.assert:
     that:
-      - owner_user_url_keys is search('^ssh-', multiline=True)
+      # A FIDO2 key starts with sk-, for example sk-ssh-ed25519@openssh.com.
+      - owner_user_url_keys is search('^(sk-)?(ssh|ecdsa)-', multiline=True)
     fail_msg: "The URL {{ owner_user_ssh_keys_url }} gave no SSH key. Ansible stops, so it does not delete your keys."
 
 # A key on GitHub can also be a refused key or an extra key. The role drops

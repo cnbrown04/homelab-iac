@@ -478,6 +478,11 @@ the cluster.
   `owner_user` makes it, with the keys at `github.com/cnbrown04.keys`.
 - `iac-admin` is for Ansible and the pipelines only. The owner does not log
   in with it. It has sudo with no password, and its password is locked.
+- `caleb` logs in with FIDO2 keys (`sk-ssh-ed25519`). The YubiKey 5C Nano
+  and the Token2 are the primary keys. The second YubiKey is the backup.
+  The public keys are on GitHub, so `owner_user` puts them on each host.
+  - `iac-admin` keeps its key in 1Password. With a FIDO2 key, each run of
+    Ansible needs a touch for each host.
 - Each user has a different key. Do not give one key to two users.
   - `iac-admin` has the key in `ansible/iac-admin-key.pub`. Its private key
     is in 1Password. `hermes` also has the pipeline key.
@@ -615,7 +620,16 @@ no port, and add a resource to `pangolin_blueprint_resources`.
 To add a host: a new VPS runs `scripts/vps-harden.sh`, then the play with
 `-e ansible_user=caleb` one time. Give that run the key of `caleb` with
 `-e ansible_ssh_private_key_file=<file>`, because `iac-admin` has no key on
-the VPS yet. A new Proxmox node runs
+the VPS yet. Also give it `--ask-become-pass`, with the password in
+`~/.du_initial_sudo_password` of `caleb`. Then `owner_user` sets the
+password of SOPS.
+- `scripts/vps-harden.sh` runs du_setup at a fixed commit, with no
+  question. du_setup writes `10-hardening.conf`, and `ssh_hardening` deletes
+  it, because that file wins over `99-hardening.conf`.
+- To upgrade du_setup, change `DU_SETUP_COMMIT` and `DU_SETUP_SHA256`
+  together. Renovate does not bump them.
+
+A new Proxmox node runs
 `playbooks/proxmox_bootstrap.yml` as root, then `playbooks/proxmox_nodes.yml`.
 Add the node to `hosts.yml` first, and to the group `pantheon` for the
 cluster.

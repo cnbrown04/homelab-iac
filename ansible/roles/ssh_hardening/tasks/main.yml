@@ -19,3 +19,12 @@
     mode: "0644"
     validate: /usr/sbin/sshd -t -f %s
   notify: SSH configuration changed
+
+# du_setup (scripts/vps-harden.sh) writes this file. sshd uses the first value
+# that it reads, so 10-hardening.conf wins over 99-hardening.conf. Ansible
+# deletes it, so only the settings of this role apply.
+- name: Delete the SSH drop-in of du_setup
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d/10-hardening.conf
+    state: absent
+  notify: SSH configuration changed

@@ -3,8 +3,8 @@
 admin_user_extra_ssh_keys:
   - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJ20dWgJFxvs+kNgHVrRNqLvmMbekLjQoi5U/yzzJHZ github-actions hermes"
 
-# The SSH settings are the defaults of the ssh_hardening role, the same as
-# scripts/vps-harden.sh. Only these users can log in.
+# The SSH settings are the defaults of the ssh_hardening role.
+# Only these users can log in.
 ssh_hardening_allow_users:
   - caleb
   - iac-admin
