@@ -1,7 +1,7 @@
 name: opencloud
 services:
   opencloud:
-    image: docker.io/opencloudeu/opencloud:7.2.6
+    image: docker.io/opencloudeu/opencloud:9.1.1
     container_name: opencloud
     restart: unless-stopped
     # User 3000 owns each file in the shares. Samba forces the same user.
