@@ -66,7 +66,7 @@ services:
   # Traefik gets the certificate with the Cloudflare DNS-01 challenge.
   # Ansible writes the route and the token in the folder traefik.
   traefik:
-    image: docker.io/traefik:v3.7.19
+    image: docker.io/traefik:v3.8.0
     container_name: opencloud-traefik
     restart: unless-stopped
     user: "65534:65534"
