@@ -32,7 +32,7 @@ spec:
       containers:
         - name: filebrowser
           # The slim image has no ffmpeg, so a video gets no thumbnail.
-          image: ghcr.io/gtsteffaniak/filebrowser:2.0.2-stable-slim
+          image: ghcr.io/gtsteffaniak/filebrowser:2.1.0-stable-slim
           env:
             - name: FILEBROWSER_CONFIG
               value: /config/config.yaml
