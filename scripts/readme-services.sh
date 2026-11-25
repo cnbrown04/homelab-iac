@@ -14,8 +14,10 @@
 set -euo pipefail
 
 out=${README_SERVICES_OUT:-.github/assets}
-dashboard=https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons
-selfhst=https://cdn.jsdelivr.net/gh/selfhst/icons
+# raw.githubusercontent.com, not jsDelivr: jsDelivr can refuse a GitHub runner
+# (403).
+dashboard=https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main
+selfhst=https://raw.githubusercontent.com/selfhst/icons/main
 font='-apple-system,BlinkMacSystemFont,Segoe UI,Noto Sans,Helvetica,Arial,sans-serif'
 # An icon larger than this goes into the map as a small PNG.
 max_svg=6000
@@ -59,7 +61,7 @@ TYPHON_GROUPS=(
   "Library|Sonarr:sonarr,Radarr:radarr,Chaptarr:chaptarr,File Browser:filebrowser-quantum"
   "Downloads|Prowlarr:prowlarr,Jackett:jackett,qBittorrent:qbittorrent"
   "Apps|Karakeep:selfhst/karakeep,Sure:selfhst/sure-finance"
-  "Testing|Tuff:https://cdn.jsdelivr.net/gh/usetuff/tuff@v1.1.0/web/public/icon.svg,HolyArrs:selfhst/holyarrs"
+  "Testing|Tuff:https://raw.githubusercontent.com/usetuff/tuff/v1.1.0/web/public/icon.svg,HolyArrs:selfhst/holyarrs"
 )
 
 # The hosts out of the cluster: the name, the logo, the subtitle, and the apps
