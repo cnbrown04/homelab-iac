@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: glance
-          image: docker.io/panonim/dynacat:3.0.3
+          image: docker.io/panonim/dynacat:3.0.4
           env:
             # Git holds the config, and the ConfigMap is read-only. So the
             # editor in the page stays off.
