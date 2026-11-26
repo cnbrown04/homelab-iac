@@ -52,9 +52,19 @@ spec:
               value: "8787"
             - name: MIGRATE_ON_START
               value: "1"
+            # The Pocket ID client "tuff" is a confidential client with PKCE.
+            # Its callback URL is
+            # https://tuff.buildwithcaleb.com/auth/oauth/oidc/callback.
+            - name: OIDC_ISSUER
+              value: https://auth.buildwithcaleb.com
+            - name: OIDC_CLIENT_ID
+              value: tuff
+            - name: OIDC_NAME
+              value: Cerberus
           # tuff.sops.yaml gives DATABASE_URL, DATABASE_URL_APP,
           # DATABASE_URL_WORKER, JWT_SECRET, ENCRYPTION_KEY, SETUP_TOKEN,
-          # GITHUB_SIGNIN_CLIENT_ID, and GITHUB_SIGNIN_CLIENT_SECRET.
+          # GITHUB_SIGNIN_CLIENT_ID, GITHUB_SIGNIN_CLIENT_SECRET, and
+          # OIDC_CLIENT_SECRET.
           envFrom: &env-from
             - secretRef:
                 name: tuff

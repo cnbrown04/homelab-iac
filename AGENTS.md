@@ -287,10 +287,14 @@ the cluster.
     Meilisearch and Chrome in their own pods.
 - Tuff is at `tuff.buildwithcaleb.com`, with the Pangolin login in front of
   its own login. The owner tests it. It replaced Tududi on 23 November 2026.
-  - Tuff has no generic OIDC, so it cannot use Pocket ID. It has its
-    password login and "Sign in with GitHub", with an OAuth App of the
-    owner. GitHub does not link by email. Link GitHub in the settings of the
-    account.
+  - Tuff logs in with Pocket ID (from 1.2.0), with the password login, and
+    with "Sign in with GitHub" through an OAuth App of the owner.
+  - The Pocket ID client `tuff` is a confidential client with PKCE. Only
+    `homelab_admin` can use it. The owner made it by hand. The button says
+    `Cerberus`.
+  - Tuff links a Pocket ID login to the account with the same email, because
+    Pocket ID verifies each email. Tuff does not read the groups. GitHub does
+    not link by email, so link GitHub in the settings of the account.
   - The first visitor of `https://tuff.buildwithcaleb.com/setup?token=<SETUP_TOKEN>`
     becomes the owner. Then sign-up is closed, and a person joins with an
     invitation. Tuff has no mail, so it shows each invitation link.
